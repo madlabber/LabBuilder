@@ -1,0 +1,24 @@
+---
+- name: test_Build_Windows_VM_from_ISO
+  hosts: localhost
+  gather_facts: false
+  vars_files: 
+    - vars/vars-esx.yml
+  tasks:
+    - name: Build a Windows VM
+      include_vars: defaults/Build_Server2016_VM_from_ISO.yml
+    - set_fact:
+        vm_name: TEST_WindowsServer2016VM
+        # vm_num_cpus: 2        
+        # vm_memory_mb: 2048   
+        # vm_disk_gb: 40            
+        vm_datastore: "Staging"
+        vm_network: "VM Network"
+        vm_password_new: P@ssw0rd
+        # vm_hostname: win5        
+        # vm_address: 192.168.0.13
+        # vm_netmask_cidr: 24
+        # vm_gateway: 192.168.0.1
+        # vm_dns_server: 192.168.0.1
+        # vm_domain: lab.local
+    - include_tasks: tasks/Build_Windows_VM_from_ISO.yml

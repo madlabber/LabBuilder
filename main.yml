@@ -1,0 +1,6 @@
+---
+- hosts: localhost
+  gather_facts: false
+  tasks:
+- name: Start Lab Build
+  import_playbook: build_lab_ansible_v2.yml

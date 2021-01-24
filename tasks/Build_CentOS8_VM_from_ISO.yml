@@ -1,0 +1,246 @@
+---
+- name: Create kickstart ISO
+  community.general.iso_create:
+    src_files:
+      - "{{kickstart_file}}"
+    dest_iso: "files/{{config_iso}}"
+    interchange_level: 3
+    joliet: 3
+    vol_ident: OEMDRV
+- name: Copy kickstart iso to datastore
+  community.vmware.vsphere_copy:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'  
+    validate_certs: no 
+    src: "files/{{config_iso}}"
+    datacenter: "{{vcenter_datacenter}}"
+    datastore: "{{ vm_datastore }}"
+    path: "{{config_iso}}"
+  delegate_to: localhost
+  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
+- name: Check if install ISO exists
+  community.vmware.vsphere_file:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no
+    datacenter: ""
+    datastore: "{{ iso_datastore }}"
+    path: "{{ install_iso }}"
+    state: file
+  register: install_iso_exists
+  delegate_to: localhost
+  ignore_errors: true 
+- name: Add ESXi to Ansible Hosts for SSH
+  add_host:
+    name: '{{ esxi_address }}'
+    group: "esx"
+    ansible_user: '{{ esxi_username }}'
+    ansible_password: '{{ esxi_password }}'
+    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+  when: install_iso_exists.failed
+- name: Enable ESX SSH (TSM-SSH)
+  community.vmware.vmware_host_service_manager:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    esxi_hostname: '{{ esxi_hostname }}'
+    service_name: TSM-SSH
+    state: present
+  register: tsm_ssh_service
+  delegate_to: localhost
+  when: install_iso_exists.failed
+- name: Enable ESX Shell (TSM)
+  community.vmware.vmware_host_service_manager:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    esxi_hostname: '{{ esxi_hostname }}'
+    service_name: TSM
+    state: present
+  register: tsm_service
+  delegate_to: localhost
+  when: install_iso_exists.failed
+- name: Download the Centos ISO
+  shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ install_iso_url }}'
+  args:
+    creates: '/vmfs/volumes/{{ iso_datastore }}/{{ install_iso }}'
+  delegate_to: '{{ esxi_address }}'
+  when: install_iso_exists.failed
+- name: Disable ESX SSH (TSM-SSH)
+  community.vmware.vmware_host_service_manager:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    esxi_hostname: '{{ esxi_hostname }}'
+    service_name: TSM-SSH
+    state: absent
+  delegate_to: localhost
+  when: tsm_ssh_service.changed
+- name: Disable ESX Shell (TSM)
+  community.vmware.vmware_host_service_manager:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    esxi_hostname: '{{ esxi_hostname }}'
+    service_name: TSM
+    state: absent
+  delegate_to: localhost
+  when: tsm_service.changed
+- name: Create VM
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}' 
+    validate_certs: no 
+    datacenter: "{{vcenter_datacenter}}"
+    cluster: '{{vcenter_cluster}}'    
+    folder: /
+    name: '{{ vm_name }}'
+    state: present
+    guest_id: centos7_64Guest
+    cdrom:
+        - controller_number: 0
+          unit_number: 0
+          state: present
+          type: iso
+          iso_path: '[{{ iso_datastore }}] {{ install_iso }}'
+        - controller_number: 0
+          unit_number: 1
+          state: present
+          type: iso
+          iso_path: '[{{ vm_datastore }}] {{config_iso}}'
+    disk:
+    - size_gb: '{{ vm_disk_gb }}'
+      type: thin
+      datastore: '{{ vm_datastore }}'
+    hardware:
+      memory_mb: '{{ vm_memory_mb }}'
+      num_cpus: '{{ vm_num_cpus }}'
+      scsi: lsilogicsas
+    networks:
+    - name: '{{ vm_network }}'
+      device_type: e1000
+    wait_for_ip_address: no
+  delegate_to: localhost
+  register: deploy_vm
+- name: Set boot order
+  community.vmware.vmware_guest_boot_manager:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no  
+    name: '{{ vm_name }}'
+    boot_delay: 1000
+    enter_bios_setup: False
+    boot_retry_enabled: True
+    boot_retry_delay: 20000
+    boot_firmware: bios
+    secure_boot_enabled: False
+    boot_order:
+      - disk
+      - cdrom
+      - ethernet
+      - floppy
+  delegate_to: localhost
+  register: vm_boot_order
+- name: Power-On the virtual machine
+  community.vmware.vmware_guest_powerstate:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: '{{ vm_name }}'
+    state: powered-on
+  delegate_to: localhost
+  register: powerstate
+- name: Wait for VMware tools to become available 
+  community.vmware.vmware_guest_tools_wait:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  retries: 10
+  delay: 60
+  register: result           
+  until: result is succeeded
+- name: Set root Passwd
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    vm_username: "root"
+    vm_password: '{{ vm_password_old }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin root\""
+    wait_for_process: true
+  delegate_to: localhost
+  ignore_errors: yes   
+- name: Run shell command via vm_shell
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "root"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: "{{item}}"
+    wait_for_process: true
+  delegate_to: localhost  
+  loop:
+    - "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
+    - "-c \"hostnamectl set-hostname {{ vm_hostname }}.{{ vm_domain }}\""
+    - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.address {{vm_address}}/{{vm_netmask_cidr}} IPv4.gateway {{vm_gateway}} IPv4.method manual\""
+    - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.dns {{vm_dns_server}}\""
+- name: Reboot-Guest
+  community.vmware.vmware_guest_powerstate:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no  
+    name: '{{ vm_name }}'
+    state: reboot-guest
+  delegate_to: localhost
+  register: deploy
+- name: Wait for 30 seconds
+  wait_for: timeout=30
+  delegate_to: localhost
+- name: Wait for VMware tools to become available by name
+  community.vmware.vmware_guest_tools_wait:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  retries: 3
+  delay: 15
+  register: result           
+  until: result is succeeded 
+- name: Wait for 30 seconds for VMware Tools refresh
+  wait_for: timeout=30
+  delegate_to: localhost
+- name: Find the VM's IP Address via VMware tools
+  community.vmware.vmware_guest_info:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    datacenter: ha-datacenter
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  register: vmfacts
+- debug: msg="IP Address - {{ vmfacts['instance']['ipv4'] }}"   
+
+

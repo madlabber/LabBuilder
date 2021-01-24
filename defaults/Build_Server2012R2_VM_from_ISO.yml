@@ -1,0 +1,40 @@
+# This is the ISO folname for the intall ISO
+install_iso: "9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
+
+# This is the URL to download the ISO from the
+install_iso_url: "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
+
+# This is the filename of the ISO containing autounattend.xml
+# This ISO will be auto-generated and uploaded to the vm_datastore
+config_iso: "{{vm_name}}-Server2012R2eval.iso"
+
+# This is the location of the autounattend.xml file
+unattend_file: "files/Server2012R2eval/autounattend.xml"
+
+# This is the default VM name
+vm_name: WindowsServer2016VM
+
+# if emtpty windows generates a random hostname as configured in the autounattend.xml file
+vm_hostname: "" 
+
+# The guest_id value must be valid per the VMware documentation
+vm_guest_id: windows9Server64Guest
+
+# These values are the default VM sizing parameters
+vm_num_cpus: 2
+vm_memory_mb: 2048
+vm_disk_gb: 40
+
+# The 'old' password must match the one set by autounattend.xml
+vm_username: ".\\Administrator" # local administrator account name
+vm_password_old: Changeme!
+
+# The new password will be applied after first boot
+vm_password_new: P@ssw0rd
+
+# IP and DNS configuration will be applied if provided
+vm_address: ""
+vm_netmask_cidr: ""
+vm_gateway: ""
+vm_dns_server: ""
+vm_domain: ""

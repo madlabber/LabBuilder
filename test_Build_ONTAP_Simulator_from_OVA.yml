@@ -1,0 +1,16 @@
+---
+- hosts: localhost 
+  name: Build ONTAP Simulator from OVA
+  gather_facts: false
+  vars_files: 
+    - vars/vars-esx.yml
+  tasks:
+    - name: Deploy an ONTAP Simulator
+      include_vars: defaults/Build_ONTAP_Simulator_from_OVA.yml
+    - set_fact:
+        vm_name: TEST_vsim2
+        sys_serial_number: "4034389-06-2"
+        ontap_node_mgmt_ip: "192.168.123.194"
+        ontap_netmask: "255.255.255.0"
+        ontap_gateway: "192.168.123.1"
+    - include_tasks: "tasks/Build_ONTAP_Simulator_from_OVA.yml"
