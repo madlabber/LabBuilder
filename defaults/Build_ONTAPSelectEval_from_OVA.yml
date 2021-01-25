@@ -1,0 +1,38 @@
+# Path to the default ONTAP Select Standalone Evaluation OVA
+ontap_select_ova: "files/9.8_DataONTAPv-esx-standalone-eval-nodar.ova" 
+
+# The ovf deployment option changed at 9.6
+# <=9.5 use 'ONTAPSelectEVAL', 
+# 9.6+ use 'ONTAPSelectEVALSmall'
+ontap_deployment_option: 'ONTAPSelectEVALSmall' 
+
+# Default VM Name
+vm_name: ONTAPSelectEval
+
+# Standard VM sizing for a small node
+vm_num_cpus: 4
+vm_memory_mb: 16384
+
+# Memory reservation should default to 100%
+# but would vary from host to host
+# This is just enough to prevent a panic
+vm_cpu_reservation_mhz: 1000        
+ 
+# This is the disk size of the data aggregate
+# The minimum supported size is 1tb
+# But smaller sizes can be used for evaluation nodes   
+vm_data_disk_gb: "500"
+
+# A production VM would be thick provisioned
+# A lab eval node can be thin
+vm_disk_rovisioning: thin 
+
+# This is all required for the cluster to instantiate itself
+ontap_cluster_name: "ONTAP"
+ontap_cluster_mgmt_ip: ""    
+ontap_node_mgmt_ip: ""
+ontap_netmask: ""
+ontap_gateway: "" 
+ontap_password: "Changeme!"
+ontap_dns_domain: "lab.local"
+ontap_dns_server: ""
