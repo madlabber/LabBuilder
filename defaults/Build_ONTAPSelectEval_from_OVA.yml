@@ -1,5 +1,5 @@
 # Path to the default ONTAP Select Standalone Evaluation OVA
-ontap_select_ova: "files/9.8_DataONTAPv-esx-standalone-eval-nodar.ova" 
+ontap_select_ova: "files/ONTAPSelect/9.8_DataONTAPv-esx-standalone-eval-nodar.ova" 
 
 # The ovf deployment option changed at 9.6
 # <=9.5 use 'ONTAPSelectEVAL', 
