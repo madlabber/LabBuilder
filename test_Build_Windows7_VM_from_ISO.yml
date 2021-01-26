@@ -1,5 +1,6 @@
 ---
-# NOTE:  This does not currently worl
+# NOTE:  This does not currently work
+# FixME: first-run commands are not executing as defined in the unattend.xml
 - name: test_Build_Windows_VM_from_ISO
   hosts: localhost
   gather_facts: false
