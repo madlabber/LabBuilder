@@ -25,7 +25,7 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'   
     validate_certs: no
-    datacenter: ""
+    datacenter: "{{vcenter_datacenter}}"
     datastore: "{{ iso_datastore }}"
     path: "{{ install_iso }}"
     state: file
