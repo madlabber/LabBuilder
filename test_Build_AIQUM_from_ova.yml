@@ -3,7 +3,7 @@
   hosts: localhost
   gather_facts: false
   vars:
-    vm_name: TEST_AIQUM
+    vm_name: AIQUM
     vm_network: "VM Network"
     aiqum_ova: "files/AIQUM/ActiveIQUnifiedManager-9.8.ova"
     vm_username: admin
@@ -13,20 +13,20 @@
   #
   #  Networking configuration
   #  Enables Auto IPv6 addressing for vApp.
-    IPV6Auto: false # ovf:type="boolean" ovf:userConfigurable="true" ovf:value="false">
+  #  IPV6Auto: false # ovf:type="boolean" ovf:userConfigurable="true" ovf:value="false">
   # Specifies the hostname for the appliance. Leave blank if DHCP is desired.
-    HostFQDN: "" # ovf:type="string" ovf:userConfigurable="true">
+    vm_hostname: "aiqum2.schlab.pri" # ovf:type="string" ovf:userConfigurable="true">
   # Specifies the IP address for the appliance. Leave blank if DHCP is desired.
-    IPAddress: "" # ovf:required="false" ovf:type="string" ovf:userConfigurable="true">
+    vm_address: "192.168.123.128" # ovf:required="false" ovf:type="string" ovf:userConfigurable="true">
   # Network Mask (or) Prefix Length
   # Specifies the subnet to use on the deployed network. Leave blank if DHCP is desired.
-    NetworkMask: "" # ovf:required="false" ovf:type="string" ovf:userConfigurable="true">
+    vm_netmask: "255.255.255.0" # ovf:required="false" ovf:type="string" ovf:userConfigurable="true">
   # Specifies the gateway on the deployed network. Leave blank if DHCP is desired.
-    Gateway: "" # ovf:required="false" ovf:type="string" ovf:userConfigurable="true">
+    vm_gateway: "192.168.123.1" # ovf:required="false" ovf:type="string" ovf:userConfigurable="true">
   # Primary DNS ip address. Leave blank if DHCP is desired.
-    PrimaryDNS: "" # ovf:required="false" ovf:type="string" ovf:userConfigurable="true">
+    vm_dns1: "192.168.123.21" # ovf:required="false" ovf:type="string" ovf:userConfigurable="true">
   # Secondary DNS ip address. Leave blank if DHCP is desired.
-    SecondaryDNS: "" # ovf:required="false" ovf:type="string" ovf:userConfigurable="true">
+    vm_dns2: "192.168.123.1" # ovf:required="false" ovf:type="string" ovf:userConfigurable="true">
 
   vars_files: 
     - vars/vars-esx.yml
@@ -48,13 +48,13 @@
       networks: "{u'ONTAP Select Network':u'{{ vm_network }}',u'nat':u'{{ vm_network }}'}"
       inject_ovf_env: true
       properties:
-        IPV6Auto: false
-        HostFQDN: ""
-        IPAddress: ""
-        NetworkMask: ""
-        Gateway: ""
-        PrimaryDNS: ""
-        SecondaryDNS: ""
+        org.linuxdistx.IPV6Auto: false
+        org.linuxdistx.HostFQDN: "{{vm_hostname}}"
+        org.linuxdistx.IPAddress: "{{vm_address}}"
+        org.linuxdistx.NetworkMask: "{{vm_netmask}}"
+        org.linuxdistx.Gateway: "{{vm_gateway}}"
+        org.linuxdistx.PrimaryDNS: "{{vm_dns1}}"
+        org.linuxdistx.SecondaryDNS: "{{vm_dns2}}"
     delegate_to: localhost
     retries: 10
     delay: 60
@@ -72,6 +72,7 @@
       wait_for_ip_address: false
     delegate_to: localhost
 
+  # This happens early in the fist boot
   - name: Wait for VMware tools to become available
     community.vmware.vmware_guest_tools_wait:
       hostname: '{{ vcenter_address }}'
@@ -80,15 +81,17 @@
       validate_certs: no 
       name: '{{ vm_name }}'
     delegate_to: localhost
-    retries: 3
-    delay: 15
+    retries: 10
+    delay: 60
     register: result           
     until: result is succeeded 
 
-  - name: Pause for 5 minutes
+  # This timer needs tuning
+  - name: Pause for 6 minutes
     pause:
-      minutes: 5
+      minutes: 6
 
+  # First is prompts for timezone info
   - name: Configure appliance via sendkey
     community.vmware.vmware_guest_sendkey:
       hostname: '{{ vcenter_address }}'
@@ -102,10 +105,94 @@
     loop: 
       - "12" # US
       - "10" # Pacific
-      - "{{vm_username}}" # username
-      - "{{vm_password}}"
-      - "{{vm_password}}"
-      - "" # this is here to force the enter key after the preceding command
+      - "" #enter
+
+  # Now we wait for it to bring up its nic
+  - name: Start VM
+    vmware_guest:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'
+      validate_certs: no
+      name: '{{ vm_name }}'
+      state: poweredon
+      wait_for_ip_address: true
+    delegate_to: localhost
+
+  # This timer also needs tuning
+  - name: Pause for 4 minutes
+    pause:
+      minutes: 4
+
+  # now we set the admin creds - slowly
+  - name: Configure appliance via sendkey
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'    
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      string_send: "{{vm_username}}"
+    delegate_to: localhost
+  - name: Press ENTER
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'    
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+    delegate_to: localhost
+
+  # This timer also needs tuning
+  - name: Pause for 5 seconds
+    pause:
+      seconds: 5
+
+  # Password
+  - name: Configure appliance via sendkey
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'    
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      string_send: "{{vm_password}}"
+    delegate_to: localhost
+  - name: Press ENTER
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'    
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+    delegate_to: localhost
+
+  # This timer also needs tuning
+  - name: Pause for 5 seconds
+    pause:
+      seconds: 5
+
+  # Password confirmation
+  - name: Configure appliance via sendkey
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'    
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      string_send: "{{vm_password}}"
+    delegate_to: localhost
+  - name: Press ENTER
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'    
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+    delegate_to: localhost
 
 
 
