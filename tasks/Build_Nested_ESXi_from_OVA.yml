@@ -1,0 +1,65 @@
+---
+# - name: Build Nested ESXI from OVA
+#   hosts: localhost
+#   gather_facts: false
+#   vars:
+#     vm_name: TEST_NestedESXi01
+#     vm_network: "VM Network"
+#     ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
+#     ovf_hostname: "NestedEsxi01"
+#     ovf_address: 192.168.123.141
+#     ovf_netmask: 255.255.255.0
+#     ovf_gateway: 192.168.123.1 
+#     ovf_vlan: ""  
+#     ovf_dns: 192.168.123.1 
+#     ovf_domain: lab.local   
+#     ovf_ntp: 192.168.123.1
+#     ovf_syslog: "" # IP of syslog server
+#     ovf_password: P@ssw0rd
+#     ovf_ssh: "true"
+#     ovf_createvmfs: "true"
+
+#   vars_files: 
+#     - vars/vars-esx.yml
+
+#   tasks:
+- vmware_deploy_ovf:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: '{{ vcenter_datacenter }}'
+    cluster: '{{ vcenter_cluster }}'
+    datastore: '{{ vm_datastore }}'
+    name: '{{ vm_name }}'
+    ovf: '{{ ovf_file }}'
+    disk_provisioning: thin
+    power_on: yes
+    wait_for_ip_address: false
+    networks: "{u'VM Network':u'{{ vm_network }}'}"
+    inject_ovf_env: true
+    properties:
+      guestinfo.hostname: "{{ovf_hostname}}" 
+      guestinfo.ipaddress: "{{ovf_address}}"
+      guestinfo.netmask: "{{ovf_netmask}}" 
+      guestinfo.gateway: "{{ovf_gateway}}" 
+      guestinfo.vlan: "{{ovf_vlan}}"
+      guestinfo.dns: "{{ovf_dns}}"
+      guestinfo.domain: "{{ovf_domain}}"
+      guestinfo.ntp: "{{ovf_ntp}}"
+      guestinfo.syslog: "{{ovf_syslog}}"
+      guestinfo.password: "{{ovf_password}}"
+      guestinfo.ssh: '{{ovf_ssh}}'
+      guestinfo.createvmfs: '{{ovf_createvmfs}}'
+  delegate_to: localhost
+  retries: 10
+  delay: 60
+  register: result           
+  until: result is succeeded 
+
+
+
+
+
+
+

@@ -1,0 +1,114 @@
+---
+# - hosts: localhost 
+#   name: vCenter Configuration 
+#   gather_facts: false
+#   vars:
+#     ova_file: "files/VMware/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
+#     vm_name: TEST_vCenter4
+#     vm_network: "VM Network"
+#     vm_password: P@ssw0rd
+#     vm_address: 192.168.123.137
+#     vm_hostname: testvc1
+#     vm_fqdn: 192.168.123.137   # if no DNS resolution, use the IP address here
+#     vm_netmask_cidr: "24"
+#     vm_dns_server: 192.168.123.1
+#     vm_gateway: 192.168.123.1
+#     vm_domain: 'lab.local'
+#     searchpath: ""
+#     vm_deployment_size: 'tiny' # vCenter t-shirt size: tiny,small,medium,large, or infrastructure 
+#     vm_autoconfig: 'True' # 
+#     vm_enable_ssh: 'True'
+#   vars_files: 
+#     vars/vars-esx.yml
+#   tasks:
+#   # If the target is vCenter, push user configurable vars, then patch the rest before poweron
+- community.vmware.vmware_deploy_ovf:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no      
+    datacenter: '{{ vcenter_datacenter }}'
+    cluster: '{{ vcenter_cluster }}'
+    datastore: '{{ vm_datastore }}'
+    name: '{{ vm_name }}' # shortname, not FQDN
+    ovf: '{{ ova_file }}' 
+    disk_provisioning: thin
+    networks:
+        "Network 1": "{{vm_network}}"
+    power_on: no
+    wait_for_ip_address: false
+    inject_ovf_env: true
+    properties:
+      DeploymentOption.value: '{{vm_deployment_size}}' # vCenter t-shirt size: tiny,small,medium,large, or infrastructure 
+      guestinfo.cis.appliance.net.addr.family: 'ipv4' # ipv4 or ipv6
+      guestinfo.cis.appliance.net.mode: '{{vm_net_mode}}' # static or dhcp
+      guestinfo.cis.appliance.net.addr: '{{ vm_address }}' 
+      guestinfo.cis.appliance.net.pnid: "{{ vm_fqdn }}" # FQDN of vcenter server
+      guestinfo.cis.appliance.net.prefix: '{{ vm_netmask_cidr }}' # netmask length, CIDR notation, i.e. '24'
+      guestinfo.cis.appliance.net.gateway: '{{ vm_gateway }}' 
+      guestinfo.cis.appliance.net.dns.servers: '{{ vm_dns_server }}' # Comma separated list of IP addresses of DNS servers.
+      guestinfo.cis.appliance.root.passwd: '{{ vm_password }}' 
+#      guestinfo.cis.deployment.autoconfig: 'True' # Auto-configure after deployment
+      guestinfo.cis.vmdir.password: '{{ vm_password }}' # SSO Password for administrator@vsphere.local
+      domain: '{{ vm_domain }}'
+      searchpath: '{{ searchpath }}'
+  delegate_to: localhost
+  when: vcenter_address != esxi_address
+- name: Patch broken vApp properties
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no  
+    name: "{{ vm_name }}"
+    state: poweredon
+    vapp_properties:
+      - id: guestinfo.cis.deployment.autoconfig
+        type: boolean
+        value: "{{vm_autoconfig}}"
+        userConfigurable: true
+      - id: guestinfo.cis.appliance.ssh.enabled
+        type: boolean
+        value: "{{vm_enable_ssh}}"
+        userConfigurable: true      
+  delegate_to: localhost
+  when: vcenter_address != esxi_address
+
+# If the target is ESXi host, push all vars and power on
+- community.vmware.vmware_deploy_ovf:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no      
+    datacenter: '{{ vcenter_datacenter }}'
+    cluster: '{{ vcenter_cluster }}'
+    datastore: '{{ vm_datastore }}'
+    name: '{{ vm_name }}' # shortname, not FQDN
+    ovf: '{{ ova_file }}' 
+    disk_provisioning: thin
+    networks:
+        "Network 1": "{{vm_network}}"
+    power_on: yes
+    wait_for_ip_address: false
+    inject_ovf_env: true
+    properties:
+      DeploymentOption.value: '{{vm_deployment_size}}' # vCenter t-shirt size: tiny,small,medium,large, or infrastructure 
+      guestinfo.cis.appliance.net.addr.family: 'ipv4' # ipv4 or ipv6
+      guestinfo.cis.appliance.net.mode: '{{vm_net_mode}}' # static or dhcp
+      guestinfo.cis.appliance.net.addr: '{{ vm_address }}' 
+      guestinfo.cis.appliance.net.pnid: "{{ vm_fqdn }}" # FQDN of vcenter server
+      guestinfo.cis.appliance.net.prefix: '{{ vm_netmask_cidr }}' # netmask length, CIDR notation, i.e. '24'
+      guestinfo.cis.appliance.net.gateway: '{{ vm_gateway }}' 
+      guestinfo.cis.appliance.net.dns.servers: '{{ vm_dns_server }}' # Comma separated list of IP addresses of DNS servers.
+      guestinfo.cis.appliance.root.passwd: '{{ vm_password }}' 
+      guestinfo.cis.deployment.autoconfig: '{{vm_autoconfig}}' # Auto-configure after deployment
+      guestinfo.cis.vmdir.password: '{{ vm_password }}' # SSO Password for administrator@vsphere.local
+      guestinfo.cis.appliance.ssh.enabled: "{{vm_enable_ssh}}"
+      domain: '{{ vm_domain }}'
+      searchpath: '{{ searchpath }}'
+  delegate_to: localhost
+  when: vcenter_address == esxi_address
+
+
+
+

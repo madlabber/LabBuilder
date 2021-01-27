@@ -1,0 +1,192 @@
+---
+- name: Build Lab - vSphere7
+  hosts: localhost
+  gather_facts: false
+  vars:
+    lab_name: lab_vsphere7
+    lab_password: P@ssw0rd
+    lab_network_wan_portgroup: "VM Network"
+    lab_network_lan1_portgroup: "lab_vsphere7_net1"
+    lab_network_lan2_portgroup: "lab_vsphere7_net2"
+    lab_network_lan1_netmask_cidr: 24
+    lab_network_lan1_netmask: "255.255.255.0"
+    lab_network_lan1_gateway: "192.168.0.1"
+    lab_network_lan1_dns_ip: "192.168.0.1"
+    lab_domain_name: "lab.local"
+    lab_dc01_ip: "192.168.0.11"
+#    lab_ansible_ip: "192.168.0.13"
+    lab_vm_datastore: lab_vsphere7
+#    skip_gateway_vm: true
+#    skip_dc01_vm: true
+#    skip_vcsa_vm: true
+#    skip_esx01_vm: true
+#    skip_esx02_vm: true
+#    skip_esx03_vm: true
+#    skip_esx04_vm: true
+  vars_files: 
+    - vars/vars-esx.yml
+  tasks:
+    - name: Build lab pfSense Gateway
+      meta: noop
+    - block:
+      - include_vars: defaults/Build_pfSense_from_ISO.yml
+      - set_fact:
+          vm_name: '{{lab_name}}_gateway'
+          vm_datastore: "{{lab_vm_datastore}}"
+          vm_password_new: "{{lab_password}}"
+          vm_network_wan: "{{lab_network_wan_portgroup}}"
+          vm_network_lan: "{{lab_network_lan1_portgroup}}"
+          config_xml_file: "files/pfsense/config.xml"
+      - include_tasks: tasks/Build_pfSense_from_ISO.yml
+      when: skip_gateway_vm is not true
+
+    - name: Build Windows VM - DC01
+      meta: noop
+    - block:
+      - include_vars: defaults/Build_Windows_VM_from_ISO.yml
+      - set_fact:
+          vm_name: '{{lab_name}}_dc01'         
+          vm_datastore: "{{lab_vm_datastore}}"
+          vm_network: "{{lab_network_lan1_portgroup}}"
+          vm_password_new: "{{lab_password}}"
+          vm_hostname: dc01        
+          vm_address: "{{lab_dc01_ip}}"
+          vm_netmask_cidr: "{{lab_network_lan1_netmask_cidr}}"
+          vm_gateway: "{{lab_network_lan1_gateway}}"
+          vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+          vm_domain: "{{lab_domain_name}}"
+      - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
+      when: skip_dc01_vm is not true
+
+    - name: Build a Active Directory Forest
+      meta: noop
+    - block:
+      - set_fact:
+          vm_name: '{{lab_name}}_dc01'
+          vm_username: ".\\Administrator" 
+          vm_password: "{{lab_password}}"         
+          vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+          vm_domain: "{{lab_domain_name}}"
+      - include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
+      when: skip_dc01_vm is not true    
+
+# TODO:
+#   Add DNS records to DC01
+
+# Deploy vCenter
+    - name: Build vCenter Appliance from OVA
+      meta: noop
+    - block:
+      - include_vars: defaults/Build_vCenter_from_OVA.yml
+      - set_fact:
+          # ova_file: "files/VMware/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
+          vm_name: '{{lab_name}}_vcsa'
+          vm_hostname: vcsa
+          vm_domain: "{{lab_domain_name}}"
+          vm_fqdn: "192.168.0.50"   # if no DNS resolution, use the IP address here
+          vm_network: "{{lab_network_lan1_portgroup}}"
+          vm_password: "{{lab_password}}"
+          vm_net_mode: "static" # static or dhcp
+          vm_address: "192.168.0.50"
+          vm_netmask_cidr: "{{lab_network_lan1_netmask_cidr}}"
+          vm_dns_server: "192.168.0.1"
+          vm_gateway: "{{lab_network_lan1_gateway}}"
+          # searchpath: ""
+          # vm_deployment_size: 'tiny' 
+          vm_autoconfig: 'False' 
+          # vm_enable_ssh: 'True'
+      - include_tasks: tasks/Build_vCenter_from_OVA.yml
+      when: skip_vcsa_vm is not true
+# Deploy ESX1
+    - name: Build Nested ESXI from OVA
+      meta: noop
+    - block:
+      - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
+      - set_fact:
+          vm_name: '{{lab_name}}_esxi01'
+          vm_network: "{{lab_network_lan1_portgroup}}"
+          ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
+          ovf_hostname: "esxi01"
+          ovf_address: 192.168.0.51
+          ovf_netmask: "{{lab_network_lan1_netmask}}"
+          ovf_gateway: "{{lab_network_lan1_gateway}}"
+          ovf_vlan: ""  
+          ovf_dns: "lab_network_lan1_dns_ip" 
+          ovf_domain: lab.local   
+          ovf_ntp: "lab_network_lan1_gateway"
+          ovf_syslog: "" # IP of syslog server
+          ovf_password: "{{lab_password}}"
+          ovf_ssh: "true"
+          ovf_createvmfs: "true"
+      - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
+      when: skip_esx01_vm is not true
+# DEPLOY ESX2
+    - name: Build Nested ESXI from OVA
+      meta: noop
+    - block:
+      - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
+      - set_fact:
+          vm_name: '{{lab_name}}_esxi02'
+          vm_network: "{{lab_network_lan1_portgroup}}"
+          ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
+          ovf_hostname: "esxi02"
+          ovf_address: 192.168.0.52
+          ovf_netmask: "{{lab_network_lan1_netmask}}"
+          ovf_gateway: "{{lab_network_lan1_gateway}}"
+          ovf_vlan: ""  
+          ovf_dns: "lab_network_lan1_dns_ip" 
+          ovf_domain: lab.local   
+          ovf_ntp: "lab_network_lan1_gateway"
+          ovf_syslog: "" # IP of syslog server
+          ovf_password: "{{lab_password}}"
+          ovf_ssh: "true"
+          ovf_createvmfs: "true"
+      - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
+      when: skip_esx01_vm is not true
+# DEPLOY ESX3
+    - name: Build Nested ESXI from OVA
+      meta: noop
+    - block:
+      - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
+      - set_fact:
+          vm_name: '{{lab_name}}_esxi03'
+          vm_network: "{{lab_network_lan1_portgroup}}"
+          ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
+          ovf_hostname: "esxi03"
+          ovf_address: 192.168.0.53
+          ovf_netmask: "{{lab_network_lan1_netmask}}"
+          ovf_gateway: "{{lab_network_lan1_gateway}}"
+          ovf_vlan: ""  
+          ovf_dns: "lab_network_lan1_dns_ip" 
+          ovf_domain: lab.local   
+          ovf_ntp: "lab_network_lan1_gateway"
+          ovf_syslog: "" # IP of syslog server
+          ovf_password: "{{lab_password}}"
+          ovf_ssh: "true"
+          ovf_createvmfs: "true"
+      - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
+      when: skip_esx01_vm is not true
+# DEPLOY ESX4
+    - name: Build Nested ESXI from OVA
+      meta: noop
+    - block:
+      - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
+      - set_fact:
+          vm_name: '{{lab_name}}_esxi04'
+          vm_network: "{{lab_network_lan1_portgroup}}"
+          ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
+          ovf_hostname: "esxi04"
+          ovf_address: 192.168.0.54
+          ovf_netmask: "{{lab_network_lan1_netmask}}"
+          ovf_gateway: "{{lab_network_lan1_gateway}}"
+          ovf_vlan: ""  
+          ovf_dns: "lab_network_lan1_dns_ip" 
+          ovf_domain: lab.local   
+          ovf_ntp: "lab_network_lan1_gateway"
+          ovf_syslog: "" # IP of syslog server
+          ovf_password: "{{lab_password}}"
+          ovf_ssh: "true"
+          ovf_createvmfs: "true"
+      - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
+      when: skip_esx01_vm is not true
+

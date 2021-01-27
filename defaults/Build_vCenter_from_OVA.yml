@@ -1,0 +1,45 @@
+
+# Path to the vCenter OVA File
+ova_file: "files/VMware/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
+
+# Default VM Namw
+vm_name: vcsa
+
+# default hostname
+vm_hostname: vcsa
+
+# default domain name
+vm_domain: lab.local
+
+# default fqdn
+vm_fqdn: "{{vm_hostname}}.{{vm_domain}}"   # if no DNS resolution, use the IP address here
+
+# default vswitch portgroup
+vm_network: "VM Network"
+
+# default vm password
+vm_password: Changeme!
+
+# IP Configuration
+vm_net_mode: "dhcp" # static or dhcp
+vm_address: ""
+vm_netmask_cidr: "24"
+vm_dns_server: ""
+vm_gateway: ""
+
+# DNS Seach domains
+searchpath: ""
+
+# vCenter t-shirt size: tiny,small,medium,large, or infrastructure 
+vm_deployment_size: 'tiny' 
+
+# True will autoconfigure vCenter, False will stop at the first phase install
+vm_autoconfig: 'True' 
+
+# True or False setting controls SSH service
+vm_enable_ssh: 'True'
+
+
+
+
+
