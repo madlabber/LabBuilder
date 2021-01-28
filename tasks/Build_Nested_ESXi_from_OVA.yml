@@ -49,16 +49,35 @@
       guestinfo.ntp: "{{ovf_ntp}}"
       guestinfo.syslog: "{{ovf_syslog}}"
       guestinfo.password: "{{ovf_password}}"
-      guestinfo.ssh: '{{ovf_ssh}}'
-      guestinfo.createvmfs: '{{ovf_createvmfs}}'
+      guestinfo.ssh: '{{ovf_ssh|string}}'
+      guestinfo.createvmfs: '{{ovf_createvmfs|string}}'
   delegate_to: localhost
   retries: 10
   delay: 60
   register: result           
   until: result is succeeded 
-
-
-
+- name: Adjust VM Sizing
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    state: present
+    hardware:
+      memory_mb: '{{ vm_memory_mb }}'
+      num_cpus: '{{ vm_num_cpus }}'
+  delegate_to: localhost
+- name: Power-On the virtual machine
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    name: '{{ vm_name }}'
+    state: poweredon
+  delegate_to: localhost
+  register: powerstate
 
 
 

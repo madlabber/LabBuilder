@@ -5,15 +5,15 @@
   tasks:  
   - name: fetch file from vm
     community.vmware.vmware_guest_file_operation:
-      hostname: "192.168.123.49"
+      hostname: "192.168.123.47"
       username: "root"
       password: "P@ssw0rd"
       validate_certs: no
       #datacenter: "{{ datacenter_name }}"
-      vm_id: "gateway99"
+      vm_id: "lab_vsphere7_gateway"
       vm_username: "admin"
       vm_password: "P@ssw0rd"
       fetch:
           src: "/cf/conf/config.xml"
-          dest: "config.xml.bak"
+          dest: "files/config.xml.bak"
     delegate_to: localhost

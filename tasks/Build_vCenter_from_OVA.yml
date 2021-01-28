@@ -60,20 +60,29 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'
     validate_certs: no  
-    name: "{{ vm_name }}"
-    state: poweredon
+    name: '{{ vm_name }}'
+    state: present
     vapp_properties:
       - id: guestinfo.cis.deployment.autoconfig
         type: boolean
-        value: "{{vm_autoconfig}}"
+        value: '{{vm_autoconfig|string}}'
         userConfigurable: true
       - id: guestinfo.cis.appliance.ssh.enabled
         type: boolean
-        value: "{{vm_enable_ssh}}"
+        value: '{{vm_enable_ssh|string}}'
         userConfigurable: true      
   delegate_to: localhost
   when: vcenter_address != esxi_address
-
+- name: Power On
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no  
+    name: '{{ vm_name }}'
+    state: poweredon   
+  delegate_to: localhost
+  when: vcenter_address != esxi_address
 # If the target is ESXi host, push all vars and power on
 - community.vmware.vmware_deploy_ovf:
     hostname: '{{ vcenter_address }}'
@@ -101,9 +110,9 @@
       guestinfo.cis.appliance.net.gateway: '{{ vm_gateway }}' 
       guestinfo.cis.appliance.net.dns.servers: '{{ vm_dns_server }}' # Comma separated list of IP addresses of DNS servers.
       guestinfo.cis.appliance.root.passwd: '{{ vm_password }}' 
-      guestinfo.cis.deployment.autoconfig: '{{vm_autoconfig}}' # Auto-configure after deployment
+      guestinfo.cis.deployment.autoconfig: '{{vm_autoconfig|string}}' # Auto-configure after deployment
       guestinfo.cis.vmdir.password: '{{ vm_password }}' # SSO Password for administrator@vsphere.local
-      guestinfo.cis.appliance.ssh.enabled: "{{vm_enable_ssh}}"
+      guestinfo.cis.appliance.ssh.enabled: '{{vm_enable_ssh|string}}'
       domain: '{{ vm_domain }}'
       searchpath: '{{ searchpath }}'
   delegate_to: localhost

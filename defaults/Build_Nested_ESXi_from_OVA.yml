@@ -7,6 +7,11 @@ vm_network: "VM Network"
 # path to ova file
 ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
 
+# VCPUs to assign to the VM
+vm_num_cpus: 2
+# Memory to assign the VM
+vm_memory_mb: 8192
+
 #Hostname 
 #ESXi Hostname (DHCP if left blank)
 #" ovf:type="string" ovf:userConfigurable="true"
