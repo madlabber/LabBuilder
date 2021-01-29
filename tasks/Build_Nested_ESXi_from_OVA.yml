@@ -34,7 +34,7 @@
     name: '{{ vm_name }}'
     ovf: '{{ ovf_file }}'
     disk_provisioning: thin
-    power_on: yes
+    power_on: no
     wait_for_ip_address: false
     networks: "{u'VM Network':u'{{ vm_network }}'}"
     inject_ovf_env: true
@@ -64,6 +64,19 @@
     validate_certs: no
     name: '{{ vm_name }}'
     state: present
+    disk:
+    - size_gb: "{{vm_disk1_size_gb}}"
+      controller_type: paravirtual
+      controller_number: 0
+      unit_number: 1
+      datastore: '{{vm_datastore}}'
+      type: thin
+    - size_gb: "{{vm_disk2_size_gb}}"
+      controller_type: paravirtual
+      controller_number: 0
+      unit_number: 2
+      datastore: '{{vm_datastore}}'
+      type: thin
     hardware:
       memory_mb: '{{ vm_memory_mb }}'
       num_cpus: '{{ vm_num_cpus }}'

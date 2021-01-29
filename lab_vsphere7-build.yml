@@ -40,10 +40,10 @@
     skip_gateway_vm: true
     skip_dc01_vm: true
     skip_vcsa_vm: true
-    # skip_esx01_vm: true
-    # skip_esx02_vm: true
-    # skip_esx03_vm: true
-    # skip_esx04_vm: true
+    skip_esx01_vm: true
+    skip_esx02_vm: true
+    skip_esx03_vm: true
+    skip_esx04_vm: true
   vars_files: 
     - vars/vars-esx.yml
   tasks:
@@ -160,6 +160,8 @@
           vm_network: "{{lab_network_lan1_portgroup}}"
           vm_memory_mb: 8192
           vm_num_cpus: 2
+          vm_disk1_size_gb: 4
+          vm_disk2_size_gb: 40
           #ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
           ovf_hostname: "{{lab_esx01_hostname}}"
           ovf_address: "{{lab_esx01_ip}}"
@@ -186,6 +188,8 @@
           vm_network: "{{lab_network_lan1_portgroup}}"
           vm_memory_mb: 8192
           vm_num_cpus: 2
+          vm_disk1_size_gb: 4
+          vm_disk2_size_gb: 40
           ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
           ovf_hostname: "{{lab_esx02_hostname}}"
           ovf_address: "{{lab_esx02_ip}}"
@@ -212,6 +216,8 @@
           vm_network: "{{lab_network_lan1_portgroup}}"
           vm_memory_mb: 8192
           vm_num_cpus: 2
+          vm_disk1_size_gb: 4
+          vm_disk2_size_gb: 40
           #ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
           ovf_hostname: "{{lab_esx03_hostname}}"
           ovf_address: "{{lab_esx03_ip}}"
@@ -238,6 +244,8 @@
           vm_network: "{{lab_network_lan1_portgroup}}"
           vm_memory_mb: 8192
           vm_num_cpus: 2
+          vm_disk1_size_gb: 4
+          vm_disk2_size_gb: 40
           ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
           ovf_hostname: "{{lab_esx04_hostname}}"
           ovf_address: "{{lab_esx04_ip}}"
@@ -254,47 +262,6 @@
       - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
       when: skip_esx04_vm is not true
 
-    - name: Add disks to nested ESXi Instances
-      vmware_guest:
-        hostname: '{{ vcenter_address }}'
-        username: '{{ vcenter_username }}'
-        password: '{{ vcenter_password }}'
-        validate_certs: no
-        name: '{{ item }}'
-        state: present
-        disk:
-        - size_gb: 40
-          controller_type: paravirtual
-          controller_number: 0
-          unit_number: 2
-          datastore: '{{lab_vm_datastore}}'
-          type: thin
-      delegate_to: localhost
-      loop:
-        - '{{lab_name}}_{{lab_esx01_hostname}}'
-        - '{{lab_name}}_{{lab_esx02_hostname}}'
-        - '{{lab_name}}_{{lab_esx03_hostname}}'
-        - '{{lab_name}}_{{lab_esx04_hostname}}'
-
-    - name: Reboot nested ESXi Instances
-      vmware_guest:
-        hostname: '{{ vcenter_address }}'
-        username: '{{ vcenter_username }}'
-        password: '{{ vcenter_password }}'
-        validate_certs: no
-        name: '{{ item }}'
-        state: restarted
-      delegate_to: localhost
-      loop:
-        - '{{lab_name}}_{{lab_esx01_hostname}}'
-        - '{{lab_name}}_{{lab_esx02_hostname}}'
-        - '{{lab_name}}_{{lab_esx03_hostname}}'
-        - '{{lab_name}}_{{lab_esx04_hostname}}'       
-
-
-
-
-
-
+    
 
 

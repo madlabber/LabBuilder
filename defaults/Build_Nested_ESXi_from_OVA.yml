@@ -12,6 +12,10 @@ vm_num_cpus: 2
 # Memory to assign the VM
 vm_memory_mb: 8192
 
+# Disk sizes
+vm_disk1_size_gb: 4 # cache disk
+vm_disk2_size_gb: 8 # capacity disk
+
 #Hostname 
 #ESXi Hostname (DHCP if left blank)
 #" ovf:type="string" ovf:userConfigurable="true"
