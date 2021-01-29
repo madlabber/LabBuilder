@@ -1,0 +1,17 @@
+---
+- name: Install NetApp VAAI vib on ESXi Host
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Install NetApp VAAI vib on ESXi Host
+      meta: noop
+    - block:
+      - set_fact:
+          esxi_address: 192.168.123.140
+          esxi_username: root
+          esxi_password: P@ssw0rd
+          apply_vsc_settings: true
+          reboot_esxi_host: true
+          vaai_vib_file: "files/NetAppNasPlugin.v23.vib"
+          esxi_datastore: datastore1
+      - include_tasks: tasks/install_vaai_on_esxi_host.yml

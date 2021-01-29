@@ -1,0 +1,158 @@
+---
+- name: Install NetApp VAAI vib on ESXi Host
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    # Inband access to the ESX host is assumed
+    # because this playbook configures the 
+    # hosting infrastructure to run the nested labs
+
+    # Install the VAAI vib first to get the reboot out of the way
+    - name: Install NetApp VAAI vib on ESXi Host
+      meta: noop
+    - block:
+      - set_fact:
+          esxi_address: 192.168.123.140
+          esxi_username: root
+          esxi_password: P@ssw0rd
+          apply_vsc_settings: true
+          reboot_esxi_host: true
+          vaai_vib_file: "files/NetAppNasPlugin.v23.vib"
+          esxi_datastore: datastore1
+      - include_tasks: tasks/install_vaai_on_esxi_host.yml
+
+    - name: Configure Host to support vlab
+      meta: noop
+    - block:
+      - name: Set Advanced Options
+        vmware_host_config_manager:
+          <<: *esxi_login
+          esxi_hostname: '{{ esxi_address }}'
+          options:
+            "Mem.ShareForceSalting": 0    # To maximize VM density
+            "Misc.BlueScreenTimeout": 60  # To automatically reboot after a PSOD
+        delegate_to: localhost
+
+      # This firewall rule allows the host to support telnet connections to guest serial port consoles
+      - name: Manage Firewall Rules
+        vmware_host_firewall_manager:
+          <<: *esxi_login
+          esxi_hostname: '{{ esxi_address }}'      
+          rules:
+            - name: remoteSerialPort 
+              enabled: true
+        delegate_to: localhost
+
+      # this vswitch is used for portgroups internal to nested lab instances
+      - name: Add an isolated VMWare vSwitch
+        vmware_vswitch:
+          <<: *esxi_login
+          switch: vSwitch1
+          mtu: 9000
+        delegate_to: localhost
+
+      - name: Configure ESXi hostname and upstream DNS servers
+        vmware_dns_config:
+          <<: *esxi_login
+          change_hostname_to: '{{ esxi_hostname }}'
+          domainname: '{{ lab_domain }}'
+          dns_servers:
+          - '{{ lab_upstream_dns }}'
+        delegate_to: localhost
+
+    - name: Build Windows VM - DC01
+      meta: noop
+    - block:
+      - include_vars: defaults/Build_Windows_VM_from_ISO.yml
+      - set_fact:
+          vm_name: '{{lab_name}}_{{lab_dc01_hostname}}'         
+          vm_datastore: "{{lab_vm_datastore}}"
+          vm_network: "{{lab_network_lan1_portgroup}}"
+          vm_password_new: "{{lab_password}}"
+          vm_hostname: "{{lab_dc01_hostname}}"
+          vm_address: "{{lab_dc01_ip}}"
+          vm_netmask_cidr: "{{lab_network_lan1_netmask_cidr}}"
+          vm_gateway: "{{lab_network_lan1_gateway}}"
+          vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+          vm_domain: "{{lab_domain_name}}"
+      - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
+      when: skip_dc01_vm is not true
+
+    - name: Build a Active Directory Forest
+      meta: noop
+    - block:
+      - set_fact:
+          vm_name: '{{lab_name}}_{{lab_dc01_hostname}}'
+          vm_username: ".\\Administrator" 
+          vm_password: "{{lab_password}}"         
+          vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+          vm_domain: "{{lab_domain_name}}"
+      - include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
+      when: skip_dc01_vm is not true    
+
+    - name: Perform additional configuration steps on DC01
+      community.vmware.vmware_vm_shell:
+        hostname: '{{ vcenter_address }}'
+        username: '{{ vcenter_username }}'
+        password: '{{ vcenter_password }}' 
+        validate_certs: no
+        vm_username: ".\\Administrator"
+        vm_password: "{{lab_password}}"
+        vm_id: '{{lab_name}}_{{lab_dc01_hostname}}'
+        vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+        vm_shell_args: " -command \"({{item}})\""
+        wait_for_process: true
+      delegate_to: localhost
+      retries: 6
+      delay: 10 
+      register: result           
+      until: result is succeeded 
+      when: skip_dc01_vm is not true    
+      loop:
+        # Add vCenter DNS record    
+        - "Add-DnsServerResourceRecordA -Name {{lab_vcsa_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_vcsa_ip}} -TimeToLive 01:00:00"
+        # Add ESX01 DNS record
+        - "Add-DnsServerResourceRecordA -Name {{lab_esx01_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_esx01_ip}} -TimeToLive 01:00:00"
+        # Add ESX01 DNS record
+        - "Add-DnsServerResourceRecordA -Name {{lab_esx02_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_esx02_ip}} -TimeToLive 01:00:00"
+        # Add ESX01 DNS record
+        - "Add-DnsServerResourceRecordA -Name {{lab_esx03_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_esx03_ip}} -TimeToLive 01:00:00"
+        # Add ESX01 DNS record
+        - "Add-DnsServerResourceRecordA -Name {{lab_esx04_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_esx04_ip}} -TimeToLive 01:00:00"
+        # Disable Admin IEESC
+        - "set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Active Setup\\Installed Components{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}' -name IsInstalled -Value 0"
+        # Disable User IEESC
+        - "set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Active Setup\\Installed Components{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}' -name IsInstalled -Value 0"
+
+    - name: Build vCenter Appliance from OVA
+      meta: noop
+    - block:
+      - include_vars: defaults/Build_vCenter_from_OVA.yml
+      - set_fact:
+          # ova_file: "files/VMware/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
+          vm_name: '{{lab_name}}_{{lab_vcsa_hostname}}'
+          vm_hostname: '{{lab_vcsa_hostname}}'
+          vm_domain: '{{lab_domain_name}}'
+          vm_fqdn: '{{lab_vsca_fqdn_or_ip}}'  # if no DNS resolution, use the IP address here
+          vm_network: '{{lab_network_lan1_portgroup}}'
+          vm_password: '{{lab_password}}'
+          vm_net_mode: "static" # static or dhcp
+          vm_address: '{{lab_vcsa_ip}}'
+          vm_netmask_cidr: '{{lab_network_lan1_netmask_cidr}}'
+          vm_dns_server: '{{lab_network_lan1_dns_ip}}'
+          vm_gateway: '{{lab_network_lan1_gateway}}'
+          # searchpath: ""
+          # vm_deployment_size: 'tiny' 
+          vm_autoconfig: '{{lab_vcsa_autoconfigure}}'
+          # vm_enable_ssh: 'True'
+      - include_tasks: tasks/Build_vCenter_from_OVA.yml
+      when: skip_vcsa_vm is not true
+
+    # Deploy OTS
+
+# To Do in -configure
+# Configure vCenter
+# Configure OTS
+# Perform Integration
+# Install and configure the portal app
+

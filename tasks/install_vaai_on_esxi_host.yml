@@ -1,0 +1,129 @@
+---
+# - name: Install NetApp VAAI vib on ESXi Host
+#   hosts: localhost
+#   gather_facts: false
+#   vars:
+#     esxi_address: 192.168.123.140
+#     esxi_username: root
+#     esxi_password: P@ssw0rd
+#     apply_vsc_settings: true
+#     reboot_esxi_host: true
+#     vaai_vib_file: "files/NetAppNasPlugin.v23.vib"
+#     esxi_datastore: datastore1
+
+#   tasks:
+- name: Copy vib to datastore
+  community.vmware.vsphere_copy:
+    hostname: '{{ esxi_address }}'
+    username: '{{ esxi_username }}'
+    password: '{{ esxi_password }}'   
+    validate_certs: no 
+    src: "{{vaai_vib_file}}"
+    datacenter: "ha-datacenter"
+    datastore: "{{ esxi_datastore }}"
+    path: "NetAppNasPlugin.vib"
+  delegate_to: localhost
+
+- name: Add ESXi to Ansible Hosts for SSH
+  add_host:
+    name: '{{ esxi_address }}'
+    group: "esx"
+    ansible_user: '{{ esxi_username }}'
+    ansible_password: '{{ esxi_password }}'
+    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+
+- name: Enable ESX SSH (TSM-SSH)
+  community.vmware.vmware_host_service_manager:
+    hostname: '{{ esxi_address }}'
+    username: '{{ esxi_username }}'
+    password: '{{ esxi_password }}'   
+    validate_certs: no 
+    esxi_hostname: '{{ esxi_address }}'
+    service_name: TSM-SSH
+    state: present
+  register: tsm_ssh_service
+  delegate_to: localhost
+
+- name: Enable ESX Shell (TSM)
+  community.vmware.vmware_host_service_manager:
+    hostname: '{{ esxi_address }}'
+    username: '{{ esxi_username }}'
+    password: '{{ esxi_password }}'   
+    validate_certs: no 
+    esxi_hostname: '{{ esxi_address }}'
+    service_name: TSM
+    state: present
+  register: tsm_service
+  delegate_to: localhost
+
+- name: Install the VAAI vib 
+  shell: 'esxcli software vib install -v /vmfs/volumes/{{ esxi_datastore }}/NetAppNasPlugin.vib'
+  args:
+    creates: /bootbank/netappna.v00
+  ignore_errors: yes
+  delegate_to: '{{ esxi_address }}'
+  register: installvib
+
+# Return the TSM-SSH service to its original state
+- name: Disable ESX SSH (TSM-SSH)
+  community.vmware.vmware_host_service_manager:
+    hostname: '{{ esxi_address }}'
+    username: '{{ esxi_username }}'
+    password: '{{ esxi_password }}'   
+    validate_certs: no 
+    esxi_hostname: '{{ esxi_address }}'
+    service_name: TSM-SSH
+    state: absent
+  delegate_to: localhost
+  when: tsm_ssh_service.changed
+
+# Return the TSM service to its original state
+- name: Disable ESX Shell (TSM)
+  community.vmware.vmware_host_service_manager:
+    hostname: '{{ esxi_address }}'
+    username: '{{ esxi_username }}'
+    password: '{{ esxi_password }}'   
+    validate_certs: no 
+    esxi_hostname: '{{ esxi_address }}'
+    service_name: TSM
+    state: absent
+  delegate_to: localhost
+  when: tsm_service.changed
+
+# optionally, apply the recommended settings from the VSC documentation
+- name: Set VSC Values
+  vmware_host_config_manager:
+    hostname: '{{ esxi_address }}'
+    username: '{{ esxi_username }}'
+    password: '{{ esxi_password }}'   
+    validate_certs: no 
+    esxi_hostname: '{{ esxi_address }}'
+    options:
+      "Net.TcpipHeapSize": 32
+      "Net.TcpipHeapMax": 1536
+      "NFS.MaxVolumes": 256
+      "NFS41.MaxVolumes": 256
+      "NFS.MaxQueueDepth": 128
+      "NFS.HeartbeatMaxFailures": 10
+      "NFS.HeartbeatFrequency": 12
+      "NFS.HeartbeatTimeout": 5
+      "Disk.QFullSampleSize": 32
+      "Disk.QFullThreshold": 8
+  delegate_to: localhost
+  register: advoptions
+  when: apply_vsc_settings is true
+
+# If enabled and required, reboot the host
+- name: Reboot-Host
+  vmware_host_powerstate:
+    hostname: '{{ esxi_address }}'
+    username: '{{ esxi_username }}'
+    password: '{{ esxi_password }}'   
+    validate_certs: no 
+    esxi_hostname: '{{ esxi_address }}' 
+    state: reboot-host
+    force: yes
+  delegate_to: localhost
+  when: 
+    - installvib.changed or advoptions.changed
+    - reboot_esxi_host is true
