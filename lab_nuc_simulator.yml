@@ -1,5 +1,5 @@
 ---
-- name: Build Nested ESXI NUC Simulation
+- name: Build Nested ESXI for NUC Simulation
   hosts: localhost
   gather_facts: false
   vars_files: 
@@ -10,7 +10,7 @@
     - block:
       - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
       - set_fact:
-          vm_name: TEST_NestedESXi04
+          vm_name: TEST_NestedESXi01
           vm_network: "VM Network"
           vm_memory_mb: 32768
           vm_num_cpus: 6
@@ -27,7 +27,7 @@
           ovf_ntp: 192.168.123.1
           ovf_syslog: "" # IP of syslog server
           ovf_password: P@ssw0rd
-          ovf_ssh: "true"
+          ovf_ssh: "false"
           ovf_createvmfs: "true"
       - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
 
