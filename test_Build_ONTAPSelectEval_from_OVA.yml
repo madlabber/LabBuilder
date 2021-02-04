@@ -14,7 +14,7 @@
         # vm_network: "VM Network"
         vm_num_cpus: 4
         # vm_cpu_reservation_mhz: 1000        
-        vm_memory_mb: 7164    
+        vm_memory_mb: 16384 
         vm_data_disk_gb: "100"
         # vm_disk_rovisioning: thin 
         ontap_cluster_name: "ONTAP"
