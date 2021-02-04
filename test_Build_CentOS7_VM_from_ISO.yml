@@ -5,9 +5,9 @@
   vars_files: 
     - vars/vars-esx.yml
   tasks:
-    - name: Build a CentOS VM
-      include_vars: defaults/Build_CentOS7_VM_from_ISO.yml
-    - set_fact:
+    - include_vars: defaults/Build_CentOS7_VM_from_ISO.yml
+    - include_tasks: tasks/Build_CentOS7_VM_from_ISO.yml
+      vars:
         vm_name: TEST_Centos7VM
         # vm_num_cpus: 2        
         # vm_memory_mb: 2048   
@@ -21,6 +21,5 @@
         vm_gateway: 192.168.123.1
         vm_dns_server: 192.168.123.1
         vm_domain: lab.local
-    - include_tasks: tasks/Build_CentOS7_VM_from_ISO.yml
 
 

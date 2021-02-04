@@ -37,35 +37,34 @@
     lab_vsca_fqdn_or_ip: "vcsa.lab.local" 
     lab_vm_datastore: lab_vsphere7
 # skip flags for debugging
-    skip_gateway_vm: true
-    skip_dc01_vm: true
-    skip_vcsa_vm: true
-    skip_esx01_vm: true
-    skip_esx02_vm: true
-    skip_esx03_vm: true
-    skip_esx04_vm: true
+    # skip_gateway_vm: true
+    # skip_dc01_vm: true
+    # skip_vcsa_vm: true
+    # skip_esx01_vm: true
+    # skip_esx02_vm: true
+    # skip_esx03_vm: true
+    # skip_esx04_vm: true
   vars_files: 
     - vars/vars-esx.yml
   tasks:
     - name: Build lab pfSense Gateway
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_pfSense_from_ISO.yml
-      - set_fact:
+      - include_tasks: tasks/Build_pfSense_from_ISO.yml
+        vars:
           vm_name: '{{lab_name}}_gateway'
           vm_datastore: "{{lab_vm_datastore}}"
           vm_password_new: "{{lab_password}}"
           vm_network_wan: "{{lab_network_wan_portgroup}}"
           vm_network_lan: "{{lab_network_lan1_portgroup}}"
           config_xml_file: "files/pfsense/config.xml"
-      - include_tasks: tasks/Build_pfSense_from_ISO.yml
       when: skip_gateway_vm is not true
 
     - name: Build Windows VM - DC01
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_Windows_VM_from_ISO.yml
-      - set_fact:
+      - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
+        vars:
           vm_name: '{{lab_name}}_{{lab_dc01_hostname}}'         
           vm_datastore: "{{lab_vm_datastore}}"
           vm_network: "{{lab_network_lan1_portgroup}}"
@@ -76,19 +75,17 @@
           vm_gateway: "{{lab_network_lan1_gateway}}"
           vm_dns_server: "{{lab_network_lan1_dns_ip}}"
           vm_domain: "{{lab_domain_name}}"
-      - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
       when: skip_dc01_vm is not true
 
     - name: Build a Active Directory Forest
-      meta: noop
-    - block:
-      - set_fact:
+      block:
+      - include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
+        vars:
           vm_name: '{{lab_name}}_{{lab_dc01_hostname}}'
           vm_username: ".\\Administrator" 
           vm_password: "{{lab_password}}"         
           vm_dns_server: "{{lab_network_lan1_dns_ip}}"
           vm_domain: "{{lab_domain_name}}"
-      - include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
       when: skip_dc01_vm is not true    
 
     - name: Perform additional configuration steps on DC01
@@ -127,10 +124,10 @@
 
 # Deploy vCenter
     - name: Build vCenter Appliance from OVA
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_vCenter_from_OVA.yml
-      - set_fact:
+      - include_tasks: tasks/Build_vCenter_from_OVA.yml
+        vars:
           # ova_file: "files/VMware/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
           vm_name: '{{lab_name}}_{{lab_vcsa_hostname}}'
           vm_hostname: '{{lab_vcsa_hostname}}'
@@ -147,13 +144,11 @@
           # vm_deployment_size: 'tiny' 
           vm_autoconfig: '{{lab_vcsa_autoconfigure}}'
           # vm_enable_ssh: 'True'
-      - include_tasks: tasks/Build_vCenter_from_OVA.yml
       when: skip_vcsa_vm is not true
 
     # Deploy ESX101
     - name: Build Nested ESXI from OVA
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
       - set_fact:
           vm_name: '{{lab_name}}_{{lab_esx01_hostname}}'
@@ -180,8 +175,7 @@
 
     # DEPLOY ESXi02
     - name: Build Nested ESXI from OVA
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
       - set_fact:
           vm_name: '{{lab_name}}_{{lab_esx02_hostname}}'
@@ -208,8 +202,7 @@
 
 # DEPLOY ESX3
     - name: Build Nested ESXI from OVA
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
       - set_fact:
           vm_name: '{{lab_name}}_{{lab_esx03_hostname}}'
@@ -236,8 +229,7 @@
 
 # DEPLOY ESX4
     - name: Build Nested ESXI from OVA
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
       - set_fact:
           vm_name: '{{lab_name}}_{{lab_esx04_hostname}}'

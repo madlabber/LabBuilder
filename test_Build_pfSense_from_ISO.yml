@@ -5,12 +5,11 @@
   vars_files: 
     - vars/vars-esx.yml
   tasks:
-    - name: Create pfSense VM - gateway
-      include_vars: defaults/Build_pfSense_from_ISO.yml
-    - set_fact:
+    - include_vars: defaults/Build_pfSense_from_ISO.yml
+    - include_tasks: tasks/Build_pfSense_from_ISO.yml
+      vars:
         vm_name: TEST_pfsense2
         vm_password_new: P@ssw0rd
         vm_network_wan: "VM Network"
         vm_network_lan: "lab_ansible_v2_2"
         config_xml_file: "files/pfsense/config.xml"
-    - include_tasks: tasks/Build_pfSense_from_ISO.yml

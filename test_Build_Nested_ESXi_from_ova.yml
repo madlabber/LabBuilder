@@ -5,27 +5,23 @@
   vars_files: 
     - vars/vars-esx.yml
   tasks:
-    - name: Build Nested ESXI from OVA
-      meta: noop
-    - block:
-      - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
-      - set_fact:
-          vm_name: TEST_NestedESXi03
-          vm_network: "VM Network"
-          vm_memory_mb: 8192
-          vm_num_cpus: 2
-          ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
-          ovf_hostname: "NestedEsxi01"
-          ovf_address: 192.168.123.142
-          ovf_netmask: 255.255.255.0
-          ovf_gateway: 192.168.123.1 
-          ovf_vlan: ""  
-          ovf_dns: 192.168.123.1 
-          ovf_domain: lab.local   
-          ovf_ntp: 192.168.123.1
-          ovf_syslog: "" # IP of syslog server
-          ovf_password: P@ssw0rd
-          ovf_ssh: "true"
-          ovf_createvmfs: "true"
-      - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
-
+    - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
+    - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
+      vars:
+        vm_name: TEST_NestedESX142
+        vm_network: "VM Network"
+        vm_memory_mb: 8192
+        vm_num_cpus: 2
+        ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
+        ovf_hostname: "NestedEsxi01"
+        ovf_address: 192.168.123.142
+        ovf_netmask: 255.255.255.0
+        ovf_gateway: 192.168.123.1 
+        ovf_vlan: ""  
+        ovf_dns: 192.168.123.1 
+        ovf_domain: lab.local   
+        ovf_ntp: 192.168.123.1
+        ovf_syslog: "" # IP of syslog server
+        ovf_password: P@ssw0rd
+        ovf_ssh: True
+        ovf_createvmfs: True

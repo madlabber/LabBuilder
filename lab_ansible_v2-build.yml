@@ -35,24 +35,23 @@
     - vars/vars-esx.yml
   tasks:
     - name: Build lab pfSense Gateway
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_pfSense_from_ISO.yml
-      - set_fact:
+      - include_tasks: tasks/Build_pfSense_from_ISO.yml
+        vars:
           vm_name: '{{lab_name}}_gateway'
           vm_datastore: "{{lab_vm_datastore}}"
           vm_password_new: "{{lab_password}}"
           vm_network_wan: "{{lab_network_wan_portgroup}}"
           vm_network_lan: "{{lab_network_lan1_portgroup}}"
           config_xml_file: "files/pfsense/config.xml"
-      - include_tasks: tasks/Build_pfSense_from_ISO.yml
       when: skip_gateway_vm is not true
 
     - name: Build Windows VM - DC01
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_Windows_VM_from_ISO.yml
-      - set_fact:
+      - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
+        vars:
           vm_name: '{{lab_name}}_dc01'         
           vm_datastore: "{{lab_vm_datastore}}"
           vm_network: "{{lab_network_lan1_portgroup}}"
@@ -63,26 +62,24 @@
           vm_gateway: "{{lab_network_lan1_gateway}}"
           vm_dns_server: "{{lab_network_lan1_dns_ip}}"
           vm_domain: "{{lab_domain_name}}"
-      - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
       when: skip_dc01_vm is not true
 
     - name: Build a Active Directory Forest
-      meta: noop
-    - block:
-      - set_fact:
+      block:
+      - include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
+        vars:
           vm_name: '{{lab_name}}_dc01'
           vm_username: ".\\Administrator" 
           vm_password: "{{lab_password}}"         
           vm_dns_server: "{{lab_network_lan1_dns_ip}}"
           vm_domain: "{{lab_domain_name}}"
-      - include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
       when: skip_dc01_vm is not true    
 
     - name: Build Windows VM - WIN1
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_Windows_VM_from_ISO.yml
-      - set_fact:
+      - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
+        vars:
           vm_hostname: win1        
           vm_name: '{{lab_name}}_win1'
           vm_address: "{{lab_win1_ip}}"                 
@@ -93,14 +90,13 @@
           vm_gateway: "{{lab_network_lan1_gateway}}"
           vm_dns_server: "{{lab_network_lan1_dns_ip}}"
           vm_domain: "{{lab_domain_name}}"
-      - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
       when: skip_win1_vm is not true
 
     - name: Build CentOS VM - ansible
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_CentOS8_VM_from_ISO.yml
-      - set_fact:
+      - include_tasks: tasks/Build_CentOS8_VM_from_ISO.yml
+        vars:
           vm_hostname: ansible
           vm_address: "{{lab_ansible_ip}}"       
           vm_name: '{{lab_name}}_ansible'
@@ -111,12 +107,10 @@
           vm_dns_server: "{{lab_network_lan1_dns_ip}}"
           vm_domain: "{{lab_domain_name}}"
           vm_datastore: "{{lab_vm_datastore}}"
-      - include_tasks: tasks/Build_CentOS8_VM_from_ISO.yml
       when: skip_ansible_vm is not true
 
     - name: Build CentOS VM - centos1
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_CentOS8_VM_from_ISO.yml
       - set_fact:
           vm_hostname: centos1
@@ -134,8 +128,7 @@
 
 
     - name: Build ONTAP Simulator - vsim1
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_ONTAP_Simulator_from_OVA.yml
       - set_fact:
           vm_name: '{{lab_name}}_vsim1'
@@ -164,8 +157,7 @@
       when: skip_vsim1_vm is not true
 
     - name: Build ONTAP Simulator - vsim2-01
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_ONTAP_Simulator_from_OVA.yml
       - set_fact:
           vm_name: '{{lab_name}}_vsim2-01'
@@ -180,8 +172,7 @@
       when: skip_vsim2_01_vm is not true
 
     - name: Build ONTAP Simulator - vsim2-02
-      meta: noop
-    - block:
+      block:
       - include_vars: defaults/Build_ONTAP_Simulator_from_OVA.yml
       - set_fact:
           vm_name: '{{lab_name}}_vsim2-02'
