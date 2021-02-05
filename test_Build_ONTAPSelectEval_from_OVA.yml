@@ -5,16 +5,16 @@
   vars_files: 
     vars/vars-esx.yml
   tasks:
-    - name: Deploy an ONTAP Simulator
-      include_vars: defaults/Build_ONTAPSelectEval_from_OVA.yml
-    - set_fact:
+    - include_vars: defaults/Build_ONTAPSelectEval_from_OVA.yml
+    - include_tasks: tasks/Build_ONTAPSelectEval_from_OVA.yml
+      vars:
         # ontap_select_ova: "files/9.8_DataONTAPv-esx-standalone-eval-nodar.ova" 
         # ontap_deployment_option: 'ONTAPSelectEVALSmall' # <=9.5 use 'ONTAPSelectEVAL', 9.6+ use 'ONTAPSelectEVALSmall'
         vm_name: Test_ONTAPSelect7g
         # vm_network: "VM Network"
         vm_num_cpus: 4
         # vm_cpu_reservation_mhz: 1000        
-        vm_memory_mb: 7164    
+        vm_memory_mb: 16384 
         vm_data_disk_gb: "100"
         # vm_disk_rovisioning: thin 
         ontap_cluster_name: "ONTAP"
@@ -25,4 +25,3 @@
         ontap_password: "P@ssw0rd"
         ontap_dns_domain: "lab.local"
         ontap_dns_server: "192.168.123.1"
-    - include_tasks: tasks/Build_ONTAPSelectEval_from_OVA.yml

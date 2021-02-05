@@ -5,9 +5,9 @@
   vars_files: 
     vars/vars-esx.yml
   tasks:
-    - name: Build vCenter Appliance from OVA
-      include_vars: defaults/Build_vCenter_from_OVA.yml
-    - set_fact:
+    - include_vars: defaults/Build_vCenter_from_OVA.yml
+    - include_tasks: tasks/Build_vCenter_from_OVA.yml
+      vars:
         # ova_file: "files/VMware/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
         vm_name: vcsa
         vm_hostname: vcsa
@@ -24,8 +24,6 @@
         # vm_deployment_size: 'tiny' 
         # vm_autoconfig: 'True' 
         # vm_enable_ssh: 'True'
-    - include_tasks: tasks/Build_vCenter_from_OVA.yml
-
 
 
 

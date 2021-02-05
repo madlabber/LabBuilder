@@ -2,6 +2,39 @@
 - name: Install NetApp VAAI vib on ESXi Host
   hosts: localhost
   gather_facts: false
+  vars:
+    # These variable are for the host being configured
+    esxi_address: 192.168.123.140
+    esxi_hostname: NestedESX140
+    esxi_username: root
+    esxi_password: P@ssw0rd
+    vm_datastore: datastore1
+    iso_datastore: datastore1
+
+    # These variables also alias to the host
+    vcenter_address: '{{esxi_address}}'
+    vcenter_username: '{{esxi_username}}'
+    vcenter_password: '{{esxi_password}}'
+    vcenter_datacenter: 'ha-datacenter'
+    vcenter_cluster: ""
+
+    # These variables define the management/vm network of the esxi host
+    vm_network_portgroup: "VM Network"
+    vm_network_netmask_cidr: "24"
+    vm_network_gateway: 192.168.123.1
+    vm_network_dns: 192.168.123.1
+
+    # These variables control the resources being provisioned
+    lab_password: P@ssw0rd
+    lab_dc01_hostname: dc01
+    lab_dc01_domain: nuc.lab
+    lab_dc01_ip: 192.168.123.141
+
+#    skip_dc01_vm: true
+#    skip_dc01_extras: true
+    skip_vcsa_vm: true
+    skip_ots_vm: true
+
   tasks:
     # Inband access to the ESX host is assumed
     # because this playbook configures the 
@@ -12,13 +45,13 @@
       meta: noop
     - block:
       - set_fact:
-          esxi_address: 192.168.123.140
-          esxi_username: root
-          esxi_password: P@ssw0rd
+          # esxi_address: 192.168.123.140
+          # esxi_username: root
+          # esxi_password: P@ssw0rd
           apply_vsc_settings: true
           reboot_esxi_host: true
           vaai_vib_file: "files/NetAppNasPlugin.v23.vib"
-          esxi_datastore: datastore1
+          esxi_datastore: "{{iso_datastore}}"
       - include_tasks: tasks/install_vaai_on_esxi_host.yml
 
     - name: Configure Host to support vlab
@@ -26,7 +59,10 @@
     - block:
       - name: Set Advanced Options
         vmware_host_config_manager:
-          <<: *esxi_login
+          hostname: '{{ esxi_address }}'
+          username: '{{ esxi_username }}'
+          password: '{{ esxi_password }}'   
+          validate_certs: no 
           esxi_hostname: '{{ esxi_address }}'
           options:
             "Mem.ShareForceSalting": 0    # To maximize VM density
@@ -36,7 +72,10 @@
       # This firewall rule allows the host to support telnet connections to guest serial port consoles
       - name: Manage Firewall Rules
         vmware_host_firewall_manager:
-          <<: *esxi_login
+          hostname: '{{ esxi_address }}'
+          username: '{{ esxi_username }}'
+          password: '{{ esxi_password }}'   
+          validate_certs: no
           esxi_hostname: '{{ esxi_address }}'      
           rules:
             - name: remoteSerialPort 
@@ -46,18 +85,24 @@
       # this vswitch is used for portgroups internal to nested lab instances
       - name: Add an isolated VMWare vSwitch
         vmware_vswitch:
-          <<: *esxi_login
+          hostname: '{{ esxi_address }}'
+          username: '{{ esxi_username }}'
+          password: '{{ esxi_password }}'   
+          validate_certs: no
           switch: vSwitch1
           mtu: 9000
         delegate_to: localhost
 
       - name: Configure ESXi hostname and upstream DNS servers
         vmware_dns_config:
-          <<: *esxi_login
+          hostname: '{{ esxi_address }}'
+          username: '{{ esxi_username }}'
+          password: '{{ esxi_password }}'   
+          validate_certs: no
           change_hostname_to: '{{ esxi_hostname }}'
-          domainname: '{{ lab_domain }}'
+          domainname: '{{ lab_dc01_domain }}'
           dns_servers:
-          - '{{ lab_upstream_dns }}'
+          - '{{ vm_network_dns }}'
         delegate_to: localhost
 
     - name: Build Windows VM - DC01
@@ -65,16 +110,16 @@
     - block:
       - include_vars: defaults/Build_Windows_VM_from_ISO.yml
       - set_fact:
-          vm_name: '{{lab_name}}_{{lab_dc01_hostname}}'         
-          vm_datastore: "{{lab_vm_datastore}}"
-          vm_network: "{{lab_network_lan1_portgroup}}"
+          vm_name: '{{lab_dc01_hostname}}'         
+          vm_datastore: '{{vm_datastore}}'
+          vm_network: '{{vm_network_portgroup}}'
           vm_password_new: "{{lab_password}}"
           vm_hostname: "{{lab_dc01_hostname}}"
           vm_address: "{{lab_dc01_ip}}"
-          vm_netmask_cidr: "{{lab_network_lan1_netmask_cidr}}"
-          vm_gateway: "{{lab_network_lan1_gateway}}"
-          vm_dns_server: "{{lab_network_lan1_dns_ip}}"
-          vm_domain: "{{lab_domain_name}}"
+          vm_netmask_cidr: "{{vm_network_netmask_cidr}}"
+          vm_gateway: "{{vm_network_gateway}}"
+          vm_dns_server: "{{vm_network_dns}}"
+          vm_domain: "{{lab_dc01_domain}}"
       - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
       when: skip_dc01_vm is not true
 
@@ -82,11 +127,11 @@
       meta: noop
     - block:
       - set_fact:
-          vm_name: '{{lab_name}}_{{lab_dc01_hostname}}'
+          vm_name: '{{lab_dc01_hostname}}'
           vm_username: ".\\Administrator" 
           vm_password: "{{lab_password}}"         
-          vm_dns_server: "{{lab_network_lan1_dns_ip}}"
-          vm_domain: "{{lab_domain_name}}"
+          vm_dns_server: "{{vm_network_dns}}"
+          vm_domain: "{{lab_dc01_domain}}"
       - include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
       when: skip_dc01_vm is not true    
 
@@ -98,7 +143,7 @@
         validate_certs: no
         vm_username: ".\\Administrator"
         vm_password: "{{lab_password}}"
-        vm_id: '{{lab_name}}_{{lab_dc01_hostname}}'
+        vm_id: '{{lab_dc01_hostname}}'
         vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
         vm_shell_args: " -command \"({{item}})\""
         wait_for_process: true
@@ -107,18 +152,18 @@
       delay: 10 
       register: result           
       until: result is succeeded 
-      when: skip_dc01_vm is not true    
+      when: skip_dc01_extras is not true    
       loop:
         # Add vCenter DNS record    
-        - "Add-DnsServerResourceRecordA -Name {{lab_vcsa_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_vcsa_ip}} -TimeToLive 01:00:00"
+        #- "Add-DnsServerResourceRecordA -Name {{lab_vcsa_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_vcsa_ip}} -TimeToLive 01:00:00"
         # Add ESX01 DNS record
-        - "Add-DnsServerResourceRecordA -Name {{lab_esx01_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_esx01_ip}} -TimeToLive 01:00:00"
+        #- "Add-DnsServerResourceRecordA -Name {{lab_esx01_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_esx01_ip}} -TimeToLive 01:00:00"
         # Add ESX01 DNS record
-        - "Add-DnsServerResourceRecordA -Name {{lab_esx02_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_esx02_ip}} -TimeToLive 01:00:00"
+        #- "Add-DnsServerResourceRecordA -Name {{lab_esx02_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_esx02_ip}} -TimeToLive 01:00:00"
         # Add ESX01 DNS record
-        - "Add-DnsServerResourceRecordA -Name {{lab_esx03_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_esx03_ip}} -TimeToLive 01:00:00"
+        #- "Add-DnsServerResourceRecordA -Name {{lab_esx03_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_esx03_ip}} -TimeToLive 01:00:00"
         # Add ESX01 DNS record
-        - "Add-DnsServerResourceRecordA -Name {{lab_esx04_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_esx04_ip}} -TimeToLive 01:00:00"
+        #- "Add-DnsServerResourceRecordA -Name {{lab_esx04_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{lab_esx04_ip}} -TimeToLive 01:00:00"
         # Disable Admin IEESC
         - "set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Active Setup\\Installed Components{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}' -name IsInstalled -Value 0"
         # Disable User IEESC
@@ -171,6 +216,7 @@
           ontap_dns_domain: "lab.local"
           ontap_dns_server: "192.168.123.1"
       - include_tasks: tasks/Build_ONTAPSelectEval_from_OVA.yml
+      when: skip_ots_vm is not true
 
 # To Do in -configure
 # Configure vCenter
