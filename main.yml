@@ -66,7 +66,7 @@
 
 # This play takes all the name/ip pairs from all hosts and adds DNS records on the DC
 - name: populate DNS records
-  hosts: all
+  hosts: none
   serial: 1
   gather_facts: false
   vars_files:
@@ -85,10 +85,11 @@
       vm_shell_args: " -command \"({{item}})\""
       wait_for_process: true
     delegate_to: localhost
-    retries: 6
+    retries: 3
     delay: 10 
     register: result           
-    until: result is succeeded    
+    until: result is succeeded  
+    ignore_errors: yes  
     loop:
       # Add vCenter DNS record    
       - "Add-DnsServerResourceRecordA -Name {{inventory_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{ip_address}} -TimeToLive 01:00:00"
@@ -219,6 +220,42 @@
         vm_domain: "{{lab_domain_name}}"
         vm_datastore: "{{lab_vm_datastore}}"
     when: version == "CentOS7"
+
+- name: Build ONTAP Simulators
+  hosts: vsims
+#  serial: 1 # free may also work but boot sequence is timing sensitive
+  strategy: free
+  gather_facts: false
+  vars_files:
+    - vars/vars-esx.yml
+  tasks:
+  - include_vars: defaults/Build_ONTAP_Simulator_from_OVA.yml
+  - include_tasks: "tasks/Build_ONTAP_Simulator_from_OVA.yml"
+    vars:
+      vm_name: '{{lab_name}}_{{inventory_hostname}}'
+      vm_datastore: "{{lab_vm_datastore}}"
+      sys_serial_number: "{{ sys_serial_num }}" 
+      cluster_network: "{{lab_network_lan1_portgroup}}"
+      data_network: "{{lab_network_lan1_portgroup}}"
+      ontap_node_mgmt_ip: "{{ip_address}}"
+      ontap_netmask: "{{lab_network_lan1_netmask}}"
+      ontap_gateway: "{{lab_network_lan1_gateway}}"
+
+  - name: Run Cluster Setup
+    include_tasks: "tasks/Run_Cluster_Setup_from_vm_shell.yml"
+    vars:
+      # These additional items are required by cluster setup
+      vm_name: '{{lab_name}}_{{inventory_hostname}}'
+      ontap_cluster_mgmt_ip: "{{lab_vsim1_cluster_mgmt_ip}}"
+      ontap_cluster_name: "{{cluster_name | default('ONTAP')}}"
+      ontap_password: "{{lab_password |default('netapp123')}}"
+      ontap_dns_domain: "{{lab_domain_name}}"
+      ontap_dns_server: "{{lab_network_lan1_dns_ip}}"
+      ontap_location: "{{lab_name}}"
+      ontap_netmask: "{{lab_network_lan1_netmask}}"
+      ontap_gateway: "{{lab_network_lan1_gateway}}"
+    when: cluster_setup is true
+
 
 
 

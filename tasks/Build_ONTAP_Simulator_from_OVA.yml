@@ -47,9 +47,10 @@
     state: poweredon
     wait_for_ip_address: false
   delegate_to: localhost
-- name: Pause for 5 seconds
-  pause:
-    seconds: 5
+- name: Wait for 5 seconds
+  wait_for: timeout=5
+  delegate_to: localhost
+  
 - name: Press Space to interrupt autoboot
   community.vmware.vmware_guest_sendkey:
     hostname: '{{ vcenter_address }}'
