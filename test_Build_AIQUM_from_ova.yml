@@ -29,7 +29,7 @@
     vm_dns2: "192.168.123.1" # ovf:required="false" ovf:type="string" ovf:userConfigurable="true">
 
   vars_files: 
-    - vars/vars-esx.yml
+    - vars/main.yml
 
   tasks:
   - vmware_deploy_ovf:

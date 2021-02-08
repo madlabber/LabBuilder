@@ -7,7 +7,7 @@
     vm_username: root
     vm_password: P@ssw0rd
   vars_files: 
-    - vars/vars-esx.yml
+    - vars/main.yml
   tasks:
     - name: Install xRDP on Centos8
       community.vmware.vmware_vm_shell:

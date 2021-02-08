@@ -3,7 +3,7 @@
   hosts: localhost
   gather_facts: no  
   vars_files:
-   - vars/vars-esx.yml
+   - vars/main.yml
   tasks:
     - include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
       vars:

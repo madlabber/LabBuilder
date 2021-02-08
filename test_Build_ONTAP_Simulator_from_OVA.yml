@@ -3,7 +3,7 @@
   name: Build ONTAP Simulator from OVA
   gather_facts: false
   vars_files: 
-    - vars/vars-esx.yml
+    - vars/main.yml
   tasks:
     - include_vars: defaults/Build_ONTAP_Simulator_from_OVA.yml
     - include_tasks: tasks/Build_ONTAP_Simulator_from_OVA.yml

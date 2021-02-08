@@ -3,7 +3,7 @@
   hosts: localhost
   gather_facts: false
   vars_files: 
-    - vars/vars-esx.yml
+    - vars/main.yml
   tasks:
     - name: Build Nested ESXI from OVA
       meta: noop

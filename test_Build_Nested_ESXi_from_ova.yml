@@ -3,7 +3,7 @@
   hosts: localhost
   gather_facts: false
   vars_files: 
-    - vars/vars-esx.yml
+    - vars/main.yml
   tasks:
     - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
     - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml

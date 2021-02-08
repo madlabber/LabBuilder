@@ -3,7 +3,7 @@
   hosts: localhost
   gather_facts: false
   vars_files: 
-    - vars/vars-esx.yml
+    - vars/main.yml
   tasks:
     - include_vars: defaults/Build_pfSense_from_ISO.yml
     - include_tasks: tasks/Build_pfSense_from_ISO.yml

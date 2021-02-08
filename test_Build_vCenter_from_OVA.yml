@@ -3,7 +3,7 @@
   name: vCenter Configuration 
   gather_facts: false
   vars_files: 
-    vars/vars-esx.yml
+    vars/main.yml
   tasks:
     - include_vars: defaults/Build_vCenter_from_OVA.yml
     - include_tasks: tasks/Build_vCenter_from_OVA.yml

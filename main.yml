@@ -13,7 +13,7 @@
   hosts: pfsense
   gather_facts: false
   vars_files: 
-    - vars/vars-esx.yml  
+    - vars/main.yml  
   tasks:
   - name: Build lab pfSense Gateway
     block:
@@ -28,7 +28,7 @@
   hosts: dc
   gather_facts: false
   vars_files: 
-    - vars/vars-esx.yml  
+    - vars/main.yml  
   tasks:
   - name: default version
     set_fact:
@@ -66,11 +66,11 @@
 
 # This play takes all the name/ip pairs from all hosts and adds DNS records on the DC
 - name: populate DNS records
-  hosts: none
+  hosts: all
   serial: 1
   gather_facts: false
   vars_files:
-    - vars/vars-esx.yml
+    - vars/main.yml
   tasks:
   - name: Add DNS record via vm shell
     community.vmware.vmware_vm_shell:
@@ -99,7 +99,7 @@
   hosts: vcenter
   gather_facts: false
   vars_files: 
-    - vars/vars-esx.yml
+    - vars/main.yml
   tasks:
   - name: Build vCenter Appliance from OVA
     block:
@@ -128,7 +128,7 @@
   hosts: nestedesx
   gather_facts: false
   vars_files: 
-    - vars/vars-esx.yml
+    - vars/main.yml
   tasks:
 #    - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
     - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
@@ -157,7 +157,7 @@
   hosts: winservers
   gather_facts: false
   vars_files: 
-    - vars/vars-esx.yml  
+    - vars/main.yml  
   tasks:
   # - name: default version
   #   set_fact:
@@ -185,7 +185,7 @@
   hosts: centos
   gather_facts: false
   vars_files: 
-    - vars/vars-esx.yml  
+    - vars/main.yml  
   tasks:
   - name: Build CentOS8 VM - ansible
     block:
@@ -227,7 +227,7 @@
   strategy: free
   gather_facts: false
   vars_files:
-    - vars/vars-esx.yml
+    - vars/main.yml
   tasks:
   - include_vars: defaults/Build_ONTAP_Simulator_from_OVA.yml
   - include_tasks: "tasks/Build_ONTAP_Simulator_from_OVA.yml"
@@ -246,7 +246,7 @@
     vars:
       # These additional items are required by cluster setup
       vm_name: '{{lab_name}}_{{inventory_hostname}}'
-      ontap_cluster_mgmt_ip: "{{lab_vsim1_cluster_mgmt_ip}}"
+      ontap_cluster_mgmt_ip: "{{cluster_mgmt_ip}}"
       ontap_cluster_name: "{{cluster_name | default('ONTAP')}}"
       ontap_password: "{{lab_password |default('netapp123')}}"
       ontap_dns_domain: "{{lab_domain_name}}"

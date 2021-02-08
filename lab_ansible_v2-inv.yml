@@ -1,12 +1,12 @@
 all:
   hosts:
   vars:
-    lab_name: lab_ansible_v2a
+    lab_name: lab_ansible_v2
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
-    lab_vm_datastore: lab_ansible_v2a
+    lab_vm_datastore: lab_ansible_v2
     lab_network_wan_portgroup: "VM Network"
-    lab_network_lan1_portgroup: "lab_ansible_v2a_net1"
+    lab_network_lan1_portgroup: "lab_ansible_v2_net1"
     lab_network_lan1_netmask_cidr: "24"
     lab_network_lan1_netmask: "255.255.255.0"
     lab_network_lan1_gateway: "192.168.0.1"
@@ -24,13 +24,13 @@ all:
     dc:
       hosts:
         dc01:
-          version: "Server2016"
+          version: "Server2019"
           ip_address: 192.168.0.11
     winservers:
       hosts:
         win1:
           ip_address: 192.168.0.12
-          version: "Server2016"      
+          version: "Server2019"      
           vm_memory_mb: 2048
           vm_num_cpus: 2
           vm_disk_gb: 40          
@@ -38,10 +38,10 @@ all:
       hosts:
         ansible:
           ip_address: 192.168.0.15
-          version: "CentOS7"
+          version: "CentOS8"
         centos1:
           ip_address: 192.168.0.14
-          version: "CentOS7"
+          version: "CentOS8"
       vars:
     vsims:
       hosts:
@@ -60,6 +60,6 @@ all:
           sys_serial_num: "4034389-06-2"
           cluster_create: false   
       vars:
-          ontap_version: "9.7"             
+          ontap_version: "9.8"             
 
 

@@ -5,7 +5,7 @@
   vars:
     version: Server2016
   vars_files: 
-    - vars/vars-esx.yml
+    - vars/main.yml
   tasks:
     - include_vars: defaults/Build_Server2012R2_VM_from_ISO.yml
       when: version == "Server2012R2"

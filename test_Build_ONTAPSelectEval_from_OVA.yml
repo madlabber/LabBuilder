@@ -3,7 +3,7 @@
   name: Build ONTAPSelectEval from OVA
   gather_facts: false
   vars_files: 
-    vars/vars-esx.yml
+    vars/main.yml
   tasks:
     - include_vars: defaults/Build_ONTAPSelectEval_from_OVA.yml
     - include_tasks: tasks/Build_ONTAPSelectEval_from_OVA.yml

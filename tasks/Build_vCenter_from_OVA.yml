@@ -19,7 +19,7 @@
 #     vm_autoconfig: 'True' # 
 #     vm_enable_ssh: 'True'
 #   vars_files: 
-#     vars/vars-esx.yml
+#     vars/main.yml
 #   tasks:
 #   # If the target is vCenter, push user configurable vars, then patch the rest before poweron
 - community.vmware.vmware_deploy_ovf:
