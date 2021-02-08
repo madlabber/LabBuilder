@@ -8,13 +8,15 @@
     - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
     - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
       vars:
-        vm_name: TEST_NestedESX142
+        ovf_version: "6.7u3" #7.0u1, 7.0, 6.7u3, 6.7u2, 6.7u1, 6.7 ... 6.0?
+        ovf_file: "files/VMware/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
+        ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
+        vm_name: "TEST_NestedESXi{{ovf_version}}"
         vm_network: "VM Network"
-        vm_memory_mb: 8192
-        vm_num_cpus: 2
-        ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
+#        vm_memory_mb: 8192
+#        vm_num_cpus: 2
         ovf_hostname: "NestedEsxi01"
-        ovf_address: 192.168.123.142
+        ovf_address: 192.168.123.143
         ovf_netmask: 255.255.255.0
         ovf_gateway: 192.168.123.1 
         ovf_vlan: ""  

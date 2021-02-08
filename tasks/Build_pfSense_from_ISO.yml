@@ -1,4 +1,20 @@
 ---
+    # install_iso: "pfSense-CE-2.4.5-RELEASE-p1-amd64.iso"
+    # install_iso_url: "https://atxfiles.pfsense.org/mirror/downloads/pfSense-CE-2.4.5-RELEASE-p1-amd64.iso.gz"
+
+- name: variable processings
+  set_fact:
+    _vm_name: "{{vm_name | default('pfSense')}}"
+    _install_iso: "{{install_iso | default('pfSense-CE-2.4.5-RELEASE-p1-amd64.iso')}}"
+    _install_iso_url: "{{install_iso_url | default('https://atxfiles.pfsense.org/mirror/downloads/pfSense-CE-2.4.5-RELEASE-p1-amd64.iso.gz')}}"
+    _vm_password_new: "{{vm_password_new | default('P@ssw0rd')}}"
+    _vm_network_wan: "{{vm_network_wan   | default('VM Network')}}"
+    _vm_network_lan: "{{vm_network_lan   | default('')}}"
+    _vm_disk_gb: "{{vm_disk_gb | default(10)}}"
+    _vm_memory_mb: "{{vm_memory_mb | default(1024)}}"
+    _vm_num_cpus: "{{vm_num_cpus | default(1)}}"
+    _config_xml_file: "{{config_xml_file | default('')}}"
+  delegate_to: localhost
 - name: Check if install ISO exists
   community.vmware.vsphere_file:
     hostname: '{{ vcenter_address }}'
@@ -7,7 +23,7 @@
     validate_certs: no
     datacenter: "{{ vcenter_datacenter }}"
     datastore: "{{ iso_datastore }}"
-    path: "{{ install_iso }}"
+    path: "{{ _install_iso }}"
     state: file
   register: install_iso_exists
   delegate_to: localhost
@@ -45,15 +61,15 @@
   delegate_to: localhost
   when: install_iso_exists.failed
 - name: Download the pfSense ISO
-  shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ install_iso_url }}'
+  shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ _install_iso_url }}'
   args:
-    creates: '/vmfs/volumes/{{ iso_datastore }}/{{ install_iso }}.gz'
+    creates: '/vmfs/volumes/{{ iso_datastore }}/{{ _install_iso }}.gz'
   delegate_to: '{{ esxi_address }}'
   when: install_iso_exists.failed
 - name: Extract the pfSense ISO
-  shell: 'gunzip /vmfs/volumes/{{ iso_datastore }}/{{ install_iso }}.gz'
+  shell: 'gunzip /vmfs/volumes/{{ iso_datastore }}/{{ _install_iso }}.gz'
   args:
-    creates: '/vmfs/volumes/{{ iso_datastore }}/{{ install_iso }}'
+    creates: '/vmfs/volumes/{{ iso_datastore }}/{{ _install_iso }}'
   delegate_to: '{{ esxi_address }}'
   when: install_iso_exists.failed
 - name: Disable ESX SSH (TSM-SSH)
@@ -87,7 +103,7 @@
     datacenter: "{{vcenter_datacenter}}"
     cluster: '{{vcenter_cluster}}'    
     folder: /
-    name: '{{ vm_name }}'
+    name: '{{ _vm_name }}'
     state: present
     guest_id: centos7_64Guest
     cdrom:
@@ -95,19 +111,19 @@
           unit_number: 0
           state: present
           type: iso
-          iso_path: '[{{ iso_datastore }}] {{ install_iso }}'
+          iso_path: '[{{ iso_datastore }}] {{ _install_iso }}'
     disk:
-    - size_gb: '{{ vm_disk_gb }}'
+    - size_gb: '{{ _vm_disk_gb |int }}'
       type: thin
       datastore: '{{ vm_datastore }}'
     hardware:
-      memory_mb: '{{ vm_memory_mb }}'
-      num_cpus: '{{ vm_num_cpus }}'
+      memory_mb: '{{ _vm_memory_mb |int}}'
+      num_cpus: '{{ _vm_num_cpus |int}}'
       scsi: lsilogicsas
     networks:
-    - name: '{{ vm_network_wan }}'
+    - name: '{{ _vm_network_wan }}'
       device_type: e1000
-    - name: '{{ vm_network_lan }}'
+    - name: '{{ _vm_network_lan }}'
       device_type: e1000
     wait_for_ip_address: no
   delegate_to: localhost
@@ -118,7 +134,7 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'  
     validate_certs: no 
-    name: '{{ vm_name }}'
+    name: '{{ _vm_name }}'
     boot_delay: 1000
     enter_bios_setup: False
     boot_retry_enabled: True
@@ -137,7 +153,7 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'   
     validate_certs: no 
-    name: '{{ vm_name }}'
+    name: '{{ _vm_name }}'
     state: powered-on
   delegate_to: localhost
   register: powerstate
@@ -150,7 +166,7 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'   
     validate_certs: no 
-    name: "{{ vm_name }}"
+    name: "{{ _vm_name }}"
     keys_send: ENTER
     string_send: "{{item}}"
   delegate_to: localhost
@@ -168,7 +184,7 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'  
     validate_certs: no 
-    name: "{{ vm_name }}"
+    name: "{{ _vm_name }}"
     keys_send: ENTER
     string_send: "{{item}}"
   delegate_to: localhost
@@ -184,7 +200,7 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'  
     validate_certs: no 
-    name: "{{ vm_name }}"
+    name: "{{ _vm_name }}"
     keys_send: ENTER
     string_send: "{{item}}"
   delegate_to: localhost
@@ -199,7 +215,7 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'  
     validate_certs: no 
-    name: '{{ vm_name }}'
+    name: '{{ _vm_name }}'
   delegate_to: localhost
   retries: 10
   delay: 60
@@ -214,15 +230,15 @@
     password: '{{ vcenter_password }}'  
     validate_certs: no 
     #datacenter: "{{ datacenter_name }}"
-    vm_id: '{{ vm_name }}'
+    vm_id: '{{ _vm_name }}'
     vm_username: "admin"
     vm_password: "pfsense" # defaults are still in effect at this point
     copy:
-        src: "{{config_xml_file}}"
+        src: "{{_config_xml_file}}"
         dest: "/cf/conf/config.xml"
         overwrite: True
   delegate_to: localhost
-  when: config_xml_file != ""
+  when: _config_xml_file != ""
 
 - name: Reboot-Guest
   community.vmware.vmware_guest_powerstate:
@@ -230,14 +246,14 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'   
     validate_certs: no 
-    name: '{{ vm_name }}'
+    name: '{{ _vm_name }}'
     state: reboot-guest
   delegate_to: localhost
   register: deploy
 - name: Wait for 30 seconds
   wait_for: timeout=30
   delegate_to: localhost
-  when: config_xml_file != ""
+  when: _config_xml_file != ""
 
 - name: Wait for VMware tools to become available by name
   community.vmware.vmware_guest_tools_wait:
@@ -245,13 +261,13 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'  
     validate_certs: no 
-    name: '{{ vm_name }}'
+    name: '{{ _vm_name }}'
   delegate_to: localhost
   retries: 3
   delay: 15
   register: result           
   until: result is succeeded 
-  when: config_xml_file != ""
+  when: _config_xml_file != ""
 
 # Any additional packages required need to be installed 
 - name: Run shell commands via vm_shell
@@ -261,8 +277,8 @@
     password: '{{ vcenter_password }}'   
     validate_certs: no 
     vm_username: "root"
-    vm_password: '{{ vm_password_new }}'
-    vm_id: '{{ vm_name }}'
+    vm_password: '{{ _vm_password_new }}'
+    vm_id: '{{ _vm_name }}'
     vm_shell: '/bin/sh'
     vm_shell_args: "{{item}}"
     wait_for_process: true

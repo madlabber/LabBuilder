@@ -1,80 +1,83 @@
-# Name of the VM in inventory
-vm_name: esxi
+# # Name of the VM in inventory
+# vm_name: esxi
 
-# vswitch portgroup name
-vm_network: "VM Network"
+# # vswitch portgroup name
+# vm_network: "VM Network"
 
-# path to ova file
-ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
+# # path to ova file
+# ovf_file: "files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova"
 
-# VCPUs to assign to the VM
-vm_num_cpus: 2
-# Memory to assign the VM
-vm_memory_mb: 8192
+# # URL ot download the OVF if its not present
+# ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi7.0_Appliance_Template_v1.ova"
 
-# Disk sizes
-vm_disk1_size_gb: 4 # cache disk
-vm_disk2_size_gb: 8 # capacity disk
+# # VCPUs to assign to the VM
+# vm_num_cpus: 2
+# # Memory to assign the VM
+# vm_memory_mb: 8192
 
-#Hostname 
-#ESXi Hostname (DHCP if left blank)
-#" ovf:type="string" ovf:userConfigurable="true"
-ovf_hostname: ""
+# # Disk sizes
+# vm_disk1_size_gb: 4 # cache disk
+# vm_disk2_size_gb: 8 # capacity disk
 
-#IP Address 
-#IP Address of vmk0 (DHCP if left blank) 
-#" ovf:type="string" ovf:userConfigurable="true"
-ovf_address: ""
+# #Hostname 
+# #ESXi Hostname (DHCP if left blank)
+# #" ovf:type="string" ovf:userConfigurable="true"
+# ovf_hostname: ""
 
-#Netmask 
-#Netmask of vmk0 (DHCP if left blank) 
-#" ovf:type="string" ovf:userConfigurable="true"
-ovf_netmask: ""
+# #IP Address 
+# #IP Address of vmk0 (DHCP if left blank) 
+# #" ovf:type="string" ovf:userConfigurable="true"
+# ovf_address: ""
 
-#Gateway 
-#Gateway of vmk0 (DHCP if left blank) 
-#" ovf:type="string" ovf:userConfigurable="true"
-ovf_gateway: "" 
+# #Netmask 
+# #Netmask of vmk0 (DHCP if left blank) 
+# #" ovf:type="string" ovf:userConfigurable="true"
+# ovf_netmask: ""
 
-#VLAN ID 
-#VLAN ID of vmk0 (DHCP if left blank)
-#" ovf:type="string" ovf:userConfigurable="true"
-ovf_vlan: ""  
+# #Gateway 
+# #Gateway of vmk0 (DHCP if left blank) 
+# #" ovf:type="string" ovf:userConfigurable="true"
+# ovf_gateway: "" 
 
-#DNS
-#DNS Server (DHCP if left blank) 
-#" ovf:type="string" ovf:userConfigurable="true"
-ovf_dns: ""
+# #VLAN ID 
+# #VLAN ID of vmk0 (DHCP if left blank)
+# #" ovf:type="string" ovf:userConfigurable="true"
+# ovf_vlan: ""  
 
-#DNS Domain 
-#DNS Domain (DHCP if left blank)
-#" ovf:type="string" ovf:userConfigurable="true"
-ovf_domain: ""   
+# #DNS
+# #DNS Server (DHCP if left blank) 
+# #" ovf:type="string" ovf:userConfigurable="true"
+# ovf_dns: ""
 
-#NTP Servers
-#NTP Server
-#"{{vm_ntp_server}}" #" ovf:type="string" ovf:userConfigurable="true" ovf:value="pool.ntp.org"
-ovf_ntp: "pool.ntp.org"
+# #DNS Domain 
+# #DNS Domain (DHCP if left blank)
+# #" ovf:type="string" ovf:userConfigurable="true"
+# ovf_domain: ""   
 
-#Syslog Server
-#Syslog Server
-#" ovf:type="string" ovf:userConfigurable="true" ovf:value="192.168.1.200"
-ovf_syslog: "" # IP of syslog server
+# #NTP Servers
+# #NTP Server
+# #"{{vm_ntp_server}}" #" ovf:type="string" ovf:userConfigurable="true" ovf:value="pool.ntp.org"
+# ovf_ntp: "pool.ntp.org"
 
-#Password
-#ESXi Root Password (default VMware1!)
-#" ovf:password="true" ovf:type="string" ovf:userConfigurable="true"
-ovf_password: "VMware1!"
+# #Syslog Server
+# #Syslog Server
+# #" ovf:type="string" ovf:userConfigurable="true" ovf:value="192.168.1.200"
+# ovf_syslog: "" # IP of syslog server
 
-#SSH
-#Enable SSH
-#" ovf:type="boolean" ovf:userConfigurable="true" ovf:value="true"
-ovf_ssh: "true"
+# #Password
+# #ESXi Root Password (default VMware1!)
+# #" ovf:password="true" ovf:type="string" ovf:userConfigurable="true"
+# ovf_password: "VMware1!"
 
-#VMFS
-#Automatically create local VMFS Datastore (datastore1)
-#" ovf:type="boolean" ovf:userConfigurable="true" ovf:value="false"
-ovf_createvmfs: "false"
+# #SSH
+# #Enable SSH
+# #" ovf:type="boolean" ovf:userConfigurable="true" ovf:value="true"
+# ovf_ssh: "true"
+
+# #VMFS
+# #Automatically create local VMFS Datastore (datastore1)
+# #" ovf:type="boolean" ovf:userConfigurable="true" ovf:value="false"
+# ovf_createvmfs: "false"
 
 
 

@@ -1,0 +1,45 @@
+---
+- name: Install NetApp VAAI vib on ESXi Host
+  hosts: localhost
+  gather_facts: false
+  vars:
+    # These variable are for the host being configured
+    esxi_address: 192.168.123.140
+    esxi_hostname: NestedESX140
+    esxi_username: root
+    esxi_password: P@ssw0rd
+    vm_datastore: datastore1
+    iso_datastore: datastore1
+
+    # These variables also alias to the host
+    vcenter_address: '{{esxi_address}}'
+    vcenter_username: '{{esxi_username}}'
+    vcenter_password: '{{esxi_password}}'
+    vcenter_datacenter: 'ha-datacenter'
+    vcenter_cluster: ""
+
+    # These variables define the management/vm network of the esxi host
+    vm_network_portgroup: "VM Network"
+    vm_network_netmask_cidr: "24"
+    vm_network_gateway: 192.168.123.1
+    vm_network_dns: 192.168.123.1
+
+    # These variables control the resources being provisioned
+    lab_password: P@ssw0rd
+    lab_dc01_hostname: dc01
+    lab_dc01_domain: nuc.lab
+    lab_dc01_ip: 192.168.123.141
+
+#    skip_dc01_vm: true
+#    skip_dc01_extras: true
+    skip_vcsa_vm: true
+    skip_ots_vm: true
+
+  tasks:
+# Create volume on SVM
+# Mound volume in the lab folder
+# Mound volume as datastore
+# Create portgroups on each host
+
+
+

@@ -1,0 +1,225 @@
+---
+# - name: print vars
+#   hosts: all
+#   gather_facts: false
+#   tasks:
+#   - debug:
+#       msg: 
+#         - "{{inventory_hostname}}.{{lab_domain_name}}"
+#         - "{{ip_address|default('')}}"
+
+#   # ---
+- name: Build pfSense VMs
+  hosts: pfsense
+  gather_facts: false
+  vars_files: 
+    - vars/vars-esx.yml  
+  tasks:
+  - name: Build lab pfSense Gateway
+    block:
+    - include_vars: defaults/Build_pfSense_from_ISO.yml
+    - include_tasks: tasks/Build_pfSense_from_ISO.yml
+      vars:
+        vm_name: "{{lab_name}}_{{inventory_hostname}}"
+        vm_datastore: "{{lab_vm_datastore}}"
+        vm_password_new: "{{lab_password}}"
+
+- name: Build DC
+  hosts: dc
+  gather_facts: false
+  vars_files: 
+    - vars/vars-esx.yml  
+  tasks:
+  - name: default version
+    set_fact:
+      version: "{{version | default('Server2019')}}"
+  - name: Build Windows VM - DC01
+    block:
+    - include_vars: defaults/Build_Server2012R2_VM_from_ISO.yml
+      when: version == "Server2012R2"
+    - include_vars: defaults/Build_Server2016_VM_from_ISO.yml
+      when: version == "Server2016"
+    - include_vars: defaults/Build_Server2019_VM_from_ISO.yml
+      when: version == "Server2019"   
+    - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
+      vars:
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'         
+        vm_datastore: "{{lab_vm_datastore}}"
+        vm_network: "{{lab_network_lan1_portgroup}}"
+        vm_password_new: "{{lab_password}}"
+        vm_hostname: "{{inventory_hostname}}"
+        vm_address: "{{ip_address}}"
+        vm_netmask_cidr: "{{lab_network_lan1_netmask_cidr}}"
+        vm_gateway: "{{lab_network_lan1_gateway}}"
+        vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+        vm_domain: "{{lab_domain_name}}"
+
+  - name: Build a Active Directory Forest
+    block:
+    - include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
+      vars:
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_username: ".\\Administrator" 
+        vm_password: "{{lab_password}}"         
+        vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+        vm_domain: "{{lab_domain_name}}"
+
+# This play takes all the name/ip pairs from all hosts and adds DNS records on the DC
+- name: populate DNS records
+  hosts: all
+  serial: 1
+  gather_facts: false
+  vars_files:
+    - vars/vars-esx.yml
+  tasks:
+  - name: Add DNS record via vm shell
+    community.vmware.vmware_vm_shell:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}' 
+      validate_certs: no
+      vm_username: ".\\Administrator"
+      vm_password: "{{lab_password}}"
+      vm_id: '{{lab_name}}_{{lab_dc01_hostname}}'
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: " -command \"({{item}})\""
+      wait_for_process: true
+    delegate_to: localhost
+    retries: 6
+    delay: 10 
+    register: result           
+    until: result is succeeded    
+    loop:
+      # Add vCenter DNS record    
+      - "Add-DnsServerResourceRecordA -Name {{inventory_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{ip_address}} -TimeToLive 01:00:00"
+
+# Build vCenter Server(s)
+- name: Build vCenter 
+  hosts: vcenter
+  gather_facts: false
+  vars_files: 
+    - vars/vars-esx.yml
+  tasks:
+  - name: Build vCenter Appliance from OVA
+    block:
+    - include_vars: defaults/Build_vCenter_from_OVA.yml
+    - include_tasks: tasks/Build_vCenter_from_OVA.yml
+      vars:
+        ova_file: "{{ova_location}}/{{vcenter_ova}}"
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_hostname: '{{inventory_hostname}}'
+        vm_domain: '{{lab_domain_name}}'
+        vm_fqdn: '{{vsca_fqdn_or_ip}}'  # if no DNS resolution, use the IP address here
+        vm_network: '{{lab_network_lan1_portgroup}}'
+        vm_password: '{{lab_password}}'
+        vm_net_mode: "static" # static or dhcp
+        vm_address: '{{ip_address}}'
+        vm_netmask_cidr: '{{lab_network_lan1_netmask_cidr}}'
+        vm_dns_server: '{{lab_network_lan1_dns_ip}}'
+        vm_gateway: '{{lab_network_lan1_gateway}}'
+        searchpath: ""
+        vm_deployment_size: "{{vcsa_size | default('tiny')}}"
+        vm_autoconfig: '{{vcsa_autoconfigure}}'
+        vm_enable_ssh: 'True'
+
+# Build Nested ESX hosts defined in the inventory file
+- name: Build Nested ESXI from OVA
+  hosts: nestedesx
+  gather_facts: false
+  vars_files: 
+    - vars/vars-esx.yml
+  tasks:
+#    - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
+    - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
+      vars:
+        ovf_version: "{{esx_version}}" #7.0u1, 7.0, 6.7u3, 6.7u2, 6.7u1, 6.7 ... 6.0?
+        ovf_file: "files/VMware/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
+        ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
+        vm_name: "{{lab_name}}_{{inventory_hostname}}"
+        vm_network: "{{lab_network_lan1_portgroup}}"
+        # vm_memory_mb: "{{memory_mb}}"
+        # vm_num_cpus: 2
+        ovf_hostname: "{{inventory_hostname}}"
+        ovf_address: "{{ip_address}}"
+        ovf_netmask: "{{lab_netmask}}"
+        ovf_gateway: "{{lab_network_lan1_gateway}}"
+        ovf_vlan: ""  
+        ovf_dns: "{{lab_network_lan1_dns_ip}}"
+        ovf_domain: "{{lab_domain_name}}"   
+        ovf_ntp: "{{lab_network_lan1_gateway}}"
+        ovf_syslog: "" # IP of syslog server
+        ovf_password: "{{lab_password}}"
+        ovf_ssh: "{{enable_ssh|string}}"
+        ovf_createvmfs: "{{create_local_vmfs|string}}"
+
+- name: Build Windows Servers
+  hosts: winservers
+  gather_facts: false
+  vars_files: 
+    - vars/vars-esx.yml  
+  tasks:
+  # - name: default version
+  #   set_fact:
+  #     version: "{{version | default('Server2019')}}"
+  - include_vars: defaults/Build_Server2012R2_VM_from_ISO.yml
+    when: version == "Server2012R2"
+  - include_vars: defaults/Build_Server2016_VM_from_ISO.yml
+    when: version == "Server2016"
+  - include_vars: defaults/Build_Server2019_VM_from_ISO.yml
+    when: version == "Server2019"   
+  - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
+    vars:
+      vm_name: '{{lab_name}}_{{inventory_hostname}}'         
+      vm_datastore: "{{lab_vm_datastore}}"
+      vm_network: "{{lab_network_lan1_portgroup}}"
+      vm_password_new: "{{lab_password}}"
+      vm_hostname: "{{inventory_hostname}}"
+      vm_address: "{{ip_address}}"
+      vm_netmask_cidr: "{{lab_network_lan1_netmask_cidr}}"
+      vm_gateway: "{{lab_network_lan1_gateway}}"
+      vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+      vm_domain: "{{lab_domain_name}}"
+
+- name: Build CentOS VMs
+  hosts: centos
+  gather_facts: false
+  vars_files: 
+    - vars/vars-esx.yml  
+  tasks:
+  - name: Build CentOS8 VM - ansible
+    block:
+    - include_vars: defaults/Build_CentOS8_VM_from_ISO.yml
+    - include_tasks: tasks/Build_CentOS8_VM_from_ISO.yml
+      vars:
+        vm_hostname: "{{inventory_hostname}}"
+        vm_address: "{{ip_address}}"       
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_network: "{{lab_network_lan1_portgroup}}"
+        vm_password_new: "{{lab_password}}"
+        vm_netmask_cidr: "{{lab_network_lan1_netmask_cidr}}"
+        vm_gateway: "{{lab_network_lan1_gateway}}"
+        vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+        vm_domain: "{{lab_domain_name}}"
+        vm_datastore: "{{lab_vm_datastore}}"
+    when: version == "CentOS8"
+
+  - name: Build CentOS8 VM - ansible
+    block:
+    - include_vars: defaults/Build_CentOS7_VM_from_ISO.yml
+    - include_tasks: tasks/Build_CentOS7_VM_from_ISO.yml
+      vars:
+        vm_hostname: "{{inventory_hostname}}"
+        vm_address: "{{ip_address}}"       
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_network: "{{lab_network_lan1_portgroup}}"
+        vm_password_new: "{{lab_password}}"
+        vm_netmask_cidr: "{{lab_network_lan1_netmask_cidr}}"
+        vm_gateway: "{{lab_network_lan1_gateway}}"
+        vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+        vm_domain: "{{lab_domain_name}}"
+        vm_datastore: "{{lab_vm_datastore}}"
+    when: version == "CentOS7"
+
+
+
+

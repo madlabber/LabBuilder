@@ -1,14 +1,5 @@
     install_iso: "pfSense-CE-2.4.5-RELEASE-p1-amd64.iso"
     install_iso_url: "https://atxfiles.pfsense.org/mirror/downloads/pfSense-CE-2.4.5-RELEASE-p1-amd64.iso.gz"
-    vm_name: psSenseVM
-    vm_password_new: P@ssw0rd
-    vm_disk_gb: 10
-    vm_memory_mb: 1024
-    vm_num_cpus: 1
-    vm_network_wan: "VM Network"
-    vm_network_lan: "Lab Network"
-    config_xml_file: "files/pfsense/config.xml"
-    vm_username: "root"
-    vm_password: '{{ vm_password_new }}'
+
 
  
