@@ -6,6 +6,7 @@
     vm_name: TEST_Centos7VM
     vm_username: root
     vm_password: P@ssw0rd
+    awx_password: P@ssw0rd
   vars_files: 
     - vars/main.yml
   tasks:
@@ -89,7 +90,7 @@
       - "echo awx_official=true >> awx/installer/inventory"
       - "sed -i 's/env: python3/python3/' awx/installer/inventory"     
       - "sed -i 's/env python3/python3/' awx/installer/inventory"
-      - "sed -i 's/# admin_password=password/admin_password=password/' awx/installer/inventory"
+      - "sed -i 's/# admin_password=password/admin_password={{awx_password}}/' awx/installer/inventory"
       - "yum install -y python3 python36-docker"
       - "pip install --upgrade pip"
       - "pip3 install setuptools --upgrade"

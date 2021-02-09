@@ -1,4 +1,15 @@
 ---
+- name: process variable
+  set_fact:
+    ontap_password:         "{{ ontap_password        |default('') }}"
+    ontap_node_mgmt_ip:     "{{ ontap_node_mgmt_ip    |default('') }}"
+    ontap_cluster_mgmt_ip:  "{{ ontap_cluster_mgmt_ip |default('') }}"
+    ontap_netmask:          "{{ ontap_netmask         |default('') }}"
+    ontap_gateway:          "{{ ontap_gateway         |default('') }}"
+    ontap_dns_domain:       "{{ ontap_dns_domain      |default('') }}" 
+    ontap_dns_server:       "{{ ontap_dns_server      |default('') }}"
+    ontap_location:         "{{ ontap_location        |default('') }}"
+
 - name: Start VM
   vmware_guest:
     hostname: '{{ esxi_address }}'

@@ -1,34 +1,7 @@
 # Path to the Simulate ONTAP OVA File
 # Tested with 9.8, but 9.7 should also be compatible
-ontap_version: "9.8"
-vsim_ova: 'files/ONTAPSimulator/vsim-netapp-DOT{{ontap_version}}-cm_nodar.ova'
-
-# VM Name shown in vCenter inventory
-vm_name: SimulateONTAP
-
-# For ESX Deployment 8GB is suggested.  5.1 GB is the minimum required to boot
-vm_memory_mb: 8192 
-
-# The default 2vcpu is generally sufficient
-vm_num_vcpus: 2
-
-# The 'cluster network' portgroup name for e0a and e0b
-cluster_network: "VM Network"
-
-# The 'data network' portgroup name for e0c and e0d
-data_network: "VM Network"
-
-# The serial number must be unique for each node within a multi-node cluster
-# The serial number must correspond to an available set of license keys
-# The two currently available options are 408236-50-7, or 4034389-06-2
-# Other serials numbers may be used if the associated licenses are available
-# Note: the sysid is randomized by the playbook
-sys_serial_number: "4082368-50-7" 
-
-
-# The sysid will randomized if blank but can be explicitly defined here:
-nvram_sysid: ""
-#nvram_sysid: "408236507" 
+ontap_version: "{{ ontap_version | default('9.8') }}"
+vsim_ova:      "{{ vsim_ova      | default('files/ONTAPSimulator/vsim-netapp-DOT{{ontap_version}}-cm_nodar.ova') }}"
 
 # Virtual (simulated) Disk Devices to create during init
 # type:qty:shelf,type:qty:shelf,type:qty:shelf,type:qty:shelf
@@ -47,23 +20,4 @@ nvram_sysid: ""
 # vdevinit: "23:14:0,23:14:1" # 28x1gb disks (default)
 # vdevinit: "23:14:0,23:14:1,23:14:2,23:14:3" # 56x1gb disks
 # vdevinit: "23:14:0,23:14:1,32:14:2,34:14:3" # (28x1gb 15k+14x2gb 7.2k+14x100mb SSD) - hybrid config
-vdevinit: "31:14:0,31:14:1,31:14:2,31:14:3" # (56x4gb 15k)  
-
-
-# Node Management IP Address
-# If specified the IP/Netmask/gateway will be assigned to the node
-# If empty, DHCP will be enabled
-ontap_node_mgmt_ip: ""
-ontap_netmask: ""
-ontap_gateway: "" 
-
-# These additional items are required by cluster setup
-ontap_cluster_mgmt_ip: ""
-ontap_cluster_name: "ONTAP"
-ontap_password: Netapp1!
-ontap_dns_domain: ""
-ontap_dns_server: ""
-ontap_location: ""
-
-
-
+vdevinit: "{{ vdevinit |default('31:14:0,31:14:1,31:14:2,31:14:3') }}" # (56x4gb 15k)  

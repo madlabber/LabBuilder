@@ -1,0 +1,109 @@
+---
+# - name: Install Ansible on Centos7 via vm_shell
+#   hosts: localhost
+#   gather_facts: false
+#   vars:
+#     vm_name: TEST_Centos7VM
+#     vm_username: root
+#     vm_password: P@ssw0rd
+#     awx_password: P@ssw0rd
+#   vars_files: 
+#     - vars/main.yml
+#   tasks:
+- name: default awx password
+  set_fact:
+    awx_password: "{{awx_password | default('{{vm_password}}')}}"
+- name: Disable SELinux
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "{{vm_username}}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"{{item}}\""
+    wait_for_process: true
+  delegate_to: localhost  
+  loop:
+    - "setenforce 0"
+    - "sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config"
+    - "sed -i 's/SELINUX=permissive/SELINUX=disabled/' /etc/selinux/config" 
+- name: Reboot-Guest
+  community.vmware.vmware_guest_powerstate:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no  
+    name: '{{ vm_name }}'
+    state: reboot-guest
+  delegate_to: localhost
+  register: deploy
+- name: Wait for 30 seconds
+  wait_for: timeout=30
+  delegate_to: localhost
+- name: Wait for VMware tools to become available by name
+  community.vmware.vmware_guest_tools_wait:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  retries: 3
+  delay: 15
+  register: result           
+  until: result is succeeded 
+- name: Wait for 30 seconds
+  wait_for: timeout=30
+  delegate_to: localhost
+- name: Run command
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "{{vm_username}}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"{{item}}\""
+    wait_for_process: true
+  delegate_to: localhost
+  retries: 3
+  delay: 15
+  register: result           
+  until: result is succeeded  
+  loop:
+    - "yum install -y epel-release"
+    - "yum remove python-docker-py"
+    - "yum install -y yum-utils device-mapper-persistent-data lvm2"
+    - "yum install -y ansible git vim-enhanced"
+    - "yum install -y python-devel python-pip" 
+    - "pip install cryptography==2.5.0"
+    - "pip install jsonschema"
+    - "pip install docker-compose~=1.23.0"
+    - "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo"
+    - "yum install docker-ce -y"
+    - "systemctl start docker"
+    - "systemctl enable docker"
+    - "git clone https://github.com/ansible/awx.git"
+    - "git clone https://github.com/ansible/awx-logos.git awx/awx-logos"
+    - "echo awx_official=true >> awx/installer/inventory"
+    - "sed -i 's/env: python3/python3/' awx/installer/inventory"     
+    - "sed -i 's/env python3/python3/' awx/installer/inventory"
+    - "sed -i 's/# admin_password=password/admin_password={{awx_password}}/' awx/installer/inventory"
+    - "yum install -y python3 python36-docker"
+    - "pip install --upgrade pip"
+    - "pip3 install setuptools --upgrade"
+    - "pip3 install --no-cache-dir cryptography==2.5.0"
+    - "pip3 install docker-compose"
+    - "firewall-cmd --permanent --add-port=80/tcp"
+    - "firewall-cmd --reload"      
+    - "ansible-playbook -i awx/installer/inventory awx/installer/install.yml"
+
+
+
+
+

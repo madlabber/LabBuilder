@@ -1,0 +1,68 @@
+all:
+  hosts:
+  vars:
+    lab_name: test
+    lab_netmask: 255.255.255.0
+    lab_password: P@ssw0rd
+    lab_vm_datastore: TestVMs
+    lab_network_wan_portgroup: "VM Network"
+    lab_network_lan1_portgroup: "VM Network"
+    lab_network_lan1_netmask_cidr: "24"
+    lab_network_lan1_netmask: "255.255.255.0"
+    lab_network_lan1_gateway: "192.168.123.1"
+    lab_network_lan1_dns_ip: "192.168.123.1"
+    lab_domain_name: "lab.local"
+#    lab_dc01_hostname: "dc01"
+#    lab_dc01_ip: "192.168.0.11"
+  children:
+    # pfsense:
+    #   hosts:
+    #     gateway:
+    #       vm_network_wan: "{{lab_network_wan_portgroup}}"
+    #       vm_network_lan: "{{lab_network_lan1_portgroup}}"
+    #       config_xml_file: "files/pfsense/config.xml"
+    # dc:
+    #   hosts:
+    #     dc01:
+    #       version: "Server2016"
+    #       ip_address: 192.168.0.11
+    # winservers:
+    #   hosts:
+    #     win1:
+    #       ip_address: 192.168.0.12
+    #       version: "Server2016"      
+    #       vm_memory_mb: 2048
+    #       vm_num_cpus: 2
+    #       vm_disk_gb: 40          
+    # centos:
+    #   hosts:
+    #     ansible:
+    #       ip_address: 192.168.0.15
+    #       version: "CentOS7"
+    #       install_ansible: true
+    #       install_awx: true
+    #     centos1:
+    #       ip_address: 192.168.0.14
+    #       version: "CentOS7"
+    #   vars:
+    #       install_xrdp: true
+    vsims:
+      hosts:
+        vsim1-01:
+          ip_address: 192.168.123.171
+          sys_serial_num: "4082368-50-7"
+          cluster_create: true
+          cluster_name: vsim1
+          cluster_mgmt_ip: 192.168.123.170
+        # vsim2-01:
+        #   ip_address: 192.168.0.81
+        #   sys_serial_num: "4082368-50-7"
+        #   cluster_create: false
+        # vsim2-02:
+        #   ip_address: 192.168.0.82
+        #   sys_serial_num: "4034389-06-2"
+        #   cluster_create: false   
+      vars:
+          ontap_version: "9.7"             
+
+

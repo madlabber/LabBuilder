@@ -39,10 +39,13 @@ all:
         ansible:
           ip_address: 192.168.0.15
           version: "CentOS7"
+          install_ansible: true
+          install_awx: true
         centos1:
           ip_address: 192.168.0.14
           version: "CentOS7"
       vars:
+          install_xrdp: true
     vsims:
       hosts:
         vsim1-01:

@@ -1,8 +1,26 @@
 ---
+#- include_vars: defaults/Build_ONTAP_Simulator_from_OVA.yml
+- name: set defaults
+  set_fact:
+    vm_name:            '{{ vm_name            |default("SimulateONTAP") }}'
+    vm_num_cpus:        '{{ vm_num_cpus        |default(2) }}'
+    vm_memory_mb:       '{{ vm_memory_mb       |default(8192) }}'
+    ontap_version:      '{{ ontap_version      |default(9.8) }}'
+    vsim_ova:           "{{ vsim_ova           |default('files/ONTAPSimulator/vsim-netapp-DOT{{ontap_version}}-cm_nodar.ova') }}" 
+    ontap_node_mgmt_ip: "{{ ontap_node_mgmt_ip |default('') }}"
+    ontap_netmask:      "{{ ontap_netmask      |default('') }}"
+    ontap_gateway:      "{{ ontap_gateway      |default('') }}"
+    cluster_network:    "{{ cluster_network    |default('VM Network') }}"
+    data_network:       "{{ data_network       |default('VM Network') }}"
+    sys_serial_number:  "{{ sys_serial_number  |default('4082368-50-7') }}"
+    nvram_sysid:        "{{ nvram_sysid        |default('') }}"
+    vdevinit: "{{ vdevinit |default('31:14:0,31:14:1,31:14:2,31:14:3') }}"
+
 - name: generate sysid
   set_fact:
     nvram_sysid: "4082{{ 9 | random(start=0) }}{{ 9 | random(start=0) }}{{ 9 | random(start=0) }}{{ 9 | random(start=0) }}07" #the two current options are 408236507, or 4034389062
   when: nvram_sysid == ""
+
 - vmware_deploy_ovf:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
@@ -32,7 +50,7 @@
     state: present
     hardware:
       memory_mb: "{{ vm_memory_mb}}"
-      num_cpus: '{{ vm_num_vcpus }}'
+      num_cpus: '{{ vm_num_cpus }}'
     customvalues:
       - key: pciHole.start
         value: 1024  # Moving the PCI hole here gives ONTAP access to more system ram
@@ -50,7 +68,7 @@
 - name: Wait for 5 seconds
   wait_for: timeout=5
   delegate_to: localhost
-  
+
 - name: Press Space to interrupt autoboot
   community.vmware.vmware_guest_sendkey:
     hostname: '{{ vcenter_address }}'

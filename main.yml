@@ -202,9 +202,25 @@
         vm_dns_server: "{{lab_network_lan1_dns_ip}}"
         vm_domain: "{{lab_domain_name}}"
         vm_datastore: "{{lab_vm_datastore}}"
+    - include_tasks: tasks/install_xrdp_in_CentOS8_with_vm_shell.yml
+      vars:
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_username: 'root'
+        vm_password: '{{lab_password}}'        
+      when: 
+        - install_xrdp is defined
+        - install_xrdp is true 
+    - include_tasks: tasks/install_ansible_in_CentOS8_with_vm_shell.yml
+      vars:
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_username: 'root'
+        vm_password: '{{lab_password}}'        
+      when: 
+        - install_ansible is defined
+        - install_ansible is true 
     when: version == "CentOS8"
 
-  - name: Build CentOS8 VM - ansible
+  - name: Build CentOS7 VM - ansible
     block:
     - include_vars: defaults/Build_CentOS7_VM_from_ISO.yml
     - include_tasks: tasks/Build_CentOS7_VM_from_ISO.yml
@@ -219,7 +235,32 @@
         vm_dns_server: "{{lab_network_lan1_dns_ip}}"
         vm_domain: "{{lab_domain_name}}"
         vm_datastore: "{{lab_vm_datastore}}"
+    - include_tasks: tasks/install_xrdp_in_CentOS7_with_vm_shell.yml
+      vars:
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_username: 'root'
+        vm_password: '{{lab_password}}'        
+      when: 
+        - install_xrdp is defined
+        - install_xrdp is true 
+    - include_tasks: tasks/install_ansible_in_CentOS7_with_vm_shell.yml
+      vars:
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_username: 'root'
+        vm_password: '{{lab_password}}'        
+      when: 
+        - install_ansible is defined
+        - install_ansible is true 
+    - include_tasks: tasks/install_AWX_in_CentOS7_with_vm_shell.yml
+      vars:
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_username: 'root'
+        vm_password: '{{lab_password}}'        
+      when: 
+        - install_awx is defined
+        - install_awx is true 
     when: version == "CentOS7"
+
 
 - name: Build ONTAP Simulators
   hosts: vsims
@@ -229,7 +270,7 @@
   vars_files:
     - vars/main.yml
   tasks:
-  - include_vars: defaults/Build_ONTAP_Simulator_from_OVA.yml
+#  - include_vars: defaults/Build_ONTAP_Simulator_from_OVA.yml
   - include_tasks: "tasks/Build_ONTAP_Simulator_from_OVA.yml"
     vars:
       vm_name: '{{lab_name}}_{{inventory_hostname}}'
