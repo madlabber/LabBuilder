@@ -256,7 +256,40 @@
       ontap_gateway: "{{lab_network_lan1_gateway}}"
     when: cluster_setup is true
 
-
+- name: Build ONTAP Select eval cluster
+  hosts: selecteval
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+  tasks:
+- hosts: localhost 
+  name: Build ONTAPSelectEval from OVA
+  gather_facts: false
+  vars_files: 
+    vars/main.yml
+  tasks:
+#  - include_vars: defaults/Build_ONTAPSelectEval_from_OVA.yml
+  - include_tasks: tasks/Build_ONTAPSelectEval_from_OVA.yml
+    vars:
+      #ontap_version: "9.8"
+      # ontap_select_ova: "files/9.8_DataONTAPv-esx-standalone-eval-nodar.ova" 
+      # ontap_deployment_option: 'ONTAPSelectEVALSmall' # <=9.5 use 'ONTAPSelectEVAL', 9.6+ use 'ONTAPSelectEVALSmall'
+      vm_name: '{{lab_name}}_{{inventory_hostname}}'
+      vm_datastore: "{{lab_vm_datastore}}"
+      vm_network: "{{lab_network_lan1_portgroup}}"
+      #vm_num_cpus: 4
+      #vm_cpu_reservation_mhz: 1000        
+      #vm_memory_mb: 16384 
+      #vm_data_disk_gb: "100"
+      #vm_disk_rovisioning: thin 
+      ontap_cluster_name: "{{cluster_name | default('ONTAP')}}"
+      ontap_cluster_mgmt_ip: "{{cluster_mgmt_ip}}"    
+      ontap_node_mgmt_ip: "{{ip_address}}"
+      ontap_netmask: "{{lab_network_lan1_netmask}}"
+      ontap_gateway: "{{lab_network_lan1_gateway}}"
+      ontap_password: "{{lab_password |default('netapp123')}}"
+      ontap_dns_domain: "{{lab_domain_name}}"
+      ontap_dns_server: "{{lab_network_lan1_dns_ip}}"
 
 
 

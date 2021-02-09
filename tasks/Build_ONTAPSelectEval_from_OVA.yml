@@ -1,4 +1,18 @@
 ---
+- name: set defaults
+  set_fact:
+    vm_name:                 '{{ vm_name                 |default("ONTAPSelect") }}'
+    vm_num_cpus:             '{{ vm_num_cpus             |default(4)      }}'
+    vm_memory_mb:            '{{ vm_memory_mb            |default(16384)  }}'
+    vm_cpu_reservation_mhz:  '{{ vm_cpu_reservation_mhz  |default(1000)   }}'  
+    ontap_deployment_option: '{{ ontap_deployment_option |default("ONTAPSelectEVALSmall") }}'  
+    vm_disk_rovisioning:     '{{ vm_disk_rovisioning     |default("thin") }}' 
+    vm_data_disk_gb:         '{{ vm_data_disk_gb         |default("500")  }}'
+    ontap_cluster_name:      '{{ ontap_cluster_name      |default("ONTAP") }}'
+    ontap_password:          '{{ ontap_password          |default("Changeme!") }}'
+    ontap_version:           "{{ ontap_version           |default('9.8')  }}"
+    ontap_select_ova:        "{{ ontap_select_ova        |default('files/ONTAPSelect/{{ontap_version}}_DataONTAPv-esx-standalone-eval-nodar.ova') }}" 
+
 - vmware_deploy_ovf:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
@@ -18,10 +32,10 @@
       DeploymentOption.value: '{{ontap_deployment_option}}' # <=9.5 use 'ONTAPSelectEVAL', 9.6+ use 'ONTAPSelectEVALSmall'
       clustername: '{{ ontap_cluster_name }}'
       Data-disk: '{{ vm_data_disk_gb }}'
-      cluster_mgmt_ipaddr: '{{ ontap_cluster_mgmt_ip }}' 
-      node_mgmt_ipaddr: '{{ ontap_node_mgmt_ip }}' 
-      netmask: '{{ ontap_netmask }}' 
-      gateway: '{{ ontap_gateway }}' 
+      cluster_mgmt_ipaddr: '{{ ontap_cluster_mgmt_ip|default("") }}' 
+      node_mgmt_ipaddr: '{{ ontap_node_mgmt_ip|default("") }}' 
+      netmask: '{{ ontap_netmask|default("") }}' 
+      gateway: '{{ ontap_gateway|default("") }}' 
       node_name: '{{ ontap_cluster_name }}-01' 
       password: '{{ ontap_password }}' 
   delegate_to: localhost
@@ -38,10 +52,10 @@
     name: '{{ vm_name }}'
     state: present
     hardware:
-      memory_mb: '{{ vm_memory_mb }}'
-      num_cpus: '{{ vm_num_cpus }}'
+      memory_mb: '{{ vm_memory_mb|int }}'
+      num_cpus: '{{ vm_num_cpus|int }}'
 #        memory_reservation_lock: true
-      cpu_reservation: "{{vm_cpu_reservation_mhz}}"
+      cpu_reservation: "{{ vm_cpu_reservation_mhz|int }}"
     customvalues:
       - key: pciHole.start
         value: 1024  # Moving the PCI hole here gives ONTAP access to more system ram
