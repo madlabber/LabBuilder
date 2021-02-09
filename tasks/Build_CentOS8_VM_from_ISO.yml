@@ -185,7 +185,8 @@
     vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin root\""
     wait_for_process: true
   delegate_to: localhost
-  ignore_errors: yes   
+  ignore_errors: yes
+
 - name: Run shell command via vm_shell
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
@@ -198,50 +199,45 @@
     vm_shell: '/usr/bin/sh'
     vm_shell_args: "{{item}}"
     wait_for_process: true
-  delegate_to: localhost  
+  delegate_to: localhost
+  retries: 3
+  delay: 5
+  register: result           
+  until: result is succeeded  
   loop:
     - "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
     - "-c \"hostnamectl set-hostname {{ vm_hostname }}.{{ vm_domain }}\""
     - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.address {{vm_address}}/{{vm_netmask_cidr}} IPv4.gateway {{vm_gateway}} IPv4.method manual\""
     - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.dns {{vm_dns_server}}\""
-- name: Reboot-Guest
-  community.vmware.vmware_guest_powerstate:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no  
-    name: '{{ vm_name }}'
-    state: reboot-guest
-  delegate_to: localhost
-  register: deploy
-- name: Wait for 30 seconds
-  wait_for: timeout=30
-  delegate_to: localhost
-- name: Wait for VMware tools to become available by name
-  community.vmware.vmware_guest_tools_wait:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'    
-    validate_certs: no 
-    name: '{{ vm_name }}'
-  delegate_to: localhost
-  retries: 3
-  delay: 15
-  register: result           
-  until: result is succeeded 
-- name: Wait for 30 seconds for VMware Tools refresh
-  wait_for: timeout=30
-  delegate_to: localhost
-- name: Find the VM's IP Address via VMware tools
-  community.vmware.vmware_guest_info:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'    
-    validate_certs: no 
-    datacenter: ha-datacenter
-    name: '{{ vm_name }}'
-  delegate_to: localhost
-  register: vmfacts
-- debug: msg="IP Address - {{ vmfacts['instance']['ipv4'] }}"   
+
+# - name: Reboot-Guest
+#   community.vmware.vmware_guest_powerstate:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}'   
+#     validate_certs: no  
+#     name: '{{ vm_name }}'
+#     state: reboot-guest
+#   delegate_to: localhost
+#   register: deploy
+# - name: Wait for 30 seconds
+#   wait_for: timeout=30
+#   delegate_to: localhost
+# - name: Wait for VMware tools to become available by name
+#   community.vmware.vmware_guest_tools_wait:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}'    
+#     validate_certs: no 
+#     name: '{{ vm_name }}'
+#   delegate_to: localhost
+#   retries: 3
+#   delay: 15
+#   register: result           
+#   until: result is succeeded 
+# - name: Wait for 30 seconds for VMware Tools refresh
+#   wait_for: timeout=30
+#   delegate_to: localhost
+
 
 
