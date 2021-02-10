@@ -93,6 +93,7 @@
     state: absent
   delegate_to: localhost
   when: tsm_service.changed
+  
 - name: Create VM
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
@@ -210,34 +211,34 @@
     - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.address {{vm_address}}/{{vm_netmask_cidr}} IPv4.gateway {{vm_gateway}} IPv4.method manual\""
     - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.dns {{vm_dns_server}}\""
 
-# - name: Reboot-Guest
-#   community.vmware.vmware_guest_powerstate:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'   
-#     validate_certs: no  
-#     name: '{{ vm_name }}'
-#     state: reboot-guest
-#   delegate_to: localhost
-#   register: deploy
-# - name: Wait for 30 seconds
-#   wait_for: timeout=30
-#   delegate_to: localhost
-# - name: Wait for VMware tools to become available by name
-#   community.vmware.vmware_guest_tools_wait:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'    
-#     validate_certs: no 
-#     name: '{{ vm_name }}'
-#   delegate_to: localhost
-#   retries: 3
-#   delay: 15
-#   register: result           
-#   until: result is succeeded 
-# - name: Wait for 30 seconds for VMware Tools refresh
-#   wait_for: timeout=30
-#   delegate_to: localhost
+- name: Reboot-Guest
+  community.vmware.vmware_guest_powerstate:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no  
+    name: '{{ vm_name }}'
+    state: reboot-guest
+  delegate_to: localhost
+  register: deploy
+- name: Wait for 30 seconds
+  wait_for: timeout=30
+  delegate_to: localhost
+- name: Wait for VMware tools to become available by name
+  community.vmware.vmware_guest_tools_wait:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  retries: 3
+  delay: 15
+  register: result           
+  until: result is succeeded 
+- name: Wait for 30 seconds for VMware Tools refresh
+  wait_for: timeout=30
+  delegate_to: localhost
 
 
 

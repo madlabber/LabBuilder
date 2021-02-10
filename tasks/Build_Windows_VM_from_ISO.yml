@@ -177,6 +177,7 @@
     state: powered-on
   delegate_to: localhost
   register: powerstate
+
 - name: Wait for VMware tools to become available 
   community.vmware.vmware_guest_tools_wait:
     hostname: '{{ vcenter_address }}'
@@ -189,6 +190,7 @@
   delay: 60
   register: result           
   until: result is succeeded 
+
 - name: Set password via vmware_vm_shell
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
@@ -203,7 +205,23 @@
     vm_shell_args: '-command "(net user Administrator {{ vm_password_new }})"'
     wait_for_process: true
   delegate_to: localhost
+  register: setpassword
   ignore_errors: yes
+
+- name: Find the VM's IP Address via VMware tools
+  community.vmware.vmware_guest_info:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    datacenter: "{{vcenter_datacenter}}"
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  register: vmfacts
+- set_fact:
+    _ipv4: "{{ vmfacts['instance']['ipv4'] | default('')}}"
+- debug: msg="IP Address - {{ vmfacts['instance'] }}"  
+
 - name: Set static IP address
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
@@ -223,7 +241,10 @@
   until: result is succeeded      
   loop:
     - "-command \"(new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ vm_address }} -prefixlength {{vm_netmask_cidr}} -defaultgateway {{ vm_gateway }})\""
-  when: vm_address != ""
+  when: 
+    - vm_address != ""
+    - vm_address != "{{_ipv4}}"
+
 - name: Set DNS Server
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
@@ -244,6 +265,7 @@
   loop:
     - "-command \"(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }})\""
   when: vm_dns_server != ""
+
 - name: Enable RDP
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
@@ -264,6 +286,7 @@
   loop:
     - "-command \"(set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name fDenyTSConnections -Value 0)\""
     - "-command \"(Enable-NetFirewallRule -DisplayGroup 'Remote Desktop')\""
+
 - name: Rename Computer
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
@@ -284,6 +307,7 @@
   loop:
     - "-command \"(Rename-Computer -NewName {{ vm_hostname }})\""
   when: vm_hostname != ""
+
 - name: Reboot-Guest
   community.vmware.vmware_guest_powerstate:
     hostname: '{{ vcenter_address }}'

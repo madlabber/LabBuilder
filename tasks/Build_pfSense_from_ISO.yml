@@ -157,59 +157,8 @@
     state: powered-on
   delegate_to: localhost
   register: powerstate
-- name: Wait for 60 seconds
-  wait_for: timeout=60
-  delegate_to: localhost
-- name: Blind Install
-  community.vmware.vmware_guest_sendkey:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
-    name: "{{ _vm_name }}"
-    keys_send: ENTER
-    string_send: "{{item}}"
-  delegate_to: localhost
-  loop: 
-    - "" # enter
-    - "" # enter
-    - "" # enter
-    - "" # enter
-- name: Wait for 120 seconds
-  wait_for: timeout=120
-  delegate_to: localhost
-- name: Blind Install part 2
-  community.vmware.vmware_guest_sendkey:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
-    validate_certs: no 
-    name: "{{ _vm_name }}"
-    keys_send: ENTER
-    string_send: "{{item}}"
-  delegate_to: localhost
-  loop: 
-    - "" # enter
-    - "" # enter
-- name: Wait for 120 seconds
-  wait_for: timeout=120
-  delegate_to: localhost
-- name: Blind Install part 3 - Open-VM-Tools
-  community.vmware.vmware_guest_sendkey:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
-    validate_certs: no 
-    name: "{{ _vm_name }}"
-    keys_send: ENTER
-    string_send: "{{item}}"
-  delegate_to: localhost
-  loop: 
-    - "8" # enter
-    - "pkg install -y pfSense-pkg-Open-VM-Tools" # enter
-    - "reboot"
-    - ""
-- name: Wait for VMware tools to become available 
+
+- name: Check for VMware tools  
   community.vmware.vmware_guest_tools_wait:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
@@ -217,10 +166,75 @@
     validate_certs: no 
     name: '{{ _vm_name }}'
   delegate_to: localhost
-  retries: 10
-  delay: 60
-  register: result           
-  until: result is succeeded
+  register: alreadyinstalled           
+  ignore_errors: true
+
+- block:
+  - name: Wait for 60 seconds
+    wait_for: timeout=60
+    delegate_to: localhost
+  - name: Blind Install
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'   
+      validate_certs: no 
+      name: "{{ _vm_name }}"
+      keys_send: ENTER
+      string_send: "{{item}}"
+    delegate_to: localhost
+    loop: 
+      - "" # enter
+      - "" # enter
+      - "" # enter
+      - "" # enter
+  - name: Wait for 120 seconds
+    wait_for: timeout=120
+    delegate_to: localhost
+  - name: Blind Install part 2
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'  
+      validate_certs: no 
+      name: "{{ _vm_name }}"
+      keys_send: ENTER
+      string_send: "{{item}}"
+    delegate_to: localhost
+    loop: 
+      - "" # enter 
+      - "" # enter
+  - name: Wait for 120 seconds
+    wait_for: timeout=120
+    delegate_to: localhost
+  - name: Blind Install part 3 - Open-VM-Tools
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'  
+      validate_certs: no 
+      name: "{{ _vm_name }}"
+      keys_send: ENTER
+      string_send: "{{item}}"
+    delegate_to: localhost
+    loop: 
+      - "8" # enter
+      - "pkg install -y pfSense-pkg-Open-VM-Tools" # enter
+      - "service vmware-guestd.sh start"
+      - ""
+  - name: Wait for VMware tools to become available 
+    community.vmware.vmware_guest_tools_wait:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'  
+      validate_certs: no 
+      name: '{{ _vm_name }}'
+    delegate_to: localhost
+    retries: 10
+    delay: 60
+    register: result           
+    until: result is succeeded
+  when: alreadyinstalled is failed
 
 # push config file
 - name: copy file to vm 
@@ -238,36 +252,40 @@
         dest: "/cf/conf/config.xml"
         overwrite: True
   delegate_to: localhost
+  register: copyconfig
   when: _config_xml_file != ""
+  ignore_errors: true
 
-- name: Reboot-Guest
-  community.vmware.vmware_guest_powerstate:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
-    name: '{{ _vm_name }}'
-    state: reboot-guest
-  delegate_to: localhost
-  register: deploy
-- name: Wait for 30 seconds
-  wait_for: timeout=30
-  delegate_to: localhost
-  when: _config_xml_file != ""
+- block:
+  - name: Reboot-Guest
+    community.vmware.vmware_guest_powerstate:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'   
+      validate_certs: no 
+      name: '{{ _vm_name }}'
+      state: reboot-guest
+    delegate_to: localhost
+    register: deploy
+  - name: Wait for 30 seconds
+    wait_for: timeout=30
+    delegate_to: localhost
+    when: _config_xml_file != ""
 
-- name: Wait for VMware tools to become available by name
-  community.vmware.vmware_guest_tools_wait:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
-    validate_certs: no 
-    name: '{{ _vm_name }}'
-  delegate_to: localhost
-  retries: 3
-  delay: 15
-  register: result           
-  until: result is succeeded 
-  when: _config_xml_file != ""
+  - name: Wait for VMware tools to become available by name
+    community.vmware.vmware_guest_tools_wait:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'  
+      validate_certs: no 
+      name: '{{ _vm_name }}'
+    delegate_to: localhost
+    retries: 3
+    delay: 15
+    register: result           
+    until: result is succeeded 
+    when: _config_xml_file != ""
+  when: copyconfig is succeeded
 
 # Any additional packages required need to be installed 
 - name: Run shell commands via vm_shell
@@ -280,10 +298,10 @@
     vm_password: '{{ _vm_password_new }}'
     vm_id: '{{ _vm_name }}'
     vm_shell: '/bin/sh'
-    vm_shell_args: "{{item}}"
+    vm_shell_args: " -c \"{{item}}\""
     wait_for_process: true
   delegate_to: localhost  
   loop:
-    - "-c \"pkg install -y pfSense-pkg-tftpd\""
+    - "pkg install -y pfSense-pkg-tftpd"
 
  

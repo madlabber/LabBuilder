@@ -13,7 +13,7 @@
     ontap_version:           "{{ ontap_version           |default('9.8')  }}"
     ontap_select_ova:        "{{ ontap_select_ova        |default('files/ONTAPSelect/{{ontap_version}}_DataONTAPv-esx-standalone-eval-nodar.ova') }}" 
 
-- vmware_deploy_ovf:
+- community.vmware.vmware_deploy_ovf:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'
@@ -43,8 +43,9 @@
   delay: 60
   register: result           
   until: result is succeeded 
+  
 - name: Adjust VM Sizing
-  vmware_guest:
+  community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'
@@ -61,7 +62,7 @@
         value: 1024  # Moving the PCI hole here gives ONTAP access to more system ram
   delegate_to: localhost
 - name: Start VM
-  vmware_guest:
+  community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'

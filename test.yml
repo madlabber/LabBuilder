@@ -28,4 +28,3 @@
   - debug:
       msg: "{{item}}"
     loop: "{{extra_commands}}"
-

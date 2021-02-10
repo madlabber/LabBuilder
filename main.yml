@@ -278,6 +278,7 @@
     delay: 5
     register: result           
     until: result is succeeded
+    ignore_errors: true
     loop: "{{extra_commands}}"
     when: extra_commands is defined
 
@@ -322,12 +323,6 @@
   gather_facts: false
   vars_files:
     - vars/main.yml
-  tasks:
-- hosts: localhost 
-  name: Build ONTAPSelectEval from OVA
-  gather_facts: false
-  vars_files: 
-    vars/main.yml
   tasks:
 #  - include_vars: defaults/Build_ONTAPSelectEval_from_OVA.yml
   - include_tasks: tasks/Build_ONTAPSelectEval_from_OVA.yml

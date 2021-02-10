@@ -1,19 +1,19 @@
 all:
   hosts:
   vars:
-    lab_name: test
+    lab_name: lab_rancher
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
-    lab_vm_datastore: TestVMs
-#    lab_network_wan_portgroup: "VM Network"
-    lab_network_lan1_portgroup: "VM Network"
+    lab_vm_datastore: lab_rancher
+    lab_network_wan_portgroup: "VM Network"
+    lab_network_lan1_portgroup: "lab_rancher_net1"
     lab_network_lan1_netmask_cidr: "24"
     lab_network_lan1_netmask: "255.255.255.0"
-    lab_network_lan1_gateway: "192.168.123.1"
-    lab_network_lan1_dns_ip: "192.168.123.1"
+    lab_network_lan1_gateway: "192.168.0.1"
+    lab_network_lan1_dns_ip: "192.168.0.1"
     lab_domain_name: "lab.local"
-    # lab_dc01_hostname: "dc01"
-    # lab_dc01_ip: "192.168.0.11"
+    lab_dc01_hostname: "dc01"
+    lab_dc01_ip: "192.168.0.11"
   children:
     # pfsense:
     #   hosts:
@@ -28,8 +28,8 @@ all:
     #       ip_address: 192.168.0.11     
     centos:
       hosts:
-        centos1:
-          ip_address: 192.168.123.114
+        rancher:
+          ip_address: 192.168.0.40
           version: "CentOS8"
           vm_memory_mb: 6144
           vm_num_cpus: 2
@@ -38,8 +38,8 @@ all:
             # Install Docker-CE
             - "dnf install -y epel-release"
             - "dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
-            - "dnf install -y https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.10-3.2.el7.x86_64.rpm"
-            - "dnf install -y docker-ce --nobest"
+            #- "dnf install -y https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.10-3.2.el7.x86_64.rpm"
+            - "dnf install -y docker-ce --allowerasing"
             - "systemctl start docker"
             - "systemctl enable docker"
             # Install Rancher
@@ -47,7 +47,50 @@ all:
             # Open Firewall
             - "firewall-cmd --permanent --add-port=8080/tcp"
             - "firewall-cmd --reload"
+        worker1:
+          ip_address: 192.168.0.41
+          version: "CentOS8"
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
+          vm_disk_gb: 40  
+          extra_commands:
+            # Install Docker-CE
+            - "dnf install -y epel-release"
+            - "dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+            #- "dnf install -y https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.10-3.2.el7.x86_64.rpm"
+            - "dnf install -y docker-ce --allowerasing"
+            - "systemctl start docker"
+            - "systemctl enable docker"
+        worker2:
+          ip_address: 192.168.0.42
+          version: "CentOS8"
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
+          vm_disk_gb: 40  
+          extra_commands:
+            # Install Docker-CE
+            - "dnf install -y epel-release"
+            - "dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+            #- "dnf install -y https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.10-3.2.el7.x86_64.rpm"
+            - "dnf install -y docker-ce --allowerasing"
+            - "systemctl start docker"
+            - "systemctl enable docker"
+        worker3:
+          ip_address: 192.168.0.43
+          version: "CentOS8"
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
+          vm_disk_gb: 40  
+          extra_commands:
+            # Install Docker-CE
+            - "dnf install -y epel-release"
+            - "dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+            #- "dnf install -y https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.10-3.2.el7.x86_64.rpm"
+            - "dnf install -y docker-ce --allowerasing"
+            - "systemctl start docker"
+            - "systemctl enable docker"
       vars:
+        enable_xrdp: true
     # vsims:
     #   hosts:
     #     vsim1-01:
@@ -65,6 +108,7 @@ all:
     #       sys_serial_num: "4034389-06-2"
     #       cluster_create: false   
     #   vars:
-    #       ontap_version: "9.8"             
+    #       ontap_version: "9.8"   
+
 
 
