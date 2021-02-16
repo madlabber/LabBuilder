@@ -15,33 +15,35 @@ all:
     lab_dc01_hostname: "dc01"
     lab_dc01_ip: "192.168.0.11"
   children:
-    # pfsense:
-    #   hosts:
-    #     gateway:
-    #       vm_network_wan: "{{lab_network_wan_portgroup}}"
-    #       vm_network_lan: "{{lab_network_lan1_portgroup}}"
-    #       config_xml_file: "files/pfsense/config.xml"
-    # dc:
-    #   hosts:
-    #     dc01:
-    #       version: "Server2019"
-    #       ip_address: 192.168.0.11     
+    pfsense:
+      hosts:
+        gateway:
+          vm_network_wan: "{{lab_network_wan_portgroup}}"
+          vm_network_lan: "{{lab_network_lan1_portgroup}}"
+          config_xml_file: "files/pfsense/config.xml"
+    dc:
+      hosts:
+        dc01:
+          version: "Server2019"
+          ip_address: 192.168.0.11     
     centos:
+      vars:
+        vm_memory_mb: 4096
+        vm_num_cpus: 2
+        vm_disk_gb: 40 
+        install_xrdp: true
+        version: "CentOS7"
       hosts:
         rancher:
           ip_address: 192.168.0.40
-          version: "CentOS8"
           vm_memory_mb: 6144
-          vm_num_cpus: 2
-          vm_disk_gb: 40  
           extra_commands:
             # Install Docker-CE
-            - "dnf install -y epel-release"
-            - "dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
-            #- "dnf install -y https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.10-3.2.el7.x86_64.rpm"
-            - "dnf install -y docker-ce --allowerasing"
-            - "systemctl start docker"
-            - "systemctl enable docker"
+            - "yum install -y epel-release"
+            - "yum remove -y python-docker-py docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine"
+            - "yum-config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+            - "yum install -y docker-ce docker-ce-cli containerd.io"
+            - "systemctl enable docker --now"
             # Install Rancher
             - "docker run -d --restart=unless-stopped -p 8080:8080 rancher/server"
             # Open Firewall
@@ -49,66 +51,41 @@ all:
             - "firewall-cmd --reload"
         worker1:
           ip_address: 192.168.0.41
-          version: "CentOS8"
-          vm_memory_mb: 4096
-          vm_num_cpus: 2
-          vm_disk_gb: 40  
           extra_commands:
             # Install Docker-CE
-            - "dnf install -y epel-release"
-            - "dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
-            #- "dnf install -y https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.10-3.2.el7.x86_64.rpm"
-            - "dnf install -y docker-ce --allowerasing"
-            - "systemctl start docker"
-            - "systemctl enable docker"
+            - "yum install -y epel-release"
+            - "yum remove -y python-docker-py docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine"
+            - "yum-config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+            - "yum install -y docker-ce docker-ce-cli containerd.io"
+            - "systemctl enable docker --now"
         worker2:
           ip_address: 192.168.0.42
-          version: "CentOS8"
-          vm_memory_mb: 4096
-          vm_num_cpus: 2
-          vm_disk_gb: 40  
           extra_commands:
             # Install Docker-CE
-            - "dnf install -y epel-release"
-            - "dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
-            #- "dnf install -y https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.10-3.2.el7.x86_64.rpm"
-            - "dnf install -y docker-ce --allowerasing"
-            - "systemctl start docker"
-            - "systemctl enable docker"
+            - "yum install -y epel-release"
+            - "yum remove -y python-docker-py docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine"
+            - "yum-config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+            - "yum install -y docker-ce docker-ce-cli containerd.io"
+            - "systemctl enable docker --now"
         worker3:
           ip_address: 192.168.0.43
-          version: "CentOS8"
-          vm_memory_mb: 4096
-          vm_num_cpus: 2
-          vm_disk_gb: 40  
           extra_commands:
             # Install Docker-CE
-            - "dnf install -y epel-release"
-            - "dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
-            #- "dnf install -y https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.10-3.2.el7.x86_64.rpm"
-            - "dnf install -y docker-ce --allowerasing"
-            - "systemctl start docker"
-            - "systemctl enable docker"
-      vars:
-        enable_xrdp: true
-    # vsims:
-    #   hosts:
-    #     vsim1-01:
-    #       ip_address: 192.168.0.71
-    #       sys_serial_num: "4082368-50-7"
-    #       cluster_create: true
-    #       cluster_name: vsim1
-    #       cluster_mgmt_ip: 192.168.0.70
-    #     vsim2-01:
-    #       ip_address: 192.168.0.81
-    #       sys_serial_num: "4082368-50-7"
-    #       cluster_create: false
-    #     vsim2-02:
-    #       ip_address: 192.168.0.82
-    #       sys_serial_num: "4034389-06-2"
-    #       cluster_create: false   
-    #   vars:
-    #       ontap_version: "9.8"   
+            - "yum install -y epel-release"
+            - "yum remove -y python-docker-py docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine"
+            - "yum-config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+            - "yum install -y docker-ce docker-ce-cli containerd.io"
+            - "systemctl enable docker --now"
+    vsims:
+      hosts:
+        vsim1-01:
+          ontap_version: "9.8"
+          ip_address: 192.168.0.71
+          sys_serial_num: "4082368-50-7"
+          cluster_create: true
+          cluster_name: vsim1
+          cluster_mgmt_ip: 192.168.0.70
+
 
 
 

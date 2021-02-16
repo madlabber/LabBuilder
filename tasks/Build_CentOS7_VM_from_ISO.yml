@@ -1,4 +1,18 @@
 ---
+- name: variable defaults
+  set_fact:
+    vm_address:      "{{vm_address      | default('') }}"
+    vm_netmask_cidr: "{{vm_netmask_cidr | default('') }}"
+    vm_gateway:      "{{vm_gateway      | default('') }}"
+    vm_dns_server:   "{{vm_dns_server   | default('') }}"
+    vm_domain:       "{{vm_domain       | default('') }}"
+    vm_hostname:     "{{vm_hostname     | default('centos7vm') }}"
+    vm_name:         "{{vm_name         | default('centos7vm') }}"
+    vm_eth_name:     "{{vm_eth_name     | default('ens32') }}"
+    vm_password_old: "{{kickstart_password | default('Changeme!') }}"
+    vm_password_new: "{{vm_password_new | default('P@ssw0rd') }}"
+    config_iso:      "{{vm_name}}-ks.iso"
+
 - name: Create kickstart ISO
   community.general.iso_create:
     src_files:
@@ -8,6 +22,7 @@
     joliet: 3
     vol_ident: OEMDRV
   delegate_to: localhost
+
 - name: Copy kickstart iso to datastore
   community.vmware.vsphere_copy:
     hostname: '{{ vcenter_address }}'
@@ -20,6 +35,7 @@
     path: "{{config_iso}}"
   delegate_to: localhost
   ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
+
 - name: Check if install ISO exists
   community.vmware.vsphere_file:
     hostname: '{{ vcenter_address }}'
@@ -33,66 +49,73 @@
   register: install_iso_exists
   delegate_to: localhost
   ignore_errors: true 
-- name: Add ESXi to Ansible Hosts for SSH
-  add_host:
-    name: '{{ esxi_address }}'
-    group: "esx"
-    ansible_user: '{{ esxi_username }}'
-    ansible_password: '{{ esxi_password }}'
-    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+
+- name: If the ISO is not present have ESXi download it
+  block:
+  - name: Add ESXi to Ansible Hosts for SSH
+    add_host:
+      name: '{{ esxi_address }}'
+      group: "esx"
+      ansible_user: '{{ esxi_username }}'
+      ansible_password: '{{ esxi_password }}'
+      ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+
+  - name: Enable ESX SSH (TSM-SSH)
+    community.vmware.vmware_host_service_manager:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'   
+      validate_certs: no 
+      esxi_hostname: '{{ esxi_hostname }}'
+      service_name: TSM-SSH
+      state: present
+    register: tsm_ssh_service
+    delegate_to: localhost
+
+  - name: Enable ESX Shell (TSM)
+    community.vmware.vmware_host_service_manager:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'    
+      validate_certs: no 
+      esxi_hostname: '{{ esxi_hostname }}'
+      service_name: TSM
+      state: present
+    register: tsm_service
+    delegate_to: localhost
+
+  - name: Download the Centos ISO
+    shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ install_iso_url }}'
+    args:
+      creates: '/vmfs/volumes/{{ iso_datastore }}/{{ install_iso }}'
+    delegate_to: '{{ esxi_address }}'
+
+  - name: Disable ESX SSH (TSM-SSH)
+    community.vmware.vmware_host_service_manager:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'    
+      validate_certs: no 
+      esxi_hostname: '{{ esxi_hostname }}'
+      service_name: TSM-SSH
+      state: absent
+    delegate_to: localhost
+    when: tsm_ssh_service.changed
+
+  - name: Disable ESX Shell (TSM)
+    community.vmware.vmware_host_service_manager:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'   
+      validate_certs: no 
+      esxi_hostname: '{{ esxi_hostname }}'
+      service_name: TSM
+      state: absent
+    delegate_to: localhost
+    when: tsm_service.changed
   when: install_iso_exists.failed
-- name: Enable ESX SSH (TSM-SSH)
-  community.vmware.vmware_host_service_manager:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
-    esxi_hostname: '{{ esxi_hostname }}'
-    service_name: TSM-SSH
-    state: present
-  register: tsm_ssh_service
-  delegate_to: localhost
-  when: install_iso_exists.failed
-- name: Enable ESX Shell (TSM)
-  community.vmware.vmware_host_service_manager:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'    
-    validate_certs: no 
-    esxi_hostname: '{{ esxi_hostname }}'
-    service_name: TSM
-    state: present
-  register: tsm_service
-  delegate_to: localhost
-  when: install_iso_exists.failed
-- name: Download the Centos ISO
-  shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ install_iso_url }}'
-  args:
-    creates: '/vmfs/volumes/{{ iso_datastore }}/{{ install_iso }}'
-  delegate_to: '{{ esxi_address }}'
-  when: install_iso_exists.failed
-- name: Disable ESX SSH (TSM-SSH)
-  community.vmware.vmware_host_service_manager:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'    
-    validate_certs: no 
-    esxi_hostname: '{{ esxi_hostname }}'
-    service_name: TSM-SSH
-    state: absent
-  delegate_to: localhost
-  when: tsm_ssh_service.changed
-- name: Disable ESX Shell (TSM)
-  community.vmware.vmware_host_service_manager:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
-    esxi_hostname: '{{ esxi_hostname }}'
-    service_name: TSM
-    state: absent
-  delegate_to: localhost
-  when: tsm_service.changed
+## End Block
+
 - name: Create VM
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
@@ -117,19 +140,20 @@
           type: iso
           iso_path: '[{{ vm_datastore }}] {{config_iso}}'
     disk:
-    - size_gb: '{{ vm_disk_gb }}'
+    - size_gb: '{{ vm_disk_gb | default(40) }}'
       type: thin
       datastore: '{{ vm_datastore }}'
     hardware:
-      memory_mb: '{{ vm_memory_mb }}'
-      num_cpus: '{{ vm_num_cpus }}'
+      memory_mb: '{{ vm_memory_mb | default(2048) }}'
+      num_cpus: '{{ vm_num_cpus | default(2) }}'
       scsi: lsilogicsas
     networks:
-    - name: '{{ vm_network }}'
+    - name: "{{ vm_network | default('VM Network') }}"
       device_type: e1000
     wait_for_ip_address: no
   delegate_to: localhost
   register: deploy_vm
+
 - name: Set boot order
   community.vmware.vmware_guest_boot_manager:
     hostname: '{{ vcenter_address }}'
@@ -150,6 +174,7 @@
       - floppy
   delegate_to: localhost
   register: vm_boot_order
+
 - name: Power-On the virtual machine
   community.vmware.vmware_guest_powerstate:
     hostname: '{{ vcenter_address }}'
@@ -160,6 +185,7 @@
     state: powered-on
   delegate_to: localhost
   register: powerstate
+
 - name: Wait for VMware tools to become available 
   community.vmware.vmware_guest_tools_wait:
     hostname: '{{ vcenter_address }}'
@@ -172,6 +198,7 @@
   delay: 60
   register: result           
   until: result is succeeded
+
 - name: Set root Passwd
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
@@ -186,6 +213,23 @@
     wait_for_process: true
   delegate_to: localhost
   ignore_errors: yes   
+
+- name: Check Hostname
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "root"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"[ $(hostname) == {{ vm_hostname }}.{{ vm_domain }} ]\""
+    wait_for_process: true
+  register: checkhostname
+  delegate_to: localhost 
+  ignore_errors: true 
+
 - name: Run shell command via vm_shell
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
@@ -208,44 +252,76 @@
     - "-c \"hostnamectl set-hostname {{ vm_hostname }}.{{ vm_domain }}\""
     - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.address {{vm_address}}/{{vm_netmask_cidr}} IPv4.gateway {{vm_gateway}} IPv4.method manual\""
     - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.dns {{vm_dns_server}}\""
-- name: Reboot-Guest
-  community.vmware.vmware_guest_powerstate:
+
+- name: Check selinux
+  community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'   
-    validate_certs: no  
-    name: '{{ vm_name }}'
-    state: reboot-guest
-  delegate_to: localhost
-  register: deploy
-- name: Wait for 30 seconds
-  wait_for: timeout=30
-  delegate_to: localhost
-- name: Wait for VMware tools to become available by name
-  community.vmware.vmware_guest_tools_wait:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'    
     validate_certs: no 
-    name: '{{ vm_name }}'
-  delegate_to: localhost
-  retries: 3
-  delay: 15
-  register: result           
-  until: result is succeeded 
-- name: Wait for 30 seconds for VMware Tools refresh
-  wait_for: timeout=30
-  delegate_to: localhost
-- name: Find the VM's IP Address via VMware tools
-  community.vmware.vmware_guest_info:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'    
-    validate_certs: no 
-    datacenter: ha-datacenter
-    name: '{{ vm_name }}'
-  delegate_to: localhost
-  register: vmfacts
-- debug: msg="IP Address - {{ vmfacts['instance']['ipv4'] }}"   
+    vm_username: "root"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"[ $(cat /etc/selinux/config | grep ^SELINUX=) == SELINUX=disabled ]\""
+    wait_for_process: true
+  delegate_to: localhost  
+  register: checkselinux
+  delegate_to: localhost 
+  ignore_errors: true 
 
+- name: Disable SELinux
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "root"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"{{item}}\""
+    wait_for_process: true
+  delegate_to: localhost
+  when: checkselinux is failed  
+  loop:
+    - "setenforce 0"
+    - "sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config"
+    - "sed -i 's/SELINUX=permissive/SELINUX=disabled/' /etc/selinux/config" 
+
+- name: reboot guest
+  block:
+  - name: Reboot-Guest
+    community.vmware.vmware_guest_powerstate:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'   
+      validate_certs: no  
+      name: '{{ vm_name }}'
+      state: reboot-guest
+    delegate_to: localhost
+    register: deploy
+
+  - name: Wait for 30 seconds
+    wait_for: timeout=30
+    delegate_to: localhost
+
+  - name: Wait for VMware tools to become available by name
+    community.vmware.vmware_guest_tools_wait:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'    
+      validate_certs: no 
+      name: '{{ vm_name }}'
+    delegate_to: localhost
+    retries: 3
+    delay: 15
+    register: result           
+    until: result is succeeded 
+
+  - name: Wait for 30 seconds for VMware Tools refresh
+    wait_for: timeout=30
+    delegate_to: localhost
+  when: (checkhostname is failed) or (checkselinux is failed)
+###end: reboot guest
 

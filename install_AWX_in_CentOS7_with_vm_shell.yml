@@ -3,7 +3,7 @@
   hosts: localhost
   gather_facts: false
   vars:
-    vm_name: TEST_Centos7VM
+    vm_name: lab_rancher_worker1
     vm_username: root
     vm_password: P@ssw0rd
     awx_password: P@ssw0rd

@@ -128,6 +128,7 @@
     wait_for_ip_address: no
   delegate_to: localhost
   register: deploy_vm
+  
 - name: Set boot order
   community.vmware.vmware_guest_boot_manager:
     hostname: '{{ vcenter_address }}'

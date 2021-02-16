@@ -9,22 +9,24 @@
     vm_password: "{{ vm_password }}"
     vm_id: "{{ vm_name }}"
     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-    vm_shell_args: "{{item}}"
+    vm_shell_args: " -command \"({{item}})\""
     wait_for_process: true
   delegate_to: localhost
-  retries: 6
+  retries: 3
   delay: 10 
   register: result           
   until: result is succeeded    
   loop:
     # Configure upstream DNS via vmware_vm_shell      
-    - "-command \"(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }})\""
-    # Disable firewall for Domain, Public and Private profiles
-    - "-command \"(Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False)\""
+    - "Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }}"
     # Install AD-Domain-Services
-    - "-command \"(Install-windowsfeature AD-domain-services)\""
+    - "Install-windowsfeature AD-Domain-Services -IncludeAllSubFeature -IncludeManagementTools"
+    # Install DNS
+    - "Install-windowsfeature DNS -IncludeAllSubFeature -IncludeManagementTools"
     # Install RSAT-ADDS        
-    - "-command \"(Install-windowsfeature RSAT-ADDS)\""
+    - "Install-windowsfeature RSAT-ADDS"
+    # Unrestrict remote scripts
+    - "Set-ExecutionPolicy unrestricted"
 
 - name: Create Domain
   community.vmware.vmware_vm_shell:
@@ -36,27 +38,28 @@
     vm_password: "{{ vm_password }}"
     vm_id: "{{ vm_name }}"
     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-    vm_shell_args: "{{item}}"
+    vm_shell_args: " -command \"({{item}})\""
     wait_for_process: true
   delegate_to: localhost
-  loop: 
-    - "-command \"(Install-ADDSForest -DomainName {{vm_domain}} -InstallDNS -NoRebootOnCompletion -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password }} -AsPlainText -Force) -Force -WarningAction silentlyContinue)\""
+  loop:
+    - "Import-module addsdeployment"
+    - "Install-ADDSForest -DomainName {{vm_domain}} -InstallDNS:$true -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password }} -AsPlainText -Force) -Force -WarningAction silentlyContinue"
   retries: 6
-  delay: 10 
+  delay: 60
   register: result           
   until: result is succeeded    
   ignore_errors: yes #This step always returns a vix error
 
-- name: Reboot-Guest
-  vmware_guest_powerstate:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}' 
-    validate_certs: no
-    name: '{{ vm_name }}'
-    state: reboot-guest
-  delegate_to: localhost
-  register: deploy
+# - name: Reboot-Guest
+#   vmware_guest_powerstate:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}' 
+#     validate_certs: no
+#     name: '{{ vm_name }}'
+#     state: reboot-guest
+#   delegate_to: localhost
+#   register: deploy
 - name: Wait for 60 seconds
   wait_for: timeout=60
   delegate_to: localhost
@@ -86,7 +89,7 @@
     vm_password: "{{ vm_password }}"
     vm_id: "{{ vm_name }}"
     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-    vm_shell_args: "{{item}}"
+    vm_shell_args: " -command \"({{item}})\""
     wait_for_process: true
   delegate_to: localhost
   retries: 6
@@ -95,11 +98,13 @@
   until: result is succeeded     
   loop:
     # Assign dns server to itself      
-    - "-command \"(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses 127.0.0.1)\""
+    - "Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses 127.0.0.1"
     # re-enable remote desktop
-    - "-command \"(set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name fDenyTSConnections -Value 0)\""
+    - "set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name fDenyTSConnections -Value 0"
     # re-add the remote desktop firewall fule
-    - "-command \"(Enable-NetFirewallRule -DisplayGroup 'Remote Desktop')\""
+    - "Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'"
+    # Disable firewall for Domain, Public and Private profiles
+    - "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False"
 
 # scriptlet for adding dns records
 #Add-DnsServerResourceRecordA -Name "host23" -ZoneName "contoso.com" -AllowUpdateAny -IPv4Address "172.18.99.23" -TimeToLive 01:00:00

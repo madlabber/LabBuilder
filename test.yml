@@ -1,15 +1,19 @@
 ---
-- name: test_Build_CentOS7_VM_from_ISO
+- name: TEST
   hosts: localhost
   gather_facts: false
   vars:
+    vm_name: lab_test_dc01
+    vm_username: ".\\administrator"
+    vm_password: P@ssw0rd
+    vm_domain: lab.local
     extra_commands:
       - "test"
 
   vars_files: 
     - vars/main.yml
   tasks:
-  - include_vars: defaults/Build_CentOS7_VM_from_ISO.yml
+  #- include_vars: defaults/Build_CentOS7_VM_from_ISO.yml
   # - include_tasks: tasks/Build_CentOS7_VM_from_ISO.yml
   #   vars:
   #     vm_name: TEST_Centos7VM
@@ -25,6 +29,102 @@
   #     vm_gateway: 192.168.123.1
   #     vm_dns_server: 192.168.123.1
   #     vm_domain: lab.local
-  - debug:
-      msg: "{{item}}"
-    loop: "{{extra_commands}}"
+  # - debug:
+  #     msg: "{{item}}"
+  #   loop: "{{extra_commands}}"
+  # - name: Find the VM's IP Address via VMware tools
+  #   community.vmware.vmware_guest_info:
+  #     hostname: '{{ vcenter_address }}'
+  #     username: '{{ vcenter_username }}'
+  #     password: '{{ vcenter_password }}'   
+  #     validate_certs: no 
+  #     datacenter: "{{vcenter_datacenter}}"
+  #     name: '{{ vm_name }}'
+  #   delegate_to: localhost
+  #   register: vmfacts
+  # - debug: msg="IP Address - {{ vmfacts }}"  
+  # - name: Check Hostname
+  #   community.vmware.vmware_vm_shell:
+  #     hostname: '{{ vcenter_address }}'
+  #     username: '{{ vcenter_username }}'
+  #     password: '{{ vcenter_password }}'   
+  #     validate_certs: no 
+  #     vm_username: "{{vm_username}}"
+  #     vm_password: '{{ vm_password }}'
+  #     vm_id: '{{ vm_name }}'
+  #     vm_shell: '/usr/bin/sh'
+  #     vm_shell_args: " -c \"[ $(hostname) == worker5.lab.local ]\""
+  #     wait_for_process: true
+  #   delegate_to: localhost  
+  # - name: Run commands
+  #   community.vmware.vmware_vm_shell:
+  #     hostname: '{{ vcenter_address }}'
+  #     username: '{{ vcenter_username }}'
+  #     password: '{{ vcenter_password }}'   
+  #     validate_certs: no 
+  #     vm_username: "{{vm_username}}"
+  #     vm_password: '{{ vm_password }}'
+  #     vm_id: '{{ vm_name }}'
+  #     vm_shell: '/usr/bin/sh'
+  #     vm_shell_args: " -c \"{{item}}\""
+  #     wait_for_process: true
+  #   delegate_to: localhost  
+  #   ignore_errors: true   
+  #   loop:
+  #   - "yum install -y epel-release"   
+  #   - "yum config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+  #   - "yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc" 
+  #   - "yum install -y docker-ce docker-ce-cli containerd.io"   
+  #   - "ps -aux | grep dockerd"
+  #   - "systemctl enable docker --now"
+
+  # - name: Check selinux
+  #   community.vmware.vmware_vm_shell:
+  #     hostname: '{{ vcenter_address }}'
+  #     username: '{{ vcenter_username }}'
+  #     password: '{{ vcenter_password }}'   
+  #     validate_certs: no 
+  #     vm_username: "{{vm_username}}"
+  #     vm_password: '{{ vm_password }}'
+  #     vm_id: '{{ vm_name }}'
+  #     vm_shell: '/usr/bin/sh'
+  #     vm_shell_args: " -c \"[ $(cat /etc/selinux/config | grep ^SELINUX=) == SELINUX=disabled ]\""
+  #     wait_for_process: true
+  #   delegate_to: localhost  
+
+# testing commands into windows
+  - name: Prepare for DCPromo
+    community.vmware.vmware_vm_shell:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}' 
+      validate_certs: no
+      vm_username: "{{vm_username}}"
+      vm_password: "{{ vm_password }}"
+      vm_id: "{{ vm_name }}"
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: " -command \"({{item}})\""
+      wait_for_process: true
+    delegate_to: localhost
+    # retries: 0
+    # delay: 10 
+    # register: result           
+    # until: result is succeeded    
+    loop:
+      # Configure upstream DNS via vmware_vm_shell      
+      #- "Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }}"
+      # Install AD-Domain-Services
+      # - "Install-windowsfeature AD-Domain-Services -IncludeAllSubFeature -IncludeManagementTools"
+      #- "Install-windowsfeature DNS -IncludeAllSubFeature -IncludeManagementTools"
+      # # Install RSAT-ADDS        
+      # - "Install-windowsfeature RSAT-ADDS"
+      # Install AD
+      - "set-executionpolicy unrestricted"
+      - "Import-module addsdeployment"
+      - "Install-ADDSForest -DomainName {{vm_domain}} -InstallDns:$true -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password }} -AsPlainText -Force) -Force -WarningAction silentlyContinue"
+#&import-module addsdeployment; 
+
+
+
+
+

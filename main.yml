@@ -273,15 +273,16 @@
       vm_shell: '/usr/bin/sh'
       vm_shell_args: " -c \"{{item}}\""
       wait_for_process: true
+      timeout: 3600
     delegate_to: localhost  
     retries: 3
-    delay: 5
+    delay: 60
     register: result           
     until: result is succeeded
     ignore_errors: true
     loop: "{{extra_commands}}"
-    when: extra_commands is defined
-
+    when: 
+      - extra_commands is defined
 
 - name: Build ONTAP Simulators
   hosts: vsims
