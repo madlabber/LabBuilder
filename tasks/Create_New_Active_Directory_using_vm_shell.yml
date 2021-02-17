@@ -22,7 +22,7 @@
     # Install AD-Domain-Services
     - "Install-windowsfeature AD-Domain-Services -IncludeAllSubFeature -IncludeManagementTools"
     # Install DNS
-    - "Install-windowsfeature DNS -IncludeAllSubFeature -IncludeManagementTools"
+    #- "Install-windowsfeature DNS -IncludeAllSubFeature -IncludeManagementTools"
     # Install RSAT-ADDS        
     - "Install-windowsfeature RSAT-ADDS"
     # Unrestrict remote scripts
@@ -43,23 +43,37 @@
   delegate_to: localhost
   loop:
     - "Import-module addsdeployment"
-    - "Install-ADDSForest -DomainName {{vm_domain}} -InstallDNS:$true -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password }} -AsPlainText -Force) -Force -WarningAction silentlyContinue"
+    - "Install-ADDSForest -DomainName {{vm_domain}} -CreateDnsDelegation:$false -InstallDNS:$true -NoRebootOnCompletion:$true -DatabasePath C:\\Windows\\NTDS -LogPath C:\\Windows\\NTDS -SysvolPath C:\\Windows\\SYSVOL -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password }} -AsPlainText -Force:$true) -Force:$true -WarningAction silentlyContinue"
   retries: 6
   delay: 60
   register: result           
   until: result is succeeded    
   ignore_errors: yes #This step always returns a vix error
+#X C:\> Install-ADDSForest
+##  -CreateDnsDelegation:$false `
+##  -DatabasePath "C:\Windows\NTDS" `
+#  -DomainMode "Win2016" `
+#X  -DomainName "yourdomain.com" `
+#  -DomainNetbiosName "THEGEEKSTUFF" `
+#  -ForestMode "Win2016" `
+#X  -InstallDns:$true `
+##  -LogPath "C:\Windows\NTDS" `
+##  -NoRebootOnCompletion:$false `
+##  -SysvolPath "C:\Windows\SYSVOL" `
+##  -Force:$true
 
-# - name: Reboot-Guest
-#   vmware_guest_powerstate:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}' 
-#     validate_certs: no
-#     name: '{{ vm_name }}'
-#     state: reboot-guest
-#   delegate_to: localhost
-#   register: deploy
+
+
+- name: Reboot-Guest
+  vmware_guest_powerstate:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}' 
+    validate_certs: no
+    name: '{{ vm_name }}'
+    state: reboot-guest
+  delegate_to: localhost
+  register: deploy
 - name: Wait for 60 seconds
   wait_for: timeout=60
   delegate_to: localhost

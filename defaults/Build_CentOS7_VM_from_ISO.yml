@@ -1,4 +1,4 @@
 install_iso: "CentOS-7-x86_64-DVD-2009.iso"
 install_iso_url: "http://mirror.fileplanet.com/centos/7.9.2009/isos/x86_64/CentOS-7-x86_64-DVD-2009.iso"
-kickstart_file: "files/CentOS8/ks.cfg"
+kickstart_file: "files/CentOS7/ks.cfg"
 kickstart_password: Changeme!

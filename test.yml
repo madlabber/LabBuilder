@@ -8,7 +8,12 @@
     vm_password: P@ssw0rd
     vm_domain: lab.local
     extra_commands:
-      - "test"
+      # Install Chrome
+      - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
+      - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+      # Install Putty
+      - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+      - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
 
   vars_files: 
     - vars/main.yml
@@ -93,7 +98,7 @@
   #   delegate_to: localhost  
 
 # testing commands into windows
-  - name: Prepare for DCPromo
+  - name: Run extra commands in powershell
     community.vmware.vmware_vm_shell:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
@@ -106,11 +111,14 @@
       vm_shell_args: " -command \"({{item}})\""
       wait_for_process: true
     delegate_to: localhost
-    # retries: 0
-    # delay: 10 
-    # register: result           
-    # until: result is succeeded    
-    loop:
+    retries: 3
+    delay: 10 
+    register: result           
+    until: result is succeeded    
+    ignore_errors: true
+    loop: "{{extra_commands}}"
+    when: extra_commands is defined
+
       # Configure upstream DNS via vmware_vm_shell      
       #- "Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }}"
       # Install AD-Domain-Services
@@ -119,9 +127,9 @@
       # # Install RSAT-ADDS        
       # - "Install-windowsfeature RSAT-ADDS"
       # Install AD
-      - "set-executionpolicy unrestricted"
-      - "Import-module addsdeployment"
-      - "Install-ADDSForest -DomainName {{vm_domain}} -InstallDns:$true -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password }} -AsPlainText -Force) -Force -WarningAction silentlyContinue"
+      # - "set-executionpolicy unrestricted"
+      # - "Import-module addsdeployment"
+      # - "Install-ADDSForest -DomainName {{vm_domain}} -InstallDns:$true -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password }} -AsPlainText -Force) -Force -WarningAction silentlyContinue"
 #&import-module addsdeployment; 
 
 

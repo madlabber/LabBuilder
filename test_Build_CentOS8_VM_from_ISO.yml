@@ -6,19 +6,18 @@
     - vars/main.yml
   tasks:
     - include_vars: defaults/Build_CentOS8_VM_from_ISO.yml
-    - include_tasks: tasks/Build_CentOS8_VM_from_ISO.yml
+    - include_tasks: tasks/Build_CentOS7_VM_from_ISO.yml
       vars:
-        vm_name: TEST_Centos8VM
+        vm_name: TEST_Centos8VM7
         # vm_num_cpus: 2        
-        # vm_memory_mb: 2048   
+        # vm_memory_mb: 3078   
         # vm_disk_gb: 40            
         vm_datastore: "Staging"
         vm_network: "VM Network"
         vm_password_new: P@ssw0rd
-        vm_hostname: centos8vm        
-        vm_address: 192.168.123.189
+        vm_hostname: centos8vm7       
+        vm_address: 192.168.123.191
         vm_netmask_cidr: 24
         vm_gateway: 192.168.123.1
         vm_dns_server: 192.168.123.1
         vm_domain: lab.local
-

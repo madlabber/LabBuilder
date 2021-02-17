@@ -64,6 +64,27 @@
         vm_dns_server: "{{lab_network_lan1_dns_ip}}"
         vm_domain: "{{lab_domain_name}}"
 
+  - name: Run extra commands in powershell
+    community.vmware.vmware_vm_shell:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}' 
+      validate_certs: no
+      vm_username: ".\\Administrator"
+      vm_password: "{{lab_password}}"
+      vm_id: '{{lab_name}}_{{inventory_hostname}}' 
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: " -command \"({{item}})\""
+      wait_for_process: true
+    delegate_to: localhost
+    retries: 3
+    delay: 10 
+    register: result           
+    until: result is succeeded    
+    ignore_errors: true
+    loop: "{{extra_commands}}"
+    when: extra_commands is defined
+
 # This play takes all the name/ip pairs from all hosts and adds DNS records on the DC
 - name: populate DNS records
   hosts: all
@@ -180,6 +201,27 @@
       vm_gateway: "{{lab_network_lan1_gateway}}"
       vm_dns_server: "{{lab_network_lan1_dns_ip}}"
       vm_domain: "{{lab_domain_name}}"
+
+  - name: Run extra commands in powershell
+    community.vmware.vmware_vm_shell:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}' 
+      validate_certs: no
+      vm_username: ".\\Administrator"
+      vm_password: "{{lab_password}}"
+      vm_id: '{{lab_name}}_{{inventory_hostname}}' 
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: " -command \"({{item}})\""
+      wait_for_process: true
+    delegate_to: localhost
+    retries: 3
+    delay: 10 
+    register: result           
+    until: result is succeeded    
+    ignore_errors: true
+    loop: "{{extra_commands}}"
+    when: extra_commands is defined
 
 - name: Build CentOS VMs
   hosts: centos
