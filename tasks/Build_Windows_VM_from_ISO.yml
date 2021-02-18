@@ -287,6 +287,24 @@
     - "-command \"(set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name fDenyTSConnections -Value 0)\""
     - "-command \"(Enable-NetFirewallRule -DisplayGroup 'Remote Desktop')\""
 
+- name: check hostname
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'  
+    validate_certs: no 
+    vm_username: "{{vm_username}}"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+    vm_shell_args: " -command \"({{item}})\""
+    wait_for_process: true
+  delegate_to: localhost
+  register: checkhostname           
+  ignore_errors: true
+  loop:
+    - "$result=$(if($env:COMPUTERNAME -ne '{{vm_hostname}}'){throw})"
+
 - name: Rename Computer
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
@@ -306,7 +324,9 @@
   until: result is succeeded      
   loop:
     - "-command \"(Rename-Computer -NewName {{ vm_hostname }})\""
-  when: vm_hostname != ""
+  when: 
+    - vm_hostname != ""
+    - checkhostname is failed
 
 - name: Reboot-Guest
   community.vmware.vmware_guest_powerstate:
@@ -318,7 +338,10 @@
     state: reboot-guest
   delegate_to: localhost
   register: deploy
-  when: vm_hostname != ""
+  when: 
+    - vm_hostname != ""
+    - checkhostname is failed
+
 - name: Wait for 30 seconds
   wait_for: timeout=30
   delegate_to: localhost
@@ -335,18 +358,22 @@
   delay: 15
   register: result           
   until: result is succeeded 
-  when: vm_hostname != ""
-- name: Wait for 30 seconds for VMware Tools refresh
-  wait_for: timeout=30
-  delegate_to: localhost
-- name: Find the VM's IP Address via VMware tools
-  community.vmware.vmware_guest_info:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
-    datacenter: "{{vcenter_datacenter}}"
-    name: '{{ vm_name }}'
-  delegate_to: localhost
-  register: vmfacts
-- debug: msg="IP Address - {{ vmfacts['instance']['ipv4'] }}"  
+  when: 
+    - vm_hostname != ""
+    - checkhostname is failed
+
+# - name: Wait for 30 seconds for VMware Tools refresh
+#   wait_for: timeout=30
+#   delegate_to: localhost
+
+# - name: Find the VM's IP Address via VMware tools
+#   community.vmware.vmware_guest_info:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}'   
+#     validate_certs: no 
+#     datacenter: "{{vcenter_datacenter}}"
+#     name: '{{ vm_name }}'
+#   delegate_to: localhost
+#   register: vmfacts
+# - debug: msg="IP Address - {{ vmfacts['instance']['ipv4'] }}"  

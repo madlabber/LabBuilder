@@ -128,7 +128,7 @@
     wait_for_ip_address: no
   delegate_to: localhost
   register: deploy_vm
-  
+
 - name: Set boot order
   community.vmware.vmware_guest_boot_manager:
     hostname: '{{ vcenter_address }}'
@@ -166,14 +166,15 @@
     password: '{{ vcenter_password }}'  
     validate_certs: no 
     name: '{{ _vm_name }}'
+    timeout: 60
   delegate_to: localhost
   register: alreadyinstalled           
   ignore_errors: true
 
 - block:
-  - name: Wait for 60 seconds
-    wait_for: timeout=60
-    delegate_to: localhost
+  # - name: Wait for 60 seconds
+  #   wait_for: timeout=60
+  #   delegate_to: localhost
   - name: Blind Install
     community.vmware.vmware_guest_sendkey:
       hostname: '{{ vcenter_address }}'
@@ -220,7 +221,7 @@
     delegate_to: localhost
     loop: 
       - "8" # enter
-      - "pkg install -y pfSense-pkg-Open-VM-Tools" # enter
+      - "pkg-static install -y pfSense-pkg-Open-VM-Tools" # enter
       - "service vmware-guestd.sh start"
       - ""
   - name: Wait for VMware tools to become available 
@@ -303,6 +304,6 @@
     wait_for_process: true
   delegate_to: localhost  
   loop:
-    - "pkg install -y pfSense-pkg-tftpd"
+    - "pkg-static install -y pfSense-pkg-tftpd"
 
  

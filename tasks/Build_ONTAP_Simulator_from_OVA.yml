@@ -40,6 +40,7 @@
   delay: 60
   register: result           
   until: result is succeeded 
+
 - name: Adjust VM Sizing
   vmware_guest:
     hostname: '{{ vcenter_address }}'
@@ -55,6 +56,7 @@
       - key: pciHole.start
         value: 1024  # Moving the PCI hole here gives ONTAP access to more system ram
   delegate_to: localhost
+
 - name: Start VM
   vmware_guest:
     hostname: '{{ vcenter_address }}'
@@ -65,6 +67,7 @@
     state: poweredon
     wait_for_ip_address: false
   delegate_to: localhost
+
 - name: Wait for 5 seconds
   wait_for: timeout=5
   delegate_to: localhost
@@ -110,30 +113,37 @@
   delay: 15
   register: result           
   until: result is succeeded 
-- name: Wait for 30 seconds for Startup to Complete
-  wait_for: timeout=30
-  delegate_to: localhost
-  when: ontap_node_mgmt_ip != "" 
 
-- name: Complete Node Setup
-  community.vmware.vmware_guest_sendkey:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'     
-    validate_certs: no 
-    name: "{{ vm_name }}"
-    keys_send: ENTER
-    string_send: "{{item}}"
-  delegate_to: localhost
-  loop: 
-    - "admin"
-    - "cluster setup"
-    - "yes"
-    - "e0c" # node mgmt port
-    - "{{ontap_node_mgmt_ip}}"
-    - "{{ontap_netmask}}"
-    - "{{ontap_gateway}}"
-    - "" # this completes the node setup phase
+- name: Run node setup
+  block:
+  # vmware tools come up a little early so we need to pause for a bit
+  - name: Wait for 30 seconds for Startup to Complete
+    wait_for: timeout=30
+    delegate_to: localhost
+    when: ontap_node_mgmt_ip != "" 
+
+  # Send keys via HID to complete setup at the vidconsole
+  - name: Complete Node Setup
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'     
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+      string_send: "{{item}}"
+    delegate_to: localhost
+    loop: 
+      - "admin"
+      - "cluster setup"
+      - "yes"
+      - "e0c" # node mgmt port
+      - "{{ontap_node_mgmt_ip}}"
+      - "{{ontap_netmask}}"
+      - "{{ontap_gateway}}"
+      - "" # this completes the node setup phase
+
   when: ontap_node_mgmt_ip != ""
+# block:end
 
 
