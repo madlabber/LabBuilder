@@ -15,18 +15,34 @@ all:
     lab_dc01_hostname: "dc01"
     lab_dc01_ip: "192.168.0.11"
   children:
-    pfsense:
+    # pfsense:
+    #   hosts:
+    #     gateway:
+    #       #ip_address: 192.168.0.1
+    #       vm_network_wan: "{{lab_network_wan_portgroup}}"
+    #       vm_network_lan: "{{lab_network_lan1_portgroup}}"
+    #       config_xml_file: "files/pfsense/config.xml"
+    # dc:
+    #   hosts:
+    #     dc01:
+    #       version: "Server2012R2"
+    #       ip_address: 192.168.0.11 
+    aiqum:
       hosts:
-        gateway:
-          #ip_address: 192.168.0.1
-          vm_network_wan: "{{lab_network_wan_portgroup}}"
-          vm_network_lan: "{{lab_network_lan1_portgroup}}"
-          config_xml_file: "files/pfsense/config.xml"
-    dc:
-      hosts:
-        dc01:
-          version: "Server2012R2"
-          ip_address: 192.168.0.11 
+        aiqum:
+          ip_address: 192.168.0.28
+          aiqum_ovf: "files/AIQUM/ActiveIQUnifiedManager-9.8.ova"
+          # ovf_networks: 
+          #   'nat': '{{ lab_network_lan1_portgroup }}'
+          # ovf_properties:
+          #   org.linuxdistx.IPV6Auto: false
+          #   org.linuxdistx.HostFQDN: "aiqum.lab.local"
+          #   org.linuxdistx.IPAddress: "{{ip_address}}"
+          #   org.linuxdistx.NetworkMask: "{{lab_network_lan1_netmask}}"
+          #   org.linuxdistx.Gateway: "{{lab_network_lan1_gateway}}"
+          #   org.linuxdistx.PrimaryDNS: "{{lab_network_lan1_dns_ip}}"
+          #   org.linuxdistx.SecondaryDNS: "{{lab_dc01_ip}}"
+
     # winservers:
     #   hosts:
     #     win1:

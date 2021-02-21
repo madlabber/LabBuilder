@@ -390,5 +390,52 @@
       ontap_dns_domain: "{{lab_domain_name}}"
       ontap_dns_server: "{{lab_network_lan1_dns_ip}}"
 
+- name: Build AIQUM from OVA
+  hosts: aiqum
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+  tasks:
+  - include_tasks: tasks/Build_AIQUM_from_ova.yml
+    vars:
+      ovf_file: "{{aiqum_ovf |default('files/AIQUM/ActiveIQUnifiedManager-9.8.ova')}}"
+      vm_name: '{{lab_name}}_{{inventory_hostname}}'
+      vm_datastore: "{{lab_vm_datastore}}"
+      vm_network: "{{lab_network_lan1_portgroup}}"
+      vm_username: "admin"
+      vm_password: "{{lab_password |default('netapp123')}}"
+      vm_hostname: '{{inventory_hostname}}'
+      vm_fqdn:     '{{inventory_hostname}}.{{lab_domain_name}}'
+      vm_address: '{{ip_address}}'
+      vm_netmask: "{{lab_network_lan1_netmask}}"
+      vm_gateway: "{{lab_network_lan1_gateway}}"
+      vm_dns_server: "{{lab_network_lan1_dns_ip}}"
 
+- name: Deploy OVF files
+  hosts: ovf
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+  tasks:
+  - vmware_deploy_ovf:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'
+      validate_certs: no
+      datacenter: '{{ vcenter_datacenter }}'
+      cluster: '{{ vcenter_cluster }}'
+      datastore: "{{lab_vm_datastore}}"
+      name: '{{lab_name}}_{{inventory_hostname}}'
+      ovf: '{{ ovf_file }}'
+      disk_provisioning: thin
+      power_on: yes
+      wait_for_ip_address: false
+      networks: "{{ovf_networks}}"
+      inject_ovf_env: true
+      properties: "{{ovf_properties}}"
+    delegate_to: localhost
+    retries: 10
+    delay: 60
+    register: result           
+    until: result is succeeded 
 
