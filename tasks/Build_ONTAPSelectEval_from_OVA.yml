@@ -6,7 +6,7 @@
     vm_memory_mb:            '{{ vm_memory_mb            |default(16384)  }}'
     vm_cpu_reservation_mhz:  '{{ vm_cpu_reservation_mhz  |default(1000)   }}'  
     ontap_deployment_option: '{{ ontap_deployment_option |default("ONTAPSelectEVALSmall") }}'  
-    vm_disk_rovisioning:     '{{ vm_disk_rovisioning     |default("thin") }}' 
+    vm_disk_provisioning:    '{{ vm_disk_provisioning    |default("thin") }}' 
     vm_data_disk_gb:         '{{ vm_data_disk_gb         |default("500")  }}'
     ontap_cluster_name:      '{{ ontap_cluster_name      |default("ONTAP") }}'
     ontap_password:          '{{ ontap_password          |default("Changeme!") }}'
@@ -23,7 +23,7 @@
     datastore: '{{ vm_datastore }}'
     name: '{{ vm_name }}'
     ovf: '{{ ontap_select_ova }}'
-    disk_provisioning: thin
+    disk_provisioning: '{{vm_disk_provisioning}}'
     power_on: no
     wait_for_ip_address: false
     networks: "{u'ONTAP Select Network':u'{{ vm_network }}',u'nat':u'{{ vm_network }}'}"

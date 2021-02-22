@@ -179,13 +179,13 @@
           vm_hostname: '{{lab_vcsa_hostname}}'
           vm_domain: '{{lab_domain_name}}'
           vm_fqdn: '{{lab_vsca_fqdn_or_ip}}'  # if no DNS resolution, use the IP address here
-          vm_network: '{{lab_network_lan1_portgroup}}'
+          vm_network: '{{lab_lan1_portgroup}}'
           vm_password: '{{lab_password}}'
           vm_net_mode: "static" # static or dhcp
           vm_address: '{{lab_vcsa_ip}}'
-          vm_netmask_cidr: '{{lab_network_lan1_netmask_cidr}}'
-          vm_dns_server: '{{lab_network_lan1_dns_ip}}'
-          vm_gateway: '{{lab_network_lan1_gateway}}'
+          vm_netmask_cidr: '{{lab_lan1_netmask_cidr}}'
+          vm_dns_server: '{{lab_lan1_dns_ip}}'
+          vm_gateway: '{{lab_lan1_gateway}}'
           # searchpath: ""
           # vm_deployment_size: 'tiny' 
           vm_autoconfig: '{{lab_vcsa_autoconfigure}}'

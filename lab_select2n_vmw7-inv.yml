@@ -2,15 +2,14 @@ all:
   hosts:
   vars:
     lab_name: lab_select2n_vmw7
-    lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
     lab_vm_datastore: lab_select2n_vmw7
-    lab_network_wan_portgroup: "VM Network"
-    lab_network_lan1_portgroup: "lab_select2n_vmw7_net1"
-    lab_network_lan1_netmask_cidr: "24"
-    lab_network_lan1_netmask: "255.255.255.0"
-    lab_network_lan1_gateway: "192.168.0.1"
-    lab_network_lan1_dns_ip: "192.168.0.1"
+    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "lab_select2n_vmw7_net1"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.1"
     lab_domain_name: "lab.local"
     lab_dc01_hostname: "dc01"
     lab_dc01_ip: "192.168.0.11"
@@ -18,8 +17,8 @@ all:
     pfsense:
       hosts:
         gateway:
-          vm_network_wan: "{{lab_network_wan_portgroup}}"
-          vm_network_lan: "{{lab_network_lan1_portgroup}}"
+          vm_network_wan: "{{lab_wan_portgroup}}"
+          vm_network_lan: "{{lab_lan1_portgroup}}"
           config_xml_file: "files/pfsense/config.xml"
     dc:
       hosts:

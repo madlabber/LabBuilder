@@ -45,13 +45,13 @@
       vars:
         vm_name: '{{lab_name}}_{{inventory_hostname}}'         
         vm_datastore: "{{lab_vm_datastore}}"
-        vm_network: "{{lab_network_lan1_portgroup}}"
+        vm_network: "{{lab_lan1_portgroup}}"
         vm_password_new: "{{lab_password}}"
         vm_hostname: "{{inventory_hostname}}"
         vm_address: "{{ip_address}}"
-        vm_netmask_cidr: "{{lab_network_lan1_netmask_cidr}}"
-        vm_gateway: "{{lab_network_lan1_gateway}}"
-        vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+        vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+        vm_gateway: "{{lab_lan1_gateway}}"
+        vm_dns_server: "{{lab_lan1_dns_ip}}"
         vm_domain: "{{lab_domain_name}}"
 
   - name: Build a Active Directory Forest
@@ -61,7 +61,7 @@
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
         vm_username: ".\\Administrator" 
         vm_password: "{{lab_password}}"         
-        vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+        vm_dns_server: "{{lab_lan1_dns_ip}}"
         vm_domain: "{{lab_domain_name}}"
 
   - name: Run extra commands in powershell
@@ -132,13 +132,13 @@
         vm_hostname: '{{inventory_hostname}}'
         vm_domain: '{{lab_domain_name}}'
         vm_fqdn: '{{vsca_fqdn_or_ip}}'  # if no DNS resolution, use the IP address here
-        vm_network: '{{lab_network_lan1_portgroup}}'
+        vm_network: '{{lab_lan1_portgroup}}'
         vm_password: '{{lab_password}}'
         vm_net_mode: "static" # static or dhcp
         vm_address: '{{ip_address}}'
-        vm_netmask_cidr: '{{lab_network_lan1_netmask_cidr}}'
-        vm_dns_server: '{{lab_network_lan1_dns_ip}}'
-        vm_gateway: '{{lab_network_lan1_gateway}}'
+        vm_netmask_cidr: '{{lab_lan1_netmask_cidr}}'
+        vm_dns_server: '{{lab_lan1_dns_ip}}'
+        vm_gateway: '{{lab_lan1_gateway}}'
         searchpath: ""
         vm_deployment_size: "{{vcsa_size | default('tiny')}}"
         vm_autoconfig: '{{vcsa_autoconfigure}}'
@@ -158,17 +158,17 @@
         ovf_file: "files/VMware/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
         ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
         vm_name: "{{lab_name}}_{{inventory_hostname}}"
-        vm_network: "{{lab_network_lan1_portgroup}}"
+        vm_network: "{{lab_lan1_portgroup}}"
         # vm_memory_mb: "{{memory_mb}}"
         # vm_num_cpus: 2
         ovf_hostname: "{{inventory_hostname}}"
         ovf_address: "{{ip_address}}"
-        ovf_netmask: "{{lab_netmask}}"
-        ovf_gateway: "{{lab_network_lan1_gateway}}"
+        ovf_netmask: "{{lab_lan1_netmask}}"
+        ovf_gateway: "{{lab_lan1_gateway}}"
         ovf_vlan: ""  
-        ovf_dns: "{{lab_network_lan1_dns_ip}}"
+        ovf_dns: "{{lab_lan1_dns_ip}}"
         ovf_domain: "{{lab_domain_name}}"   
-        ovf_ntp: "{{lab_network_lan1_gateway}}"
+        ovf_ntp: "{{lab_lan1_gateway}}"
         ovf_syslog: "" # IP of syslog server
         ovf_password: "{{lab_password}}"
         ovf_ssh: "{{enable_ssh|string}}"
@@ -193,13 +193,13 @@
     vars:
       vm_name: '{{lab_name}}_{{inventory_hostname}}'         
       vm_datastore: "{{lab_vm_datastore}}"
-      vm_network: "{{lab_network_lan1_portgroup}}"
+      vm_network: "{{lab_lan1_portgroup}}"
       vm_password_new: "{{lab_password}}"
       vm_hostname: "{{inventory_hostname}}"
       vm_address: "{{ip_address}}"
-      vm_netmask_cidr: "{{lab_network_lan1_netmask_cidr}}"
-      vm_gateway: "{{lab_network_lan1_gateway}}"
-      vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+      vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+      vm_gateway: "{{lab_lan1_gateway}}"
+      vm_dns_server: "{{lab_lan1_dns_ip}}"
       vm_domain: "{{lab_domain_name}}"
 
   - name: Run extra commands in powershell
@@ -237,11 +237,11 @@
         vm_hostname: "{{inventory_hostname}}"
         vm_address: "{{ip_address}}"       
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
-        vm_network: "{{lab_network_lan1_portgroup}}"
+        vm_network: "{{lab_lan1_portgroup}}"
         vm_password_new: "{{lab_password}}"
-        vm_netmask_cidr: "{{lab_network_lan1_netmask_cidr}}"
-        vm_gateway: "{{lab_network_lan1_gateway}}"
-        vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+        vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+        vm_gateway: "{{lab_lan1_gateway}}"
+        vm_dns_server: "{{lab_lan1_dns_ip}}"
         vm_domain: "{{lab_domain_name}}"
         vm_datastore: "{{lab_vm_datastore}}"
     - include_tasks: tasks/install_xrdp_in_CentOS8_with_vm_shell.yml
@@ -270,11 +270,11 @@
         vm_hostname: "{{inventory_hostname}}"
         vm_address: "{{ip_address}}"       
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
-        vm_network: "{{lab_network_lan1_portgroup}}"
+        vm_network: "{{lab_lan1_portgroup}}"
         vm_password_new: "{{lab_password}}"
-        vm_netmask_cidr: "{{lab_network_lan1_netmask_cidr}}"
-        vm_gateway: "{{lab_network_lan1_gateway}}"
-        vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+        vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+        vm_gateway: "{{lab_lan1_gateway}}"
+        vm_dns_server: "{{lab_lan1_dns_ip}}"
         vm_domain: "{{lab_domain_name}}"
         vm_datastore: "{{lab_vm_datastore}}"
     - include_tasks: tasks/install_xrdp_in_CentOS7_with_vm_shell.yml
@@ -340,11 +340,11 @@
       vm_name: '{{lab_name}}_{{inventory_hostname}}'
       vm_datastore: "{{lab_vm_datastore}}"
       sys_serial_number: "{{ sys_serial_num }}" 
-      cluster_network: "{{lab_network_lan1_portgroup}}"
-      data_network: "{{lab_network_lan1_portgroup}}"
+      cluster_network: "{{lab_lan1_portgroup}}"
+      data_network: "{{lab_lan1_portgroup}}"
       ontap_node_mgmt_ip: "{{ip_address}}"
-      ontap_netmask: "{{lab_network_lan1_netmask}}"
-      ontap_gateway: "{{lab_network_lan1_gateway}}"
+      ontap_netmask: "{{lab_lan1_netmask}}"
+      ontap_gateway: "{{lab_lan1_gateway}}"
 
   - name: Run Cluster Setup
     include_tasks: "tasks/Run_Cluster_Setup_from_vm_shell.yml"
@@ -355,10 +355,10 @@
       ontap_cluster_name: "{{cluster_name | default('ONTAP')}}"
       ontap_password: "{{lab_password |default('netapp123')}}"
       ontap_dns_domain: "{{lab_domain_name}}"
-      ontap_dns_server: "{{lab_network_lan1_dns_ip}}"
+      ontap_dns_server: "{{lab_lan1_dns_ip}}"
       ontap_location: "{{lab_name}}"
-      ontap_netmask: "{{lab_network_lan1_netmask}}"
-      ontap_gateway: "{{lab_network_lan1_gateway}}"
+      ontap_netmask: "{{lab_lan1_netmask}}"
+      ontap_gateway: "{{lab_lan1_gateway}}"
     when: cluster_setup is true
 
 - name: Build ONTAP Select eval cluster
@@ -375,7 +375,7 @@
       # ontap_deployment_option: 'ONTAPSelectEVALSmall' # <=9.5 use 'ONTAPSelectEVAL', 9.6+ use 'ONTAPSelectEVALSmall'
       vm_name: '{{lab_name}}_{{inventory_hostname}}'
       vm_datastore: "{{lab_vm_datastore}}"
-      vm_network: "{{lab_network_lan1_portgroup}}"
+      vm_network: "{{lab_lan1_portgroup}}"
       #vm_num_cpus: 4
       #vm_cpu_reservation_mhz: 1000        
       #vm_memory_mb: 16384 
@@ -384,11 +384,11 @@
       ontap_cluster_name: "{{cluster_name | default('ONTAP')}}"
       ontap_cluster_mgmt_ip: "{{cluster_mgmt_ip}}"    
       ontap_node_mgmt_ip: "{{ip_address}}"
-      ontap_netmask: "{{lab_network_lan1_netmask}}"
-      ontap_gateway: "{{lab_network_lan1_gateway}}"
+      ontap_netmask: "{{lab_lan1_netmask}}"
+      ontap_gateway: "{{lab_lan1_gateway}}"
       ontap_password: "{{lab_password |default('netapp123')}}"
       ontap_dns_domain: "{{lab_domain_name}}"
-      ontap_dns_server: "{{lab_network_lan1_dns_ip}}"
+      ontap_dns_server: "{{lab_lan1_dns_ip}}"
 
 - name: Build AIQUM from OVA
   hosts: aiqum
@@ -401,15 +401,15 @@
       ovf_file: "{{aiqum_ovf |default('files/AIQUM/ActiveIQUnifiedManager-9.8.ova')}}"
       vm_name: '{{lab_name}}_{{inventory_hostname}}'
       vm_datastore: "{{lab_vm_datastore}}"
-      vm_network: "{{lab_network_lan1_portgroup}}"
+      vm_network: "{{lab_lan1_portgroup}}"
       vm_username: "admin"
       vm_password: "{{lab_password |default('netapp123')}}"
       vm_hostname: '{{inventory_hostname}}'
       vm_fqdn:     '{{inventory_hostname}}.{{lab_domain_name}}'
       vm_address: '{{ip_address}}'
-      vm_netmask: "{{lab_network_lan1_netmask}}"
-      vm_gateway: "{{lab_network_lan1_gateway}}"
-      vm_dns_server: "{{lab_network_lan1_dns_ip}}"
+      vm_netmask: "{{lab_lan1_netmask}}"
+      vm_gateway: "{{lab_lan1_gateway}}"
+      vm_dns_server: "{{lab_lan1_dns_ip}}"
 
 - name: Deploy OVF files
   hosts: ovf
