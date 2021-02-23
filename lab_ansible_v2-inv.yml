@@ -25,6 +25,13 @@ all:
         dc01:
           version: "Server2019"
           ip_address: 192.168.0.11
+          extra_commands:
+            # Install Chrome
+            - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
+            - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+            # Install Putty
+            - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+            - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
     winservers:
       hosts:
         win1:
@@ -47,17 +54,17 @@ all:
         vsim1-01:
           ip_address: 192.168.0.71
           sys_serial_num: "4082368-50-7"
-          cluster_create: true
+          cluster_setup: true
           cluster_name: vsim1
           cluster_mgmt_ip: 192.168.0.70
         vsim2-01:
           ip_address: 192.168.0.81
           sys_serial_num: "4082368-50-7"
-          cluster_create: false
+          cluster_setup: false
         vsim2-02:
           ip_address: 192.168.0.82
           sys_serial_num: "4034389-06-2"
-          cluster_create: false   
+          cluster_setup: false   
       vars:
           ontap_version: "9.8"             
 
