@@ -334,14 +334,30 @@
   vars_files:
     - vars/main.yml
   tasks:
+  - set_fact:
+      cluster_network: "{{ lab_lan2_portgroup }}"
+    when:
+      - lab_lan2_portgroup is defined
+      - lab_lan2_portgroup != ""
+      - (cluster_network is undefined) or (cluster_network == "")
+  - set_fact:
+      cluster_network: "{{ lab_lan1_portgroup }}"
+    when:
+      - lab_lan1_portgroup is defined
+      - lab_lan1_portgroup != ""
+      - (cluster_network is undefined) or (cluster_network == "")
+  - set_fact:
+      data_network: "{{ lab_lan1_portgroup }}"
+    when:
+      - lab_lan1_portgroup is defined
+      - lab_lan1_portgroup != ""
+      - (data_network is undefined) or (data_network == "")
 #  - include_vars: defaults/Build_ONTAP_Simulator_from_OVA.yml
   - include_tasks: "tasks/Build_ONTAP_Simulator_from_OVA.yml"
     vars:
       vm_name: '{{lab_name}}_{{inventory_hostname}}'
       vm_datastore: "{{lab_vm_datastore}}"
       sys_serial_number: "{{ sys_serial_num }}" 
-      cluster_network: "{{lab_lan1_portgroup}}"
-      data_network: "{{lab_lan1_portgroup}}"
       ontap_node_mgmt_ip: "{{ip_address}}"
       ontap_netmask: "{{lab_lan1_netmask}}"
       ontap_gateway: "{{lab_lan1_gateway}}"
