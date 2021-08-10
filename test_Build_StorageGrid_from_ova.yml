@@ -1,0 +1,103 @@
+---
+- name: Build StorageGrid from OVA
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+  tasks:
+
+    # Deploy Admin Node
+    # - include_tasks: tasks/Build_StorageGrid_from_OVA.yml
+    #   vars:
+    #     ovf_version: "11.5.0"
+    #     vm_name: "TEST-SGWS-Admin"
+    #     vm_network: "VM Network"
+    #     vm_memory_mb: 12288
+    #     vm_num_cpus: 1
+    #     ovf_hostname: "sgws-admin"
+    #     node_type: "VM_Admin_Node"
+    #     grid_network_config: "STATIC" # "STATIC", "DHCP"
+    #     grid_network_ip: "192.168.123.170"
+    #     grid_network_mask: "255.255.255.0"
+    #     grid_network_gateway: "192.168.123.1"
+
+    # Deploy Storage Node 1
+    - include_tasks: tasks/Build_StorageGrid_from_OVA.yml
+      vars:
+        ovf_version: "11.5.0"
+        vm_name: "TEST-SGWS-Storage1"
+        vm_network: "VM Network"
+        vm_memory_mb: 8192
+        vm_num_cpus: 1
+        ovf_hostname: "sgws-storage1"
+        node_type: "VM_Storage_Node"
+        admin_ip: "192.168.123.170"
+        grid_network_config: "STATIC" # "STATIC", "DHCP"
+        grid_network_ip: "192.168.123.171"
+        grid_network_mask: "255.255.255.0"
+        grid_network_gateway: "192.168.123.1"
+
+    # Deploy Storage Node 2
+    - include_tasks: tasks/Build_StorageGrid_from_OVA.yml
+      vars:
+        ovf_version: "11.5.0"
+        vm_name: "TEST-SGWS-Storage2"
+        vm_network: "VM Network"
+        vm_memory_mb: 8192
+        vm_num_cpus: 1
+        ovf_hostname: "sgws-storage2"
+        node_type: "VM_Storage_Node"
+        admin_ip: "192.168.123.170"
+        grid_network_config: "STATIC" # "STATIC", "DHCP"
+        grid_network_ip: "192.168.123.172"
+        grid_network_mask: "255.255.255.0"
+        grid_network_gateway: "192.168.123.1"
+
+    # Deploy Storage Node 3
+    - include_tasks: tasks/Build_StorageGrid_from_OVA.yml
+      vars:
+        ovf_version: "11.5.0"
+        vm_name: "TEST-SGWS-Storage3"
+        vm_network: "VM Network"
+        vm_memory_mb: 8192
+        vm_num_cpus: 1
+        ovf_hostname: "sgws-storage3"
+        node_type: "VM_Storage_Node"
+        admin_ip: "192.168.123.170"
+        grid_network_config: "STATIC" # "STATIC", "DHCP"
+        grid_network_ip: "192.168.123.173"
+        grid_network_mask: "255.255.255.0"
+        grid_network_gateway: "192.168.123.1"
+
+    # Deploy Gateway Node
+    # - include_tasks: tasks/Build_StorageGrid_from_OVA.yml
+    #   vars:
+    #     ovf_version: "11.5.0"
+    #     vm_name: "TEST-SGWS-Gateway"
+    #     vm_network: "VM Network"
+    #     vm_memory_mb: 12288
+    #     vm_num_cpus: 4
+    #     ovf_hostname: "sgws-gateway"
+    #     node_type: "VM_API_Gateway"
+    #     admin_ip: "192.168.123.170"
+    #     grid_network_config: "STATIC" # "STATIC", "DHCP"
+    #     grid_network_ip: "192.168.123.175"
+    #     grid_network_mask: "255.255.255.0"
+    #     grid_network_gateway: "192.168.123.1"
+
+    # Deploy Non-Primary Admin Node
+    # - include_tasks: tasks/Build_StorageGrid_from_OVA.yml
+    #   vars:
+    #     ovf_version: "11.5.0"
+    #     vm_name: "TEST-SGWS-Admin2"
+    #     vm_network: "VM Network"
+    #     vm_memory_mb: 12288
+    #     vm_num_cpus: 4
+    #     ovf_hostname: "sgws-admin2"
+    #     node_type: "VM_Admin_Node"
+    #     admin_role: "Non-Primary"
+    #     admin_ip: "192.168.123.170"
+    #     grid_network_config: "STATIC" # "STATIC", "DHCP"
+    #     grid_network_ip: "192.168.123.176"
+    #     grid_network_mask: "255.255.255.0"
+    #     grid_network_gateway: "192.168.123.1"

@@ -4,7 +4,7 @@
 #   gather_facts: false
 #   tasks:
 #   - debug:
-#       msg: 
+#       msg:
 #         - "{{inventory_hostname}}.{{lab_domain_name}}"
 #         - "{{ip_address|default('')}}"
 
@@ -12,8 +12,8 @@
 - name: Build pfSense VMs
   hosts: pfsense
   gather_facts: false
-  vars_files: 
-    - vars/main.yml  
+  vars_files:
+    - vars/main.yml
   tasks:
   - name: Build lab pfSense Gateway
     block:
@@ -27,8 +27,8 @@
 - name: Build DC
   hosts: dc
   gather_facts: false
-  vars_files: 
-    - vars/main.yml  
+  vars_files:
+    - vars/main.yml
   tasks:
   - name: default version
     set_fact:
@@ -40,10 +40,10 @@
     - include_vars: defaults/Build_Server2016_VM_from_ISO.yml
       when: version == "Server2016"
     - include_vars: defaults/Build_Server2019_VM_from_ISO.yml
-      when: version == "Server2019"   
+      when: version == "Server2019"
     - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
       vars:
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'         
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'
         vm_datastore: "{{lab_vm_datastore}}"
         vm_network: "{{lab_lan1_portgroup}}"
         vm_password_new: "{{lab_password}}"
@@ -59,8 +59,8 @@
     - include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
       vars:
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
-        vm_username: ".\\Administrator" 
-        vm_password: "{{lab_password}}"         
+        vm_username: ".\\Administrator"
+        vm_password: "{{lab_password}}"
         vm_dns_server: "{{lab_lan1_dns_ip}}"
         vm_domain: "{{lab_domain_name}}"
 
@@ -68,19 +68,19 @@
     community.vmware.vmware_vm_shell:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}' 
+      password: '{{ vcenter_password }}'
       validate_certs: no
       vm_username: ".\\Administrator"
       vm_password: "{{lab_password}}"
-      vm_id: '{{lab_name}}_{{inventory_hostname}}' 
+      vm_id: '{{lab_name}}_{{inventory_hostname}}'
       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
       vm_shell_args: " -command \"({{item}})\""
       wait_for_process: true
     delegate_to: localhost
     retries: 3
-    delay: 10 
-    register: result           
-    until: result is succeeded    
+    delay: 10
+    register: result
+    until: result is succeeded
     ignore_errors: true
     loop: "{{extra_commands}}"
     when: extra_commands is defined
@@ -97,7 +97,7 @@
     community.vmware.vmware_vm_shell:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}' 
+      password: '{{ vcenter_password }}'
       validate_certs: no
       vm_username: ".\\Administrator"
       vm_password: "{{lab_password}}"
@@ -107,19 +107,20 @@
       wait_for_process: true
     delegate_to: localhost
     retries: 3
-    delay: 10 
-    register: result           
-    until: result is succeeded  
-    ignore_errors: yes  
+    delay: 10
+    register: result
+    until: result is succeeded
+    ignore_errors: yes
     loop:
-      # Add vCenter DNS record    
+      # Add vCenter DNS record
       - "Add-DnsServerResourceRecordA -Name {{inventory_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{ip_address}} -TimeToLive 01:00:00"
+    when: (skip_dns_records is undefined) or (skip_dns_records is False)
 
 # Build vCenter Server(s)
-- name: Build vCenter 
+- name: Build vCenter
   hosts: vcenter
   gather_facts: false
-  vars_files: 
+  vars_files:
     - vars/main.yml
   tasks:
   - name: Build vCenter Appliance from OVA
@@ -148,7 +149,7 @@
 - name: Build Nested ESXI from OVA
   hosts: nestedesx
   gather_facts: false
-  vars_files: 
+  vars_files:
     - vars/main.yml
   tasks:
 #    - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
@@ -165,9 +166,9 @@
         ovf_address: "{{ip_address}}"
         ovf_netmask: "{{lab_lan1_netmask}}"
         ovf_gateway: "{{lab_lan1_gateway}}"
-        ovf_vlan: ""  
+        ovf_vlan: ""
         ovf_dns: "{{lab_lan1_dns_ip}}"
-        ovf_domain: "{{lab_domain_name}}"   
+        ovf_domain: "{{lab_domain_name}}"
         ovf_ntp: "{{lab_lan1_gateway}}"
         ovf_syslog: "" # IP of syslog server
         ovf_password: "{{lab_password}}"
@@ -177,8 +178,8 @@
 - name: Build Windows Servers
   hosts: winservers
   gather_facts: false
-  vars_files: 
-    - vars/main.yml  
+  vars_files:
+    - vars/main.yml
   tasks:
   # - name: default version
   #   set_fact:
@@ -188,10 +189,10 @@
   - include_vars: defaults/Build_Server2016_VM_from_ISO.yml
     when: version == "Server2016"
   - include_vars: defaults/Build_Server2019_VM_from_ISO.yml
-    when: version == "Server2019"   
+    when: version == "Server2019"
   - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
     vars:
-      vm_name: '{{lab_name}}_{{inventory_hostname}}'         
+      vm_name: '{{lab_name}}_{{inventory_hostname}}'
       vm_datastore: "{{lab_vm_datastore}}"
       vm_network: "{{lab_lan1_portgroup}}"
       vm_password_new: "{{lab_password}}"
@@ -206,19 +207,19 @@
     community.vmware.vmware_vm_shell:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}' 
+      password: '{{ vcenter_password }}'
       validate_certs: no
       vm_username: ".\\Administrator"
       vm_password: "{{lab_password}}"
-      vm_id: '{{lab_name}}_{{inventory_hostname}}' 
+      vm_id: '{{lab_name}}_{{inventory_hostname}}'
       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
       vm_shell_args: " -command \"({{item}})\""
       wait_for_process: true
     delegate_to: localhost
     retries: 3
-    delay: 10 
-    register: result           
-    until: result is succeeded    
+    delay: 10
+    register: result
+    until: result is succeeded
     ignore_errors: true
     loop: "{{extra_commands}}"
     when: extra_commands is defined
@@ -226,8 +227,8 @@
 - name: Build CentOS VMs
   hosts: centos
   gather_facts: false
-  vars_files: 
-    - vars/main.yml  
+  vars_files:
+    - vars/main.yml
   tasks:
   - name: Build CentOS8 VM - ansible
     block:
@@ -235,7 +236,7 @@
     - include_tasks: tasks/Build_CentOS8_VM_from_ISO.yml
       vars:
         vm_hostname: "{{inventory_hostname}}"
-        vm_address: "{{ip_address}}"       
+        vm_address: "{{ip_address}}"
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
         vm_network: "{{lab_lan1_portgroup}}"
         vm_password_new: "{{lab_password}}"
@@ -248,18 +249,18 @@
       vars:
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
         vm_username: 'root'
-        vm_password: '{{lab_password}}'        
-      when: 
+        vm_password: '{{lab_password}}'
+      when:
         - install_xrdp is defined
-        - install_xrdp is true 
+        - install_xrdp is true
     - include_tasks: tasks/install_ansible_in_CentOS8_with_vm_shell.yml
       vars:
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
         vm_username: 'root'
-        vm_password: '{{lab_password}}'        
-      when: 
+        vm_password: '{{lab_password}}'
+      when:
         - install_ansible is defined
-        - install_ansible is true 
+        - install_ansible is true
     when: version == "CentOS8"
 
   - name: Build CentOS7 VM - ansible
@@ -268,7 +269,7 @@
     - include_tasks: tasks/Build_CentOS7_VM_from_ISO.yml
       vars:
         vm_hostname: "{{inventory_hostname}}"
-        vm_address: "{{ip_address}}"       
+        vm_address: "{{ip_address}}"
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
         vm_network: "{{lab_lan1_portgroup}}"
         vm_password_new: "{{lab_password}}"
@@ -281,34 +282,34 @@
       vars:
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
         vm_username: 'root'
-        vm_password: '{{lab_password}}'        
-      when: 
+        vm_password: '{{lab_password}}'
+      when:
         - install_xrdp is defined
-        - install_xrdp is true 
+        - install_xrdp is true
     - include_tasks: tasks/install_ansible_in_CentOS7_with_vm_shell.yml
       vars:
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
         vm_username: 'root'
-        vm_password: '{{lab_password}}'        
-      when: 
+        vm_password: '{{lab_password}}'
+      when:
         - install_ansible is defined
-        - install_ansible is true 
+        - install_ansible is true
     - include_tasks: tasks/install_AWX_in_CentOS7_with_vm_shell.yml
       vars:
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
         vm_username: 'root'
-        vm_password: '{{lab_password}}'        
-      when: 
+        vm_password: '{{lab_password}}'
+      when:
         - install_awx is defined
-        - install_awx is true 
+        - install_awx is true
     when: version == "CentOS7"
 
   - name: Run extra shell command via vm_shell
     community.vmware.vmware_vm_shell:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       vm_username: "root"
       vm_password: '{{ lab_password }}'
       vm_id: '{{lab_name}}_{{inventory_hostname}}'
@@ -316,14 +317,14 @@
       vm_shell_args: " -c \"{{item}}\""
       wait_for_process: true
       timeout: 3600
-    delegate_to: localhost  
+    delegate_to: localhost
     retries: 3
     delay: 60
-    register: result           
+    register: result
     until: result is succeeded
     ignore_errors: true
     loop: "{{extra_commands}}"
-    when: 
+    when:
       - extra_commands is defined
 
 - name: Build ONTAP Simulators
@@ -357,7 +358,7 @@
     vars:
       vm_name: '{{lab_name}}_{{inventory_hostname}}'
       vm_datastore: "{{lab_vm_datastore}}"
-      sys_serial_number: "{{ sys_serial_num }}" 
+      sys_serial_number: "{{ sys_serial_num }}"
       ontap_node_mgmt_ip: "{{ip_address}}"
       ontap_netmask: "{{lab_lan1_netmask}}"
       ontap_gateway: "{{lab_lan1_gateway}}"
@@ -387,24 +388,46 @@
   - include_tasks: tasks/Build_ONTAPSelectEval_from_OVA.yml
     vars:
       #ontap_version: "9.8"
-      # ontap_select_ova: "files/9.8_DataONTAPv-esx-standalone-eval-nodar.ova" 
+      # ontap_select_ova: "files/9.8_DataONTAPv-esx-standalone-eval-nodar.ova"
       # ontap_deployment_option: 'ONTAPSelectEVALSmall' # <=9.5 use 'ONTAPSelectEVAL', 9.6+ use 'ONTAPSelectEVALSmall'
       vm_name: '{{lab_name}}_{{inventory_hostname}}'
       vm_datastore: "{{lab_vm_datastore}}"
       vm_network: "{{lab_lan1_portgroup}}"
       #vm_num_cpus: 4
-      #vm_cpu_reservation_mhz: 1000        
-      #vm_memory_mb: 16384 
+      #vm_cpu_reservation_mhz: 1000
+      #vm_memory_mb: 16384
       #vm_data_disk_gb: "100"
-      #vm_disk_rovisioning: thin 
+      #vm_disk_rovisioning: thin
       ontap_cluster_name: "{{cluster_name | default('ONTAP')}}"
-      ontap_cluster_mgmt_ip: "{{cluster_mgmt_ip}}"    
+      ontap_cluster_mgmt_ip: "{{cluster_mgmt_ip}}"
       ontap_node_mgmt_ip: "{{ip_address}}"
       ontap_netmask: "{{lab_lan1_netmask}}"
       ontap_gateway: "{{lab_lan1_gateway}}"
       ontap_password: "{{lab_password |default('netapp123')}}"
       ontap_dns_domain: "{{lab_domain_name}}"
       ontap_dns_server: "{{lab_lan1_dns_ip}}"
+
+- name: Build StorageGrid from ova
+  hosts: storagegrid
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+  tasks:
+  - include_tasks: tasks/Build_StorageGrid_from_OVA.yml
+    vars:
+      #ovf_version: "11.5.0"
+      vm_name: '{{lab_name}}_{{inventory_hostname}}'
+      vm_network: "{{lab_lan1_portgroup}}"
+      vm_datastore: "{{lab_vm_datastore}}"
+      #vm_memory_mb: 8192
+      #vm_num_cpus: 1
+      ovf_hostname: '{{inventory_hostname}}'
+      #node_type: "VM_Storage_Node"
+      #admin_ip: "192.168.123.170"
+      grid_network_config: "STATIC" # "STATIC", "DHCP"
+      grid_network_ip: "{{ip_address}}"
+      grid_network_mask: "{{lab_lan1_netmask}}"
+      grid_network_gateway: "{{lab_lan1_gateway}}"
 
 - name: Build AIQUM from OVA
   hosts: aiqum
@@ -452,6 +475,5 @@
     delegate_to: localhost
     retries: 10
     delay: 60
-    register: result           
-    until: result is succeeded 
-
+    register: result
+    until: result is succeeded

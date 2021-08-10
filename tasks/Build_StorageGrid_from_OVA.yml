@@ -1,0 +1,171 @@
+---
+#- name: variables processing
+- set_fact:
+    ovf_version: "{{ovf_version | default('11.5.0')}}"
+    ovf_location: "{{ovf_location | default('files/StorageGRID-Webscale-{{ovf_version}}/vsphere') }}"
+    #ovf_file: "{{ovf_file | default('files/StorageGRID-Webscale-{{ovf_version}}/vsphere/vsphere-primary-admin.ovf')}}"
+    # ovf_url: "{{ovf_url | default('https://mysupport.netapp.com/you/cant/get/there/from/here.ova')}}"
+    vm_name: "{{vm_name | default('sgws-admin') }}"
+    vm_network: "{{vm_network | default('VM Network') }}"
+    vm_num_cpus: "{{vm_num_cpus | default(4) }}"
+    vm_memory_mb: "{{vm_memory_mb | default(12288) }}"
+    node_type: "{{node_type | default('VM_Storage_Node') }}" #"VM_Storage_Node", "VM_Admin_Node", "VM_API_Gateway", "VM_Archive_Node"}' ovf:value="VM_Admin_Node">
+    admin_role: "{{admin_role | default ('Primary')}}" # Primary, Non-Primary
+    storage_disk_size: "{{storage_disk_size | default(200)}}"
+- set_fact:
+    ovf_file: "{{ovf_file | default('{{ovf_location}}/vsphere-primary-admin.ovf')}}"
+  when:
+    - node_type == "VM_Admin_Node"
+    - admin_role == "Primary"
+- set_fact:
+    ovf_file: "{{ovf_file | default('{{ovf_location}}/vsphere-non-primary-admin.ovf')}}"
+  when:
+    - node_type == "VM_Admin_Node"
+    - admin_role == "Non-Primary"
+- set_fact:
+    ovf_file: "{{ovf_file | default('{{ovf_location}}/vsphere-storage.ovf')}}"
+  when:
+    - node_type == "VM_Storage_Node"
+- set_fact:
+    ovf_file: "{{ovf_file | default('{{ovf_location}}/vsphere-gateway.ovf')}}"
+  when:
+    - node_type == "VM_API_Gateway"
+- set_fact:
+    ovf_file: "{{ovf_file | default('{{ovf_location}}/vsphere-archive.ovf')}}"
+  when:
+    - node_type == "VM_Archive_Node"
+
+- vmware_deploy_ovf:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: '{{ vcenter_datacenter }}'
+    cluster: '{{ vcenter_cluster }}'
+    datastore: '{{ vm_datastore }}'
+    name: '{{ vm_name }}'
+    ovf: '{{ ovf_file }}'
+    disk_provisioning: thin
+    power_on: no
+    wait_for_ip_address: false
+    networks: "{u'Grid Network':u'{{ vm_network }}',u'Admin Network':u'{{ vm_network }}',u'Client Network':u'{{ vm_network }}' }"
+    inject_ovf_env: true
+    properties:
+
+      NODE_NAME: "{{ovf_hostname}}"
+      #NODE_TYPE: "{{ node_type }}"
+      #ADMIN_ROLE: "{{ admin_role }}"
+
+      #Grid Network (eth0)
+      #GRID_NETWORK_DEV: "eth0"
+      GRID_NETWORK_CONFIG: "{{ grid_network_config | default('DHCP') }}" # "STATIC", "DHCP"
+      GRID_NETWORK_IP: "{{ grid_network_ip | default ('0.0.0.0') }}"
+      GRID_NETWORK_MASK: "{{ grid_network_mask | default('255.255.255.255') }}"
+      GRID_NETWORK_GATEWAY: "{{ grid_network_gateway | default('0.0.0.0') }}"
+      GRID_NETWORK_MTU: "{{ grid_network_mtu | default('1400') }}"
+
+      #Admin Network (eth1)
+      #ADMIN_NETWORK_DEV: "eth1"
+      ADMIN_NETWORK_CONFIG: "DISABLED" #"DISABLED", "STATIC", "DHCP"
+      ADMIN_NETWORK_IP: "0.0.0.0" #The IP address of this node on the admin network (0.0.0.0 if not used).
+      ADMIN_NETWORK_MASK:  "255.255.255.255" #The netmask for this node's admin network subnet.
+      ADMIN_NETWORK_GATEWAY: "0.0.0.0" #The admin network gateway for this node (must be on the admin network subnet).
+      ADMIN_NETWORK_ESL: "" # a comma-separated list of subnets that will communicate with this node through its admin network gateway. This list will be used to create static routes. Use CIDR notation. For example, 10.10.10.0/24,192.168.100.0/24,172.16.0.0/16
+      ADMIN_NETWORK_MTU: "1400"
+      ADMIN_IP: "{{admin_ip | default(omit)}}"
+
+      #Client Network (eth2)
+      #CLIENT_NETWORK_DEV: "eth2"
+      CLIENT_NETWORK_CONFIG: "DISABLED" #"DISABLED", "STATIC", "DHCP"
+      CLIENT_NETWORK_IP: "0.0.0.0"
+      CLIENT_NETWORK_MASK: "255.255.255.255"
+      CLIENT_NETWORK_GATEWAY: "0.0.0.0"
+      CLIENT_NETWORK_MTU: "1400"
+
+      #Advanced
+      #PORT_REMAP: ""
+      #PORT_REMAP_INBOUND: ""
+
+  delegate_to: localhost
+  retries: 10
+  delay: 60
+  register: result
+  until: result is succeeded
+
+- name: Adjust VM Disk Sizing - remove
+  community.vmware.vmware_guest_disk:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    datacenter: '{{ vcenter_datacenter }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    disk:
+    - state: absent
+      controller_type: lsilogic
+      controller_number: 0
+      unit_number: 1
+    - state: absent
+      controller_type: lsilogic
+      controller_number: 0
+      unit_number: 2
+    - state: absent
+      controller_type: lsilogic
+      controller_number: 0
+      unit_number: 3
+  delegate_to: localhost
+  when: node_type == "VM_Storage_Node"
+
+- name: Adjust VM Disk Sizing - recreate
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    state: present
+    disk:
+    - size_gb: "{{ storage_disk_size|int }}"
+      controller_type: lsilogic
+      controller_number: 0
+      unit_number: 1
+      datastore: '{{ vm_datastore }}'
+      type: thin
+    - size_gb: "{{ storage_disk_size|int }}"
+      controller_type: lsilogic
+      controller_number: 0
+      unit_number: 2
+      datastore: '{{vm_datastore}}'
+      type: thin
+    - size_gb: "{{ storage_disk_size|int }}"
+      controller_type: lsilogic
+      controller_number: 0
+      unit_number: 3
+      datastore: '{{vm_datastore}}'
+      type: thin
+  delegate_to: localhost
+  when: node_type == "VM_Storage_Node"
+
+- name: Change T-Shirt
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    state: present
+    hardware:
+      memory_mb: '{{ vm_memory_mb|int }}'
+      num_cpus: '{{ vm_num_cpus|int }}'
+  delegate_to: localhost
+
+- name: Power-On the virtual machine
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    state: poweredon
+  delegate_to: localhost
+  register: powerstate
