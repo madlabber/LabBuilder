@@ -66,8 +66,8 @@ all:
         # sgws-storage3:
         #   ip_address: 192.168.0.173
         #   node_type: "VM_Storage_Node"
-        sgws-storage5:
-          ip_address: 192.168.0.176
+        sgws-storage6:
+          ip_address: 192.168.0.177
           node_type: "VM_Storage_Node"
     # winservers:
     #   hosts:

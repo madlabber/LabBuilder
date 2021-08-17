@@ -3,7 +3,7 @@
 - name: Variables Processing
   set_fact:
     ovf_version:       "{{ ovf_version | default('11.5.0') }}"
-    ovf_location:      "{{ ovf_location | default('{{playbook_dir}}/files/StorageGRID-Webscale-{{ovf_version}}/vsphere') }}"
+#    ovf_location:      "{{ ovf_location | default('{{playbook_dir}}/files/StorageGRID-Webscale-{{ovf_version}}/vsphere') }}"
     vm_name:           "{{ vm_name | default('sgws-admin') }}"
     grid_network_name: "{{ grid_network_name | default('VM Network') }}"
     vm_num_cpus:       "{{ vm_num_cpus | default(4) }}"
@@ -14,7 +14,7 @@
 
 - name: Check ovf_location1
   stat:
-    path: "{{ovf_location}}"
+    path: "{{ovf_location | default('')}}"
   delegate_to: localhost
   register: ovf_location1
 
