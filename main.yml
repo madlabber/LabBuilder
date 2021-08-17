@@ -413,11 +413,12 @@
   vars_files:
     - vars/main.yml
   tasks:
-  - include_tasks: tasks/Build_StorageGrid_from_OVA.yml
+  - include_role: 
+      name: build_storagegrid_node_from_ova
     vars:
       #ovf_version: "11.5.0"
       vm_name: '{{lab_name}}_{{inventory_hostname}}'
-      vm_network: "{{lab_lan1_portgroup}}"
+      grid_network_name: "{{lab_lan1_portgroup}}"
       vm_datastore: "{{lab_vm_datastore}}"
       #vm_memory_mb: 8192
       #vm_num_cpus: 1
