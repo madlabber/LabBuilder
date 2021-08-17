@@ -54,9 +54,9 @@ all:
       vars:
         admin_ip: 192.168.0.170
       hosts:
-        # sgws-admin:
-        #   ip_address: 192.168.0.170
-        #   node_type: "VM_Admin_Node"
+        sgws-admin:
+          ip_address: 192.168.0.170
+          node_type: "VM_Admin_Node"
         # sgws-storage1:
         #   ip_address: 192.168.0.171
         #   node_type: "VM_Storage_Node"
@@ -66,9 +66,6 @@ all:
         # sgws-storage3:
         #   ip_address: 192.168.0.173
         #   node_type: "VM_Storage_Node"
-        sgws-storage6:
-          ip_address: 192.168.0.177
-          node_type: "VM_Storage_Node"
     # winservers:
     #   hosts:
     #     win1:

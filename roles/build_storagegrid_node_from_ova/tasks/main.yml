@@ -1,16 +1,16 @@
 ---
 # Ensures all varibles are defined || defaults accordingly
-- name: Variables Processing
-  set_fact:
-    ovf_version:       "{{ ovf_version | default('11.5.0') }}"
-#    ovf_location:      "{{ ovf_location | default('{{playbook_dir}}/files/StorageGRID-Webscale-{{ovf_version}}/vsphere') }}"
-    vm_name:           "{{ vm_name | default('sgws-admin') }}"
-    grid_network_name: "{{ grid_network_name | default('VM Network') }}"
-    vm_num_cpus:       "{{ vm_num_cpus | default(4) }}"
-    vm_memory_mb:      "{{ vm_memory_mb | default(12288) }}"
-    node_type:         "{{ node_type | default('VM_Storage_Node') }}"  # "VM_Storage_Node", Default="VM_Admin_Node", "VM_API_Gateway", "VM_Archive_Node"
-    admin_role:        "{{ admin_role | default('Primary') }}"  # Primary, Non-Primary
-    storage_disk_size: "{{ storage_disk_size | default(200) }}"
+# - name: Variables Processing
+#   set_fact:
+#     ovf_version:       "{{ ovf_version | default('11.5.0') }}"
+# #    ovf_location:      "{{ ovf_location | default('{{playbook_dir}}/files/StorageGRID-Webscale-{{ovf_version}}/vsphere') }}"
+#     vm_name:           "{{ vm_name | default('sgws-admin') }}"
+#     grid_network_name: "{{ grid_network_name | default('VM Network') }}"
+#     vm_num_cpus:       "{{ vm_num_cpus | default(4) }}"
+#     vm_memory_mb:      "{{ vm_memory_mb | default(12288) }}"
+#     node_type:         "{{ node_type | default('VM_Storage_Node') }}"  # "VM_Storage_Node", Default="VM_Admin_Node", "VM_API_Gateway", "VM_Archive_Node"
+#     admin_role:        "{{ admin_role | default('Primary') }}"  # Primary, Non-Primary
+#     storage_disk_size: "{{ storage_disk_size | default(200) }}"
 
 - name: Check ovf_location1
   stat:
@@ -30,13 +30,16 @@
   delegate_to: localhost
   register: ovf_location3
 
-- set_fact:
+- name: use role_path
+  set_fact:
     ovf_location: "{{role_path}}/files/StorageGRID-Webscale-{{ovf_version}}/vsphere"
   when: 
     - ovf_location3.stat.exists
     - not ovf_location2.stat.exists
     - not ovf_location1.stat.exists
-- set_fact:
+
+- name: use playbook_dir
+  set_fact:
     ovf_location: "{{playbook_dir}}/files/StorageGRID-Webscale-{{ovf_version}}/vsphere"
   when: 
     - ovf_location2.stat.exists
@@ -57,14 +60,17 @@
 - name: 'set_fact: Primary-Admin'
   set_fact:
     ovf_file:        "{{ ovf_location }}/vsphere-primary-admin.ovf"
+    admin_role: "Primary"
   when:
-    - node_type == "VM_Admin_Node" and admin_role == "Primary"
+    - node_type == "VM_Admin_Node"
+    - admin_role == "Primary" or admin_role is undefined
 
 - name: 'set_fact: Non-Primary-Admin'
   set_fact:
     ovf_file:         "{{ ovf_location }}/vsphere-non-primary-admin.ovf"
   when:
-    - node_type == "VM_Admin_Node" and admin_role == "Non-Primary"
+    - node_type == "VM_Admin_Node"
+    - admin_role == "Non-Primary"
 
 - name: 'set_fact: Storage'
   set_fact:
