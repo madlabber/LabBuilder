@@ -410,25 +410,19 @@
 - name: Build StorageGrid from ova
   hosts: storagegrid
   gather_facts: false
+  roles:
+    - role: build_storagegrid_node_from_ova
+      vars:
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        ovf_hostname: '{{inventory_hostname}}'        
+        vm_datastore: "{{lab_vm_datastore}}"
+        grid_network_name: "{{lab_lan1_portgroup}}"        
+        grid_network_config: "STATIC" # "STATIC", "DHCP"
+        grid_network_ip: "{{ip_address}}"
+        grid_network_mask: "{{lab_lan1_netmask}}"
+        grid_network_gateway: "{{lab_lan1_gateway}}"        
   vars_files:
     - vars/main.yml
-  tasks:
-  - include_role: 
-      name: build_storagegrid_node_from_ova
-    vars:
-      #ovf_version: "11.5.0"
-      vm_name: '{{lab_name}}_{{inventory_hostname}}'
-      grid_network_name: "{{lab_lan1_portgroup}}"
-      vm_datastore: "{{lab_vm_datastore}}"
-      #vm_memory_mb: 8192
-      #vm_num_cpus: 1
-      ovf_hostname: '{{inventory_hostname}}'
-      #node_type: "VM_Storage_Node"
-      #admin_ip: "192.168.123.170"
-      grid_network_config: "STATIC" # "STATIC", "DHCP"
-      grid_network_ip: "{{ip_address}}"
-      grid_network_mask: "{{lab_lan1_netmask}}"
-      grid_network_gateway: "{{lab_lan1_gateway}}"
 
 - name: Build AIQUM from OVA
   hosts: aiqum

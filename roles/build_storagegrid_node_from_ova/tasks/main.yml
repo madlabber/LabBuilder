@@ -12,6 +12,36 @@
     admin_role:        "{{ admin_role | default('Primary') }}"  # Primary, Non-Primary
     storage_disk_size: "{{ storage_disk_size | default(200) }}"
 
+- name: Check ovf_location1
+  stat:
+    path: "{{ovf_location}}"
+  delegate_to: localhost
+  register: ovf_location1
+
+- name: Check ovf_location2
+  stat:
+    path: "{{playbook_dir}}/files/StorageGRID-Webscale-{{ovf_version}}/vsphere"
+  delegate_to: localhost
+  register: ovf_location2
+
+- name: Check ovf_location3
+  stat:
+    path: "{{role_path}}/files/StorageGRID-Webscale-{{ovf_version}}/vsphere"
+  delegate_to: localhost
+  register: ovf_location3
+
+- set_fact:
+    ovf_location: "{{role_path}}/files/StorageGRID-Webscale-{{ovf_version}}/vsphere"
+  when: 
+    - ovf_location3.stat.exists
+    - not ovf_location2.stat.exists
+    - not ovf_location1.stat.exists
+- set_fact:
+    ovf_location: "{{playbook_dir}}/files/StorageGRID-Webscale-{{ovf_version}}/vsphere"
+  when: 
+    - ovf_location2.stat.exists
+    - not ovf_location1.stat.exists
+
 - name: Set vars for admin network 
   set_fact:
     admin_network_name: "{{ grid_network_name }}"
