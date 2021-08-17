@@ -47,6 +47,7 @@ Example Playbook
           vars:
             vm_name: 'sgws-storage1'
             ovf_hostname: 'sgws-storage1'        
+            admin_ip: "192.168.0.110"
             grid_network_name: "VM Network"        
             grid_network_config: "STATIC" 
             grid_network_ip: "192.168.0.111"
