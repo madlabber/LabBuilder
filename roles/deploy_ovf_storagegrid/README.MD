@@ -1,4 +1,4 @@
-build_storagegrid_node_from_ova
+deploy_ovf_storagegrid
 ================================
 
 Deploys StorageGrid node virtual appliances to a vSphere infrastructure.
@@ -61,7 +61,7 @@ Example Playbook
 
     - hosts: storagegrid
       roles:
-        - role: build_storagegrid_node_from_ova
+        - role: deploy_ovf_storagegrid
           vars:
             vm_name: 'sgws-admin'
             ovf_hostname: 'sgws-admin'        
@@ -70,7 +70,7 @@ Example Playbook
             grid_network_ip: "192.168.0.110"
             grid_network_mask: "255.255.255.0"
             grid_network_gateway: "192.168.0.1"  
-        - role: build_storagegrid_node_from_ova
+        - role: deploy_ovf_storagegrid
           vars:
             vm_name: 'sgws-storage1'
             ovf_hostname: 'sgws-storage1'        

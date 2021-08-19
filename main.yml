@@ -411,7 +411,7 @@
   hosts: storagegrid
   gather_facts: false
   roles:
-    - role: build_storagegrid_node_from_ova
+    - role: deploy_ovf_storagegrid
       vars:
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
         ovf_hostname: '{{inventory_hostname}}'        
