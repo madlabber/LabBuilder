@@ -60,7 +60,7 @@
 - name: 'set_fact: Primary-Admin'
   set_fact:
     ovf_file:        "{{ ovf_location }}/vsphere-primary-admin.ovf"
-    admin_role: "Primary"
+    admin_role:      "Primary"
   when:
     - node_type == "VM_Admin_Node"
     - admin_role == "Primary" or admin_role is undefined
