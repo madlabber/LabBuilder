@@ -327,56 +327,31 @@
     when:
       - extra_commands is defined
 
-- name: Build ONTAP Simulators
-  hosts: vsims
-#  serial: 1 # free may also work but boot sequence is timing sensitive
+- name: Build ONTAP Simulator from OVA
+  hosts: vsims 
   strategy: free
   gather_facts: false
   vars_files:
     - vars/main.yml
   tasks:
-  - set_fact:
-      cluster_network: "{{ lab_lan2_portgroup }}"
-    when:
-      - lab_lan2_portgroup is defined
-      - lab_lan2_portgroup != ""
-      - (cluster_network is undefined) or (cluster_network == "")
-  - set_fact:
-      cluster_network: "{{ lab_lan1_portgroup }}"
-    when:
-      - lab_lan1_portgroup is defined
-      - lab_lan1_portgroup != ""
-      - (cluster_network is undefined) or (cluster_network == "")
-  - set_fact:
-      data_network: "{{ lab_lan1_portgroup }}"
-    when:
-      - lab_lan1_portgroup is defined
-      - lab_lan1_portgroup != ""
-      - (data_network is undefined) or (data_network == "")
-#  - include_vars: defaults/Build_ONTAP_Simulator_from_OVA.yml
-  - include_tasks: "tasks/Build_ONTAP_Simulator_from_OVA.yml"
-    vars:
-      vm_name: '{{lab_name}}_{{inventory_hostname}}'
-      vm_datastore: "{{lab_vm_datastore}}"
-      sys_serial_number: "{{ sys_serial_num }}"
-      ontap_node_mgmt_ip: "{{ip_address}}"
-      ontap_netmask: "{{lab_lan1_netmask}}"
-      ontap_gateway: "{{lab_lan1_gateway}}"
-
-  - name: Run Cluster Setup
-    include_tasks: "tasks/Run_Cluster_Setup_from_vm_shell.yml"
-    vars:
-      # These additional items are required by cluster setup
-      vm_name: '{{lab_name}}_{{inventory_hostname}}'
-      ontap_cluster_mgmt_ip: "{{cluster_mgmt_ip}}"
-      ontap_cluster_name: "{{cluster_name | default('ONTAP')}}"
-      ontap_password: "{{lab_password |default('netapp123')}}"
-      ontap_dns_domain: "{{lab_domain_name}}"
-      ontap_dns_server: "{{lab_lan1_dns_ip}}"
-      ontap_location: "{{lab_name}}"
-      ontap_netmask: "{{lab_lan1_netmask}}"
-      ontap_gateway: "{{lab_lan1_gateway}}"
-    when: cluster_setup is true
+    - include_role: 
+        name: deploy_ovf_vsim
+      vars:
+        vm_name:         "{{ lab_name }}_{{ inventory_hostname }}"
+        vm_datastore:    "{{ lab_vm_datastore }}"  
+        data_network:    "{{ lab_lan1_portgroup }}"
+        cluster_network: "{{ lab_lan2_portgroup | default(lab_lan1_portgroup) }}"     
+        # node setup vars
+        ontap_node_mgmt_ip: "{{ ip_address }}"                         
+        ontap_netmask:      "{{ lab_lan1_netmask }}"
+        ontap_gateway:      "{{ lab_lan1_gateway }}"
+        # cluster setup vars
+        ontap_cluster_mgmt_ip: "{{ cluster_mgmt_ip| default('') }}"
+        ontap_cluster_name:    "{{ cluster_name | default('ONTAP') }}"
+        ontap_password:        "{{ lab_password |default('netapp123') }}"
+        ontap_dns_domain:      "{{ lab_domain_name }}"
+        ontap_dns_server:      "{{ lab_lan1_dns_ip }}"
+        ontap_location:        "{{ lab_name }}"
 
 - name: Build ONTAP Select eval cluster
   hosts: selecteval

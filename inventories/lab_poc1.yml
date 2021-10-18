@@ -80,17 +80,17 @@ all:
     #   hosts:
     #     vsim1-01:
     #       ip_address: 192.168.0.71
-    #       sys_serial_num: "4082368-50-7"
+    #       sys_serial_number: "4082368-50-7"
     #       cluster_setup: true
     #       cluster_name: vsim1
     #       cluster_mgmt_ip: 192.168.0.70
     #     vsim2-01:
     #       ip_address: 192.168.0.81
-    #       sys_serial_num: "4082368-50-7"
+    #       sys_serial_number: "4082368-50-7"
     #       cluster_setup: false
     #     vsim2-02:
     #       ip_address: 192.168.0.82
-    #       sys_serial_num: "4034389-06-2"
+    #       sys_serial_number: "4034389-06-2"
     #       cluster_setup: false
     #   vars:
     #       ontap_version: "9.9.1"
