@@ -4,9 +4,9 @@ all:
     lab_name: lab_template
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
-    lab_vm_datastore: lab_poc1
+    lab_vm_datastore: lab_template
     lab_wan_portgroup: "VM Network"
-    lab_lan1_portgroup: "lab_poc1"
+    lab_lan1_portgroup: "lab_template_net1"
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
@@ -66,14 +66,14 @@ all:
     #       ip_address: 192.168.123.173
     #       node_type: "VM_Storage_Node"
 
-    winservers:
-      hosts:
-        win1:
-          ip_address: 192.168.0.12
-          version: "Server2019"
-          vm_memory_mb: 2048
-          vm_num_cpus: 2
-          vm_disk_gb: 40
+    # winservers:
+    #   hosts:
+    #     win1:
+    #       ip_address: 192.168.0.12
+    #       version: "Server2019"
+    #       vm_memory_mb: 2048
+    #       vm_num_cpus: 2
+    #       vm_disk_gb: 40
     centos:
       hosts:
         ansible:
