@@ -1,0 +1,428 @@
+---
+# - name: remove if absent or forced
+#   vmware_guest:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}'    
+#     validate_certs: no 
+#     name: '{{ vm_name }}'
+#     state: absent
+#     force: yes
+#   delegate_to: localhost
+#   when: state == "absent" or force
+
+# - meta: end_host
+#   when: state == "absent"
+
+- name: locate ovf ovf_file
+  stat:
+    path: "{{ovf_file | default('')}}" 
+  delegate_to: localhost
+  register: ovf_location
+
+- name: Check althernate ovf_file location
+  stat: 
+    path: "{{playbook_dir}}/files/vsim-netapp-DOT{{ovf_version}}-cm_nodar.ova"
+  delegate_to: localhost
+  register: ovf_playbook_dir
+  when: not ovf_location.stat.exists
+
+- name: select ovf_file
+  set_fact: 
+    ovf_file: "{{playbook_dir}}/files/vsim-netapp-DOT{{ovf_version}}-cm_nodar.ova"
+  when:
+    - not ovf_location.stat.exists
+    - ovf_playbook_dir.stat.exists
+
+- name: select cluster network
+  set_fact:
+    cluster_network: "{{ data_network }}"
+  when:
+    - (cluster_network is undefined) or (cluster_network == "")
+
+- name: generate sysid
+  set_fact:
+    nvram_sysid: "4082{{ 9 | random(start=0) }}{{ 9 | random(start=0) }}{{ 9 | random(start=0) }}{{ 9 | random(start=0) }}07" #the two current options are 408236507, or 4034389062
+  when: nvram_sysid == ""
+
+- name: size table
+  set_fact:
+    size_table: {
+      '500': '35',
+      '1000': '23',
+      '2000': '30',
+      '4000': '31',
+      '9000': '36'
+    }
+
+- name: parse vdevinit
+  set_fact:
+    shelf0_type:    '{{  (vdevinit.split(",")[0] | default("31:14:0")).split(":")[0] | default("31")}}'  
+    shelf0_qty:     '{{  (vdevinit.split(",")[0] | default("31:14:0")).split(":")[1] | default("14")}}' 
+    shelf0_shelf:   '{{  (vdevinit.split(",")[0] | default("31:14:0")).split(":")[2] | default("0")}}'   
+    shelf1_type:    '{{  (vdevinit.split(",")[1] | default("31:0:1")).split(":")[0] | default("")}}'  
+    shelf1_qty:     '{{  (vdevinit.split(",")[1] | default("31:0:1")).split(":")[1] | default("")}}' 
+    shelf1_shelf:   '{{  (vdevinit.split(",")[1] | default("31:0:1")).split(":")[2] | default("")}}'      
+    shelf2_type:    '{{  (vdevinit.split(",")[2] | default("31:0:2")).split(":")[0] | default("")}}'  
+    shelf2_qty:     '{{  (vdevinit.split(",")[2] | default("31:0:2")).split(":")[1] | default("")}}' 
+    shelf2_shelf:   '{{  (vdevinit.split(",")[2] | default("31:0:2")).split(":")[2] | default("")}}'  
+    shelf3_type:    '{{  (vdevinit.split(",")[3] | default("31:0:3")).split(":")[0] | default("")}}'  
+    shelf3_qty:     '{{  (vdevinit.split(",")[3] | default("31:0:3")).split(":")[1] | default("")}}' 
+    shelf3_shelf:   '{{  (vdevinit.split(",")[3] | default("31:0:3")).split(":")[2] | default("")}}'   
+# - name: debug
+#   debug:
+#     msg:
+#       - 'Shelf: {{  shelf0_shelf }}, qty: {{  shelf0_qty }}, type: {{  shelf0_type }}'
+#       - 'Shelf: {{  shelf1_shelf }}, qty: {{  shelf1_qty }}, type: {{  shelf1_type }}'
+#       - 'Shelf: {{  shelf2_shelf }}, qty: {{  shelf2_qty }}, type: {{  shelf2_type }}'
+#       - 'Shelf: {{  shelf3_shelf }}, qty: {{  shelf3_qty }}, type: {{  shelf3_type }}'
+#   ignore_errors: true
+- name: default shelf0_qty
+  set_fact: 
+    shelf0_qty: 14
+  when: size_table[shelf0_disk_size|default('')]|default('')|int > 0 and shelf0_qty|int == 0
+- name: default shelf1_qty
+  set_fact: 
+    shelf1_qty: 14
+  when: size_table[shelf1_disk_size|default('')]|default('')|int > 0 and shelf1_qty|int == 0
+- name: default shelf2_qty
+  set_fact: 
+    shelf2_qty: 14
+  when: size_table[shelf2_disk_size|default('')]|default('')|int > 0 and shelf2_qty|int == 0
+- name: default shelf3_qty
+  set_fact: 
+    shelf3_qty: 14
+  when: size_table[shelf3_disk_size|default('')]|default('')|int > 0 and shelf3_qty|int == 0
+
+- name: assemble vdevinit shelf0
+  set_fact:
+    vdevinit: "{{ size_table[shelf0_disk_size|default('')]|default(shelf0_type) }}:\
+               {{ shelf0_disk_count|default(shelf0_qty) }}:\
+               {{ shelf0_shelf }}"
+  when: shelf0_disk_count|default(shelf0_qty)|int >0
+- name: assemble vdevinit shelf1
+  set_fact:
+    vdevinit: "{{ vdevinit }},\
+               {{ size_table[shelf1_disk_size|default('')]|default(shelf1_type) }}:\
+               {{ shelf1_disk_count|default(shelf1_qty) }}:\
+               {{ shelf1_shelf }}"
+  when: shelf1_disk_count|default(shelf1_qty)|int >0
+- name: assemble vdevinit shelf2
+  set_fact:
+    vdevinit: "{{ vdevinit }},\
+               {{ size_table[shelf2_disk_size|default('')]|default(shelf2_type) }}:\
+               {{ shelf2_disk_count|default(shelf2_qty) }}:\
+               {{ shelf2_shelf }}"
+  when: shelf2_disk_count|default(shelf2_qty)|int >0
+- name: assemble vdevinit shelf3
+  set_fact:
+    vdevinit: "{{ vdevinit }},\
+               {{ size_table[shelf3_disk_size|default('')]|default(shelf3_type) }}:\
+               {{ shelf3_disk_count|default(shelf3_qty) }}:\
+               {{ shelf3_shelf }}"
+  when: shelf3_disk_count|default(shelf3_qty)|int >0
+- debug:
+    msg: "{{vdevinit}}"
+
+# - meta: end_host
+
+- name: 'Deploy ovf file: {{ovf_file}}' 
+  community.vmware.vmware_deploy_ovf:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    datacenter: "{{vcenter_datacenter}}"
+    cluster: '{{ vcenter_cluster }}'
+    datastore: "{{vm_datastore}}"
+    name: "{{vm_name}}"
+    ovf: "{{ovf_file}}"
+    disk_provisioning: "{{vm_disk_provisioning}}"
+    power_on: no
+    networks: "{u'hostonly':u'{{ cluster_network }}',u'nat':u'{{ data_network }}'}"
+    wait_for_ip_address: false
+  delegate_to: localhost
+  retries: 10
+  delay: 60
+  register: result           
+  until: result is succeeded 
+
+- name: Adjust VM Sizing
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: '{{ vm_name }}'
+    state: present
+    hardware:
+      memory_mb: "{{ vm_memory_mb}}"
+      num_cpus: '{{ vm_num_cpus }}'
+    customvalues:
+      - key: pciHole.start
+        value: 1024  # Moving the PCI hole here gives ONTAP access to more system ram
+  delegate_to: localhost
+
+# This wierdness is because with_sequence evaluates and fails even when this task is not executed
+# bug closed as a wont_fix by ansible
+- name: add nics
+  include_tasks: add_nics.yml
+  when: vm_num_nics|int > 4
+
+- name: Start VM
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: '{{ vm_name }}'
+    state: poweredon
+    wait_for_ip_address: false
+  delegate_to: localhost
+
+- name: Wait for 10 seconds
+  wait_for: timeout=10
+  delegate_to: localhost
+
+- name: Press Space to interrupt autoboot
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: "{{ vm_name }}"
+    keys_send: '{{item}}'
+  delegate_to: localhost
+  loop: [ SPACE, SPACE, SPACE, SPACE, SPACE ]
+
+- name: configure loader variable via sendkeys
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: "{{ vm_name }}"
+    keys_send: ENTER
+    string_send: "{{item}}"
+  delegate_to: localhost
+  loop: 
+    - "setenv SYS_SERIAL_NUM {{sys_serial_number}}"
+    - "setenv bootarg.nvram.sysid {{nvram_sysid}}"
+    - "setenv bootarg.vm.sim.vdevinit {{vdevinit}}"
+    - "setenv bootarg.sim.vdevinit {{vdevinit}}"
+    - "" # this is here to force the enter key after the preceding command
+
+# none of this worked. stubbing.
+# - name: configure node_uuid
+#   community.vmware.vmware_guest_sendkey:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}'    
+#     validate_certs: no 
+#     name: "{{ vm_name }}"
+#     keys_send: ENTER
+#     string_send: "{{item}}"
+#   delegate_to: localhost
+#   loop: 
+#   #  - "setenv bootarg.template.use_node_uuids true"
+#     - "setenv bootarg.bootmenu.node_uuid bf5ff7fc-10bc-11ec-ba72-005056a201aa"
+#     - "setenv bootarg.mgwd.nblade_uuid bf5e90b2-10dc-11ec-ba72-005056a201aa"
+#   #  - "setenv bootarg.bootmenu.node_uuid {{(ontap_cluster_name|default(vm_name)+vm_name)|to_uuid}}"
+#   #  - "setenv bootarg.mgwd.nblade_uuid {{(ontap_cluster_name+vm_name+'nblade')|to_uuid}}"
+#     - "" # this is here to force the enter key after the preceding command
+#   # when: 
+#   #   - use_node_uuids|default(false)
+
+- name: verbose console
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: "{{ vm_name }}"
+    keys_send: ENTER
+    string_send: "{{item}}"
+  delegate_to: localhost
+  loop:
+    - "setenv boot_verbose true"
+    - "setenv bootarg.init.console_muted false"
+    - ""
+  when:
+    - not console_muted|default(true)
+
+- name: boot_ontap
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: "{{ vm_name }}"
+    keys_send: ENTER
+    string_send: "{{item}}"
+  delegate_to: localhost
+  loop: 
+    - "boot_ontap"
+    - "" # this is here to force the enter key after the preceding command
+
+- name: Wait for VMware tools to become available
+  community.vmware.vmware_guest_tools_wait:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'     
+    validate_certs: no 
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  retries: 3
+  delay: 15
+  register: result           
+  until: result is succeeded 
+
+- name: 'Run node setup on {{vm_name}}'
+  block:
+  # vmware tools come up a little early so we need to pause for a bit
+  - name: Wait for 60 seconds for Startup to Complete
+    wait_for: timeout=60
+    delegate_to: localhost
+    when: ontap_node_mgmt_ip != "" 
+
+  # Send keys via HID to complete setup at the vidconsole
+  - name: Complete Node Setup
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'     
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+      string_send: "{{item}}"
+    delegate_to: localhost
+    loop: 
+      - "admin"
+      - "cluster setup"
+      - "yes"
+      - "e0c" # node mgmt port
+      - "{{ontap_node_mgmt_ip}}"
+      - "{{ontap_netmask}}"
+      - "{{ontap_gateway}}"
+      - "" # this completes the node setup phase
+  when: ontap_node_mgmt_ip != ""
+# block:end
+
+- name: 'set node admin password on {{vm_name}}'
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'     
+    validate_certs: no 
+    name: "{{ vm_name }}"
+    keys_send: ENTER
+    string_send: "{{item}}"
+  delegate_to: localhost
+  loop: 
+    - "quit"
+    - "security"
+    - "login"
+    - "password"
+    - "" # at this point the admin password is blank
+    - "{{ontap_password}}"
+    - "{{ontap_password}}"
+    - "" # this completes the node setup phase  
+  when: 
+    - set_admin_password
+    - ontap_cluster_mgmt_ip is undefined or ontap_cluster_mgmt_ip == ""
+
+- name: 'Run cluster setup on {{vm_name}}'
+  block:
+  - name: Begin cluster setup
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'     
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+      string_send: "{{item}}"
+    delegate_to: localhost
+    loop: 
+      - "create" # operation create|join
+      - "no" # single node cluster yes|no
+      - "yes" # use default cluster lif configuration
+      - "{{ontap_password}}"
+      - "{{ontap_password}}" # confirm password
+      - "{{ontap_cluster_name | default(vm_name) }}"
+      - "" # This is here to force the enter key to be pressed
+
+  - name: Wait 120 seconds for cluster setup
+    wait_for: timeout=120
+    delegate_to: localhost
+
+  - name: Complete cluster setup
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'     
+      validate_certs: no 
+      name: "{{vm_name}}"
+      keys_send: ENTER
+      string_send: "{{item}}"
+    delegate_to: localhost
+    loop: 
+      - "e0c" # cluster mgmt port
+      - "{{ontap_cluster_mgmt_ip}}"
+      - "{{ontap_netmask}}"
+      - "{{ontap_gateway}}"
+      - "{{ontap_dns_domain}}" 
+      - "{{ontap_dns_server}}"
+      - "{{ontap_location}}" # single node cluster yes|no
+      - "" # this is here to force the enter key after the preceding command
+
+#add_nodes_by_serial      
+  - name: add-node-test
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'     
+      validate_certs: no 
+      name: "{{vm_name}}"
+      keys_send: ENTER
+      string_send: "{{item}}"
+    delegate_to: localhost
+    loop: 
+      - "set diag -confirmations off" # cluster mgmt port
+      - "systemshell local bash"
+      - "ngsh -c \"add-node -cluster-ips $(ngsh -c 'show-discovered -fields address' | grep {{add_nodes_by_serial}}|cut -d' ' -f2)\""
+      - ""
+    when: 
+      - add_nodes_by_serial|default("") != "" 
+
+  - name: Wait 30 seconds for cluster setup
+    wait_for: timeout=30
+    delegate_to: localhost
+    when: 
+      - add_nodes_by_serial|default("") != "" 
+
+  - name: add-node-test
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'     
+      validate_certs: no 
+      name: "{{vm_name}}"
+      keys_send: ENTER
+      string_send: "{{item}}"
+    delegate_to: localhost
+    loop: 
+      - "exit"
+      - "set admin"
+      - "" # this is here to force the enter key after the preceding command
+    when: 
+      - add_nodes_by_serial|default("") != "" 
+      
+  when: ontap_cluster_mgmt_ip != ""
+  #end block:
+
+
+
+
+
+

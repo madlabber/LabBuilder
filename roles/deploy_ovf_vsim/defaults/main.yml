@@ -1,0 +1,74 @@
+# Path to the Simulate ONTAP OVA File
+ovf_version: "9.9.1"
+ovf_file:    "{{role_path}}/files/vsim-netapp-DOT{{ovf_version}}-cm_nodar.ova"
+
+# Default action is to create.  
+state: "present"
+force: no
+console_muted: true
+#add_nodes_by_serial: ""
+
+# vSphere Information
+# vcenter_address: "vcenter.demo.lab"
+# vcenter_username: "administrator@vsphere.local"
+# vcenter_password: "ChangeMe2!"
+# vcenter_datacenter: "Datacenter"
+# vcenter_cluster: "Cluster"
+# vm_datastore: "datastore1"
+
+# Virtual Machine configuration
+vm_name:         "SimulateONTAP"
+vm_num_cpus:     "2"
+vm_memory_mb:    "8192"
+vm_num_nics:     "4"
+vm_disk_provisioning: thin
+data_network:    "VM Network"
+# if cluster network is unspecified, the cluster ports will be conneted to the data network
+cluster_network: ""
+
+# SYS_SERIAL_NUM must match available feature license keys
+sys_serial_number:  "4082368-50-7"
+
+# SYSID will be auto-generated if not specified
+nvram_sysid: ''
+
+# Type of simulated disk subsystem.  Only VHA is supported for now
+disk_model: "vha"  # "vha", "vscsi"
+
+# Virtual (simulated) Disk Devices to create during init
+# type:qty:shelf,type:qty:shelf,type:qty:shelf,type:qty:shelf
+# Shelves 0-3 may be populated
+# Each shelf can contain up to 14 drives
+# Usefull Disk Types by capacity include:
+# |       | 15K | 7200 | SSD
+# --------------------------
+# | 100MB | 21  |  27  | 34
+# | 500MB | 22  |  28  | 35
+# | 1GB   | 23  |  29  | --
+# | 2GB   | 30  |  32  | --
+# | 4GB   | 31  |  33  | --
+# | 9GB   | 36  |  37  | --
+# Examples:
+# vdevinit: "23:14:0,23:14:1" # 28x1gb disks (ova internal default)
+# vdevinit: "23:14:0,23:14:1,23:14:2,23:14:3" # 56x1gb disks
+# vdevinit: "23:14:0,23:14:1,32:14:2,34:14:3" # (28x1gb 15k+14x2gb 7.2k+14x100mb SSD) - hybrid config
+vdevinit: "31:14:0,31:14:1" # (28x4gb 15k)
+# vdevinit: "31:14:0,31:14:1,31:14:2,31:14:3" # (56x4gb 15k)
+
+# Node Setup (optional)
+ontap_node_mgmt_ip: ""
+ontap_netmask:      ""
+ontap_gateway:      ""
+
+# Set admin password even on nodes not used to create clusters
+set_admin_password: false
+
+# Cluster Name (optional)
+# if not specified the vm_name will be used
+# ontap_cluster_name: "SimulateONTAP"
+# Cluster Setup (optional)
+ontap_password:         "netapp123"
+ontap_cluster_mgmt_ip:  ""
+ontap_dns_domain:       "" 
+ontap_dns_server:       ""
+ontap_location:         ""

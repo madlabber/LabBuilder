@@ -1,0 +1,41 @@
+## variables
+
+## vCenter information
+# vcenter_address: "vcenter.demo.lab"
+# vcenter_username: "administrator@vsphere.local"
+# vcenter_password: "ChangeMe2!"
+# vcenter_datacenter: "Datacenter"
+# vcenter_cluster: "Cluster"
+
+## ovf_file information
+ovf_version: "9.9"
+ovf_file: "{{role_path}}/files/ActiveIQUnifiedManager-{{ovf_version}}.ova"
+
+## VM configuration
+vm_name: "aiqum"
+vm_network: "VM Network"
+vm_datastore: "datastore1"
+vm_disk_provisioning: thin
+
+# OVF Properties.  Leave blank if DHCP is desired.
+vm_fqdn:          ""
+vm_address:       ""
+vm_netmask:       ""
+vm_gateway:       ""
+vm_primary_dns:   ""
+vm_secondary_dns: ""
+
+# timers
+# AIQUM requires interactive setup at the video console
+# timer1 controls the seconds to wait for the timezone prompt:
+# 6-8 minutes is a reasonable wait unless the VM infra is very slow
+timer1: 420
+# timer2 controls the seconds to wait for the username/password prompt
+# 4-6 minutes is a good range
+timer2: 300
+
+# AIQUM Configuration
+vm_username: "admin"
+vm_password: "ChangeMe2!"
+vm_timezone_geo:  "12" #12 = US
+vm_timezone_region: "10" #10 = Pacific

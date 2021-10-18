@@ -430,20 +430,21 @@
   vars_files:
     - vars/main.yml
   tasks:
-  - include_tasks: tasks/Build_AIQUM_from_ova.yml
+  - include_role: 
+      name: deploy_ovf_aiqum
     vars:
-      ovf_file: "{{aiqum_ovf |default('files/AIQUM/ActiveIQUnifiedManager-9.8.ova')}}"
-      vm_name: '{{lab_name}}_{{inventory_hostname}}'
-      vm_datastore: "{{lab_vm_datastore}}"
-      vm_network: "{{lab_lan1_portgroup}}"
-      vm_username: "admin"
-      vm_password: "{{lab_password |default('netapp123')}}"
-      vm_hostname: '{{inventory_hostname}}'
-      vm_fqdn:     '{{inventory_hostname}}.{{lab_domain_name}}'
-      vm_address: '{{ip_address}}'
-      vm_netmask: "{{lab_lan1_netmask}}"
-      vm_gateway: "{{lab_lan1_gateway}}"
-      vm_dns_server: "{{lab_lan1_dns_ip}}"
+      # ovf_file: "files/AIQUM/ActiveIQUnifiedManager-9.9.ova"          
+      vm_name:          "{{lab_name}}_{{inventory_hostname}}"
+      vm_fqdn:          "{{inventory_hostname}}.{{lab_domain_name}}"
+      vm_username:      "admin"
+      vm_password:      "{{lab_password |default('netapp123')}}"    
+      vm_datastore:     "{{lab_vm_datastore}}"
+      vm_network:       "{{lab_lan1_portgroup}}"
+      vm_address:       "{{ip_address}}"
+      vm_netmask:       "{{lab_lan1_netmask}}"
+      vm_gateway:       "{{lab_lan1_gateway}}"
+      vm_primary_dns:   "{{lab_lan1_dns_ip}}"
+      vm_secondary_dns: "{{lab_lan1_gateway}}"
 
 - name: Deploy OVF files
   hosts: ovf

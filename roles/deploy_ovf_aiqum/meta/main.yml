@@ -1,0 +1,5 @@
+# meta/main.yml
+galaxy_info:
+  role_name: deploy_ovf_aiqum
+  description: Deploy ActiveIQUnifiedManager from OVF
+  # company: 

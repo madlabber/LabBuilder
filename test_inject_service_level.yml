@@ -1,0 +1,37 @@
+---
+- hosts: localhost
+  name: Work with AIQUM's API
+  gather_facts: true
+  vars:
+    aiqum_hostname: 192.168.223.28
+    aiqum_username: admin
+    aiqum_password: P@ssw0rd
+
+  tasks:
+  - name: post new service level
+    uri:
+      url: "https://{{aiqum_hostname}}/api/storage-provider/performance-service-levels"
+      user: "{{ aiqum_username }}"
+      password: "{{ aiqum_password }}"
+      force_basic_auth: yes
+      validate_certs: no
+      method: POST
+      headers:
+        Content-Type: application/json
+        accept: application/json
+      body_format: json
+      body:
+        name: "TestSL3"
+        description: "Service Level Description"
+        iops:
+          # Absolute minimum IOPS value that is used as an override when the expected IOPS is less than this value,
+          # Absolute Minimum IOPS value cannot be greater than 75000 and cannot be less than (1000 / expected latency).
+          absolute_min_iops: 75
+          expected_iops_per_tb: 120 #iops in 32k block
+          # Peak IOPS allocation policy to be used = ['USED_SPACE’, ‘ALLOCATED_SPACE’].
+          peak_iops_allocation_policy: "used_space"
+          peak_iops_per_tb: 368 # peak is based on 4k at 2x throughput
+        latency:
+          expected: 17
+      status_code: 201
+    register: post_result

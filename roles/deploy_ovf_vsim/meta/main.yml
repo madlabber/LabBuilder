@@ -1,0 +1,5 @@
+# meta/main.yml
+galaxy_info:
+  role_name: deploy_ovf_vsim
+  description: Deploy ONTAP Simlulators (vsims) from OVA
+  # company: 

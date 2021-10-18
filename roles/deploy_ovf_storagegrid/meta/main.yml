@@ -1,0 +1,5 @@
+# meta/main.yml
+galaxy_info:
+  role_name: deploy_ovf_storagegrid
+  description: Deploy StorageGrid nodes from OVF files
+  # company: 

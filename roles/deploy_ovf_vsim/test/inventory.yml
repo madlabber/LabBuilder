@@ -1,0 +1,27 @@
+all:
+  hosts:
+  vars:
+    vcenter_address: vcenter.demo.lab
+    vcenter_username: administrator@vsphere.local
+    vcenter_password: "netapp123"
+    vcenter_datacenter: "Datacenter"
+    vcenter_cluster: "Cluster"
+    vm_datastore: "datastore1"
+  children:
+    vsims:
+      hosts:
+        demo-01:
+          sys_serial_number:        "4082368-50-7"          
+          ontap_node_mgmt_ip:    192.168.0.91
+          ontap_cluster_name:    demo
+          ontap_cluster_mgmt_ip: 192.168.0.90
+        demo-02:
+          sys_serial_number:        "4034389-06-2"          
+          ontap_node_mgmt_ip:    192.168.0.92
+          set_admin_password:    true
+      vars:
+        ontap_version: "9.9.1"
+        ontap_netmask: "255.255.255.0"
+        ontap_gateway: "192.168.0.1"
+        shelf0_disk_size: 4000
+        shelf1_disk_size: 4000

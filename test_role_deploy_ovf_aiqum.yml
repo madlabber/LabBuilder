@@ -1,0 +1,23 @@
+---
+- name: Build AIQUM from OVA
+  hosts: localhost
+  gather_facts: false
+  vars_files: 
+    - vars/main.yml
+
+  tasks:
+    - include_role: 
+        name: deploy_ovf_aiqum
+      vars:
+        # ovf_file: "files/AIQUM/ActiveIQUnifiedManager-9.8.ova"          
+        vm_name:      "aiqum99"
+        vm_fqdn:      "aiqum99.schlab.local"
+        vm_username:  "admin"
+        vm_password:  "P@ssw0rd"        
+        vm_network:   "VM Network"
+        vm_address:   "192.168.123.139"
+        vm_netmask:   "255.255.255.0"
+        vm_gateway:   "192.168.123.1"
+        vm_primary_dns: "192.168.123.21"
+        vm_secondary_dns: "192.168.123.1"
+

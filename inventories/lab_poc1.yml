@@ -35,37 +35,30 @@ all:
     #         # Install Putty
     #         - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
     #         - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
-    # aiqum:
-    #   hosts:
-    #     aiqum:
-    #       ip_address: 192.168.0.28
-    #       aiqum_ovf: "files/AIQUM/ActiveIQUnifiedManager-9.9.ova"
-    #       ovf_networks:
-    #         'nat': '{{ lab_lan1_portgroup }}'
-    #       ovf_properties:
-    #         org.linuxdistx.IPV6Auto: false
-    #         org.linuxdistx.HostFQDN: "aiqum.lab.local"
-    #         org.linuxdistx.IPAddress: "{{ip_address}}"
-    #         org.linuxdistx.NetworkMask: "{{lab_lan1_netmask}}"
-    #         org.linuxdistx.Gateway: "{{lab_lan1_gateway}}"
-    #         org.linuxdistx.PrimaryDNS: "{{lab_lan1_dns_ip}}"
-    #         org.linuxdistx.SecondaryDNS: "{{lab_dc01_ip}}"
-    storagegrid:
-      vars:
-        admin_ip: 192.168.0.170
+    aiqum:
       hosts:
-        sgws-admin:
-          ip_address: 192.168.0.170
-          node_type: "VM_Admin_Node"
-        sgws-storage1:
-          ip_address: 192.168.0.171
-          node_type: "VM_Storage_Node"
-        sgws-storage2:
-          ip_address: 192.168.0.172
-          node_type: "VM_Storage_Node"
-        sgws-storage3:
-          ip_address: 192.168.0.173
-          node_type: "VM_Storage_Node"
+        aiqum:
+          ip_address: 192.168.0.28
+    # storagegrid:
+    #   vars:
+    #     admin_ip: 192.168.123.170
+    #     vm_num_cpus: 1
+    #     vm_memory_mb: 8192
+    #   hosts:
+    #     sgws-admin:
+    #       ip_address: 192.168.123.170
+    #       node_type: "VM_Admin_Node"
+    #       vm_memory_mb: 12288
+    #     sgws-storage1:
+    #       ip_address: 192.168.123.171
+    #       node_type: "VM_Storage_Node"
+    #     sgws-storage2:
+    #       ip_address: 192.168.123.172
+    #       node_type: "VM_Storage_Node"
+    #     sgws-storage3:
+    #       ip_address: 192.168.123.173
+    #       node_type: "VM_Storage_Node"
+
     # winservers:
     #   hosts:
     #     win1:
