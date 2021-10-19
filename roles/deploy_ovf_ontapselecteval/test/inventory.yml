@@ -1,0 +1,24 @@
+all:
+  hosts:
+  vars:
+    vcenter_address: labvc01.schlab.pri
+    vcenter_username: administrator@vsphere.local
+    vcenter_password: "P@ssw0rd"
+    vcenter_datacenter: "Datacenter"
+    vcenter_cluster: "Resource Cluster"
+    vm_datastore: "TestVMs"
+  children:
+    selecteval:
+      hosts:
+        ots-demo-01:       
+          ontap_node_mgmt_ip:    192.168.123.141
+          ontap_cluster_name:    "demo"
+          ontap_cluster_mgmt_ip: 192.168.123.140
+          vm_data_disk_gb:       500
+          vm_network:            "VM Network"
+          ontap_password:        "P@ssw0rd"
+      vars:
+        ontap_version: "9.9.1"
+        ontap_netmask: "255.255.255.0"
+        ontap_gateway: "192.168.0.1"
+

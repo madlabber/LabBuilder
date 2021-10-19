@@ -1,6 +1,6 @@
 # If there is no vcenter, use the esxi host crendentials 
 # to complete the vcenter variables
-vcenter_address: labvc01.schlab.pri 
+vcenter_address: vc.nuclab.madlabber.com
 vcenter_username: administrator@vsphere.local
 vcenter_password: P@ssw0rd
 
@@ -9,23 +9,23 @@ vcenter_datacenter: Datacenter
 
 # Default cluster for new VM provisioning
 # if there is no cluster set it to ""
-vcenter_cluster: "Resource Cluster"
+vcenter_cluster: "Cluster"
 
 # Credentials for a host with access to the datastore
 # Used when ISOs are missing from the ISO datastore
-esxi_address: 192.168.123.49
+esxi_address: 192.168.125.41
 esxi_username: root
 esxi_password: P@ssw0rd
 
 # If there is a vcenter, this must match the host's name in vcenter inventory
 # if there is no vcenter, the name can be the IP address
-esxi_hostname: "esx49.schlab.pri"
+esxi_hostname: "192.168.125.41"
 
 # Default datastore for new VMs
-vm_datastore: "TestVMs"
+vm_datastore: "datastore1"
 
 # Default datastore for ISO files
-iso_datastore: "ISOs"
+iso_datastore: "datastore1"
 
 # Default portgroup for new VMs
 vm_network: "VM Network"

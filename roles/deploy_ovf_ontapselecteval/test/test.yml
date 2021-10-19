@@ -1,0 +1,13 @@
+# To run this test:
+# ansible-playbook -i inventory.tml test.yml
+---
+- name: Build ONTAP Select Standalone Eval from OVA
+  hosts: selecteval 
+  strategy: free
+  gather_facts: false
+  tasks:
+    - include_role: 
+        name: ../deploy_ovf_ontapselecteval
+      vars:
+        vm_name: "{{inventory_hostname}}"
+  

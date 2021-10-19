@@ -1,6 +1,6 @@
 # Path to the default ONTAP Select Standalone Evaluation OVA
-# ontap_version: "{{ontap_version|default('9.8')}}"
-# ontap_select_ova: "files/ONTAPSelect/{{ontap_version}}_DataONTAPv-esx-standalone-eval-nodar.ova" 
+ontap_version: "9.9.1"
+ovf_file:    "{{role_path}}/files/{{ontap_version}}_DataONTAPv-esx-standalone-eval-nodar.ova"
 
 # The ovf deployment option changed at 9.6
 # <=9.5 use 'ONTAPSelectEVAL', 
@@ -29,11 +29,11 @@
 # vm_disk_rovisioning: thin 
 
 # This is all required for the cluster to instantiate itself
-# ontap_cluster_name: "ONTAP"
-# ontap_cluster_mgmt_ip: ""    
-# ontap_node_mgmt_ip: ""
-# ontap_netmask: ""
-# ontap_gateway: "" 
-# ontap_password: "Changeme!"
+ontap_cluster_name: "ONTAP"
+ontap_cluster_mgmt_ip: ""    
+ontap_node_mgmt_ip: ""
+ontap_netmask: ""
+ontap_gateway: "" 
+ontap_password: "Changeme!"
 # ontap_dns_domain: "lab.local"
 # ontap_dns_server: ""
