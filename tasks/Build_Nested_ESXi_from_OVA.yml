@@ -11,11 +11,13 @@
     vm_disk2_size_gb: "{{vm_disk2_size_gb | default('8') }}"  
     ovf_ssh: "{{ovf_ssh | default('true') }}"
     ovf_createvmfs: "{{ovf_createvmfs |default('false') }}"
+
 - name: download OVF if necessary
   get_url:
     url: "{{ovf_url}}"
     dest: "{{ovf_file}}"
   delegate_to: localhost
+
 - vmware_deploy_ovf:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
@@ -49,6 +51,7 @@
   delay: 60
   register: result           
   until: result is succeeded 
+
 - name: Adjust VM Sizing
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
@@ -74,6 +77,7 @@
       memory_mb: '{{ vm_memory_mb|int }}'
       num_cpus: '{{ vm_num_cpus|int }}'
   delegate_to: localhost
+  
 - name: Power-On the virtual machine
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'

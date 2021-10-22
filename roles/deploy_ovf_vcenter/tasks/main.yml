@@ -22,6 +22,7 @@
 #     vars/main.yml
 #   tasks:
 #   # If the target is vCenter, push user configurable vars, then patch the rest before poweron
+
 - community.vmware.vmware_deploy_ovf:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
@@ -54,6 +55,7 @@
       searchpath: '{{ searchpath }}'
   delegate_to: localhost
   when: vcenter_address != esxi_address
+
 - name: Patch broken vApp properties
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
@@ -73,6 +75,7 @@
         userConfigurable: true      
   delegate_to: localhost
   when: vcenter_address != esxi_address
+
 - name: Power On
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
@@ -84,6 +87,7 @@
   delegate_to: localhost
   when: vcenter_address != esxi_address
 # If the target is ESXi host, push all vars and power on
+
 - community.vmware.vmware_deploy_ovf:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'

@@ -122,12 +122,9 @@
   gather_facts: false
   vars_files:
     - vars/main.yml
-  tasks:
-  - name: Build vCenter Appliance from OVA
-    block:
-    - include_vars: defaults/Build_vCenter_from_OVA.yml
-    - include_tasks: tasks/Build_vCenter_from_OVA.yml
-      vars:
+  roles:
+    - role: deploy_ovf_vcenter
+      vars: 
         ova_file: "{{ova_location}}/{{vcenter_ova}}"
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
         vm_hostname: '{{inventory_hostname}}'
@@ -144,6 +141,35 @@
         vm_deployment_size: "{{vcsa_size | default('tiny')}}"
         vm_autoconfig: '{{vcsa_autoconfigure}}'
         vm_enable_ssh: 'True'
+        
+# # Build vCenter Server(s)
+# - name: Build vCenter
+#   hosts: vcenter
+#   gather_facts: false
+#   vars_files:
+#     - vars/main.yml
+#   tasks:
+#   - name: Build vCenter Appliance from OVA
+#     block:
+#     - include_vars: defaults/Build_vCenter_from_OVA.yml
+#     - include_tasks: tasks/Build_vCenter_from_OVA.yml
+#       vars:
+#         ova_file: "{{ova_location}}/{{vcenter_ova}}"
+#         vm_name: '{{lab_name}}_{{inventory_hostname}}'
+#         vm_hostname: '{{inventory_hostname}}'
+#         vm_domain: '{{lab_domain_name}}'
+#         vm_fqdn: '{{vsca_fqdn_or_ip}}'  # if no DNS resolution, use the IP address here
+#         vm_network: '{{lab_lan1_portgroup}}'
+#         vm_password: '{{lab_password}}'
+#         vm_net_mode: "static" # static or dhcp
+#         vm_address: '{{ip_address}}'
+#         vm_netmask_cidr: '{{lab_lan1_netmask_cidr}}'
+#         vm_dns_server: '{{lab_lan1_dns_ip}}'
+#         vm_gateway: '{{lab_lan1_gateway}}'
+#         searchpath: ""
+#         vm_deployment_size: "{{vcsa_size | default('tiny')}}"
+#         vm_autoconfig: '{{vcsa_autoconfigure}}'
+#         vm_enable_ssh: 'True'
 
 # Build Nested ESX hosts defined in the inventory file
 - name: Build Nested ESXI from OVA
