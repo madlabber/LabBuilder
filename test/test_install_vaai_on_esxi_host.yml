@@ -3,7 +3,7 @@
   hosts: localhost
   gather_facts: false
   tasks:
-    - include_tasks: tasks/install_vaai_on_esxi_host.yml
+    - include_tasks: ../tasks/install_vaai_on_esxi_host.yml
       vars:
         esxi_address: 192.168.123.140
         esxi_username: root

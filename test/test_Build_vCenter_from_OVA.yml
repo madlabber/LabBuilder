@@ -3,10 +3,10 @@
   name: vCenter Configuration 
   gather_facts: false
   vars_files: 
-    vars/main.yml
+    ../vars/main.yml
   tasks:
-    - include_vars: defaults/Build_vCenter_from_OVA.yml
-    - include_tasks: tasks/Build_vCenter_from_OVA.yml
+    - include_vars: ../defaults/Build_vCenter_from_OVA.yml
+    - include_tasks: ../tasks/Build_vCenter_from_OVA.yml
       vars:
         # ova_file: "files/VMware/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
         vm_name: vcsa

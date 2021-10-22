@@ -5,15 +5,15 @@
   vars:
     version: Server2016
   vars_files: 
-    - vars/main.yml
+    - ../vars/main.yml
   tasks:
-    - include_vars: defaults/Build_Server2012R2_VM_from_ISO.yml
+    - include_vars: ../defaults/Build_Server2012R2_VM_from_ISO.yml
       when: version == "Server2012R2"
-    - include_vars: defaults/Build_Server2016_VM_from_ISO.yml
+    - include_vars: ../defaults/Build_Server2016_VM_from_ISO.yml
       when: version == "Server2016"
-    - include_vars: defaults/Build_Server2019_VM_from_ISO.yml
+    - include_vars: ../defaults/Build_Server2019_VM_from_ISO.yml
       when: version == "Server2019"      
-    - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
+    - include_tasks: ../tasks/Build_Windows_VM_from_ISO.yml
       vars:
         vm_name: TEST_WindowsVM2016
         # vm_num_cpus: 2        

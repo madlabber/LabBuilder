@@ -3,9 +3,9 @@
   hosts: localhost
   gather_facts: false
   vars_files: 
-    - vars/main.yml
+    - ../vars/main.yml
   tasks:
-  - include_tasks: tasks/install_xrdp_in_CentOS7_with_vm_shell.yml
+  - include_tasks: ../tasks/install_xrdp_in_CentOS7_with_vm_shell.yml
     vars:
       vm_name: TEST_Centos8VM
       vm_username: root

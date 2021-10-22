@@ -3,10 +3,10 @@
   hosts: localhost
   gather_facts: false
   vars_files: 
-    - vars/main.yml
+    - ../vars/main.yml
   tasks:
-    - include_vars: defaults/Build_CentOS8_VM_from_ISO.yml
-    - include_tasks: tasks/Build_CentOS7_VM_from_ISO.yml
+    - include_vars: ../defaults/Build_CentOS8_VM_from_ISO.yml
+    - include_tasks: ../tasks/Build_CentOS7_VM_from_ISO.yml
       vars:
         vm_name: TEST_CentOS8VM7
         # vm_num_cpus: 2        

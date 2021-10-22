@@ -1,0 +1,26 @@
+all:
+  hosts:
+  vars:
+    lab_name: test_ontapselecteval
+    lab_netmask: 255.255.255.0
+    lab_password: P@ssw0rd
+    lab_vm_datastore: TestVMs
+#    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "VM Network"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.123.1"
+    lab_lan1_dns_ip: "192.168.123.21"
+    lab_domain_name: "lab.local"
+    lab_dc01_hostname: "labdc01"
+    lab_dc01_ip: "192.168.123.21"
+  children:
+    ontapselecteval:
+      hosts:
+        ots-01:  
+          ontap_version: "9.9.1"           
+          ontap_node_mgmt_ip:    192.168.0.141
+          ontap_cluster_name:    "demo"
+          ontap_cluster_mgmt_ip: 192.168.0.140
+          vm_data_disk_gb:       100
+

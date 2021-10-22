@@ -15,5 +15,5 @@
       vm_password: "P@ssw0rd"
       fetch:
           src: "/cf/conf/config.xml"
-          dest: "files/config.xml.bak"
+          dest: "../files/config.xml.bak"
     delegate_to: localhost

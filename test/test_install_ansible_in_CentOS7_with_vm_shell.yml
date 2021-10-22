@@ -7,7 +7,7 @@
     vm_username: root
     vm_password: P@ssw0rd
   vars_files: 
-    - vars/main.yml
+    - ../vars/main.yml
   tasks:
     - name: Install Ansible and related components
       community.vmware.vmware_vm_shell:

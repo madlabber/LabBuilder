@@ -3,9 +3,9 @@
   hosts: localhost
   gather_facts: no  
   vars_files:
-   - vars/main.yml
+   - ../vars/main.yml
   tasks:
-    - include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
+    - include_tasks: ../tasks/Create_New_Active_Directory_using_vm_shell.yml
       vars:
         vm_name: lab_ansible_v2_dc01
         vm_network: "lab_ansible_v2_1"

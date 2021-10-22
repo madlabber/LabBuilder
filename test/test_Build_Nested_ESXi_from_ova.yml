@@ -3,13 +3,13 @@
   hosts: localhost
   gather_facts: false
   vars_files: 
-    - vars/main.yml
+    - ../vars/main.yml
   tasks:
-    - include_vars: defaults/Build_Nested_ESXi_from_OVA.yml
-    - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
+    - include_vars: ../defaults/Build_Nested_ESXi_from_OVA.yml
+    - include_tasks: ../tasks/Build_Nested_ESXi_from_OVA.yml
       vars:
         ovf_version: "6.7u3" #7.0u1, 7.0, 6.7u3, 6.7u2, 6.7u1, 6.7 ... 6.0?
-        ovf_file: "files/VMware/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
+        ovf_file: "../files/VMware/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
         ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
         vm_name: "TEST_NestedESXi{{ovf_version}}"
         vm_network: "VM Network"
