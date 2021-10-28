@@ -12,7 +12,7 @@ vm_hostname: vcsa
 vm_domain: lab.local
 
 # default fqdn
-vm_fqdn: "{{vm_hostname}}.{{vm_domain}}"   # if no DNS resolution, use the IP address here
+#vm_fqdn: "{{vm_hostname}}.{{vm_domain}}"   # if no DNS resolution, use the IP address here
 
 # default vswitch portgroup
 vm_network: "VM Network"
