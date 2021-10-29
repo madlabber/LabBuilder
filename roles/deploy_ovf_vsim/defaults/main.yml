@@ -60,9 +60,6 @@ ontap_node_mgmt_ip: ""
 ontap_netmask:      ""
 ontap_gateway:      ""
 
-# Set admin password even on nodes not used to create clusters
-set_admin_password: false
-
 # Cluster Name (optional)
 # if not specified the vm_name will be used
 # ontap_cluster_name: "SimulateONTAP"

@@ -1,7 +1,7 @@
 all:
   hosts:
   vars:
-    vcenter_address:  vcenter.demo.lab
+    vcenter_address: vcenter.demo.lab
     vcenter_username: administrator@vsphere.local
     vcenter_password: "netapp123"
     vcenter_datacenter: "Datacenter"
@@ -20,7 +20,7 @@ all:
           ontap_node_mgmt_ip:    192.168.0.92
           set_admin_password:    true
       vars:
-        ontap_version: "9.9.1"
+        ovf_version: "9.9.1"
         ontap_netmask: "255.255.255.0"
         ontap_gateway: "192.168.0.1"
         shelf0_disk_size: 4000

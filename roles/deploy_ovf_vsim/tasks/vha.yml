@@ -305,8 +305,8 @@
 - name: 'Run node setup on {{vm_name}}'
   block:
   # vmware tools come up a little early so we need to pause for a bit
-  - name: 'Wait for {{node_setup_delay|default(150)}} seconds for Startup to Complete'
-    wait_for: 'timeout={{node_setup_delay|default(150)}}'
+  - name: 'Wait for {{node_setup_delay|default(60)}} seconds for Startup to Complete'
+    wait_for: 'timeout={{node_setup_delay|default(60)}}'
     delegate_to: localhost
     when: ontap_node_mgmt_ip|default("") != "" 
 
@@ -353,7 +353,6 @@
     - "{{ontap_password}}"
     - "" # this completes the node setup phase  
   when: 
-    - set_admin_password
     - ontap_cluster_mgmt_ip is undefined or ontap_cluster_mgmt_ip == ""
 
 - name: 'Run cluster setup on {{vm_name}}'

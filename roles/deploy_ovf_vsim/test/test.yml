@@ -1,5 +1,5 @@
 # To run this test:
-# ansible-playbook -i inventory.tml test.yml
+# ansible-playbook -i inventory.yml test.yml
 ---
 - name: Build ONTAP Simulator from OVA
   hosts: vsims 
