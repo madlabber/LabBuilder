@@ -37,11 +37,10 @@ all:
     vcenter:
       hosts:
         vcsa:
-          ip_address: 192.168.0.50
-          vcsa_autoconfigure: 'True'          
-          vsca_fqdn_or_ip: "vcsa.lab.local" 
+          ip_address:   192.168.0.50      
+          vm_fqdn:      "vcsa.lab.local" 
           ova_location: "files/VMware"
-          vcenter_ova: "VMware-vCenter-Server-Appliance-6.7.0.45000-16708996_OVF10.ova"          
+          vcenter_ova:  "VMware-vCenter-Server-Appliance-6.7.0.45000-16708996_OVF10.ova"          
     nestedesx:
       hosts:
         # This host is just for running the ONTAP Deploy VM

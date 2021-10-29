@@ -28,9 +28,8 @@ all:
     vcenter:
       hosts:
         vcsa:
-          ip_address: 192.168.0.50
-          vcsa_autoconfigure: 'True'          
-          vsca_fqdn_or_ip: "vcsa.lab.local" 
+          ip_address: 192.168.0.50        
+          vm_fqdn: "vcsa.lab.local" 
           ova_location: "files/VMware"
           vcenter_ova: "VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"          
     nestedesx:
