@@ -1,7 +1,7 @@
 ---
-
-#   # If the target is vCenter, push user configurable vars, then patch the rest before poweron
-
+# When the target is a vcenter server, some parameters are not user configurable
+# So in this scenario the user configurable vars are set during deploy_ovf
+# And the remaining vars are set with vmware_guest
 - community.vmware.vmware_deploy_ovf:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
@@ -23,7 +23,7 @@
       guestinfo.cis.appliance.net.addr.family: 'ipv4' # ipv4 or ipv6
       guestinfo.cis.appliance.net.mode: '{{vm_net_mode}}' # static or dhcp
       guestinfo.cis.appliance.net.addr: '{{ vm_address }}' 
-      guestinfo.cis.appliance.net.pnid: "{{ vm_fqdn|default(vm_address) }}" # FQDN of vcenter server
+      guestinfo.cis.appliance.net.pnid: "{{ vm_fqdn | default(vm_address) }}" # FQDN of vcenter server
       guestinfo.cis.appliance.net.prefix: '{{ vm_netmask_cidr }}' # netmask length, CIDR notation, i.e. '24'
       guestinfo.cis.appliance.net.gateway: '{{ vm_gateway }}' 
       guestinfo.cis.appliance.net.dns.servers: '{{ vm_dns_server }}' # Comma separated list of IP addresses of DNS servers.
@@ -35,6 +35,7 @@
   delegate_to: localhost
   when: vcenter_address != esxi_address
 
+# Set the restricted guestinfo variables
 - name: Patch broken vApp properties
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
@@ -66,7 +67,9 @@
   delegate_to: localhost
   when: vcenter_address != esxi_address
 
-# If the target is ESXi host, push all vars and power on
+# When the target is an ESXi server the user configurable setting is not enforced
+# And all vars must be set during deploy, and deploy must power on the VM
+# otherwise the vars will not persist
 - community.vmware.vmware_deploy_ovf:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
