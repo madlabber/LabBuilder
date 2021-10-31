@@ -83,27 +83,27 @@ all:
         #   ip_address: 192.168.0.14
         #   version: "CentOS7"
       # vars:
-    # vsims:
-    #   hosts:
-    #     vsim1-01:
-    #       ip_address: 192.168.0.71
-    #       sys_serial_number: "4082368-50-7"
-    #       cluster_setup: true
-    #       cluster_name: vsim1
-    #       cluster_mgmt_ip: 192.168.0.70
-    #     vsim2-01:
-    #       ip_address: 192.168.0.81
-    #       sys_serial_number: "4082368-50-7"
-    #       cluster_setup: true
-    #       cluster_name: vsim2
-    #       cluster_mgmt_ip: 192.168.0.80
-    #       add_nodes_by_serial: "4034389-06-2"
-    #     vsim2-02:
-    #       ip_address: 192.168.0.82
-    #       sys_serial_number: "4034389-06-2"
-    #       cluster_setup: false
-    #   vars:
-    #       ontap_version: "9.9.1"
+    vsims:
+      hosts:
+        vsim1-01:
+          ip_address: 192.168.0.71
+          sys_serial_number: "4082368-50-7"
+          cluster_setup: true
+          cluster_name: vsim1
+          cluster_mgmt_ip: 192.168.0.70
+        vsim2-01:
+          ip_address: 192.168.0.81
+          sys_serial_number: "4082368-50-7"
+          cluster_setup: true
+          cluster_name: vsim2
+          cluster_mgmt_ip: 192.168.0.80
+          add_nodes_by_serial: "4034389-06-2"
+        vsim2-02:
+          ip_address: 192.168.0.82
+          sys_serial_number: "4034389-06-2"
+          cluster_setup: false
+      vars:
+          ontap_version: "9.9.1"
     #     selecteval:
     ontapselecteval:
       hosts:
