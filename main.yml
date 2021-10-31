@@ -9,20 +9,32 @@
 #         - "{{ip_address|default('')}}"
 
 #   # ---
+# - name: Build pfSense VMs
+#   hosts: pfsense
+#   gather_facts: false
+#   vars_files:
+#     - vars/main.yml
+#   tasks:
+#   - name: Build lab pfSense Gateway
+#     block:
+#     - include_vars: defaults/Build_pfSense_from_ISO.yml
+#     - include_tasks: tasks/Build_pfSense_from_ISO.yml
+#       vars:
+#         vm_name: "{{lab_name}}_{{inventory_hostname}}"
+#         vm_datastore: "{{lab_vm_datastore}}"
+#         vm_password_new: "{{lab_password}}"
+
 - name: Build pfSense VMs
   hosts: pfsense
   gather_facts: false
   vars_files:
     - vars/main.yml
-  tasks:
-  - name: Build lab pfSense Gateway
-    block:
-    - include_vars: defaults/Build_pfSense_from_ISO.yml
-    - include_tasks: tasks/Build_pfSense_from_ISO.yml
+  roles:
+    - role: build_from_iso_pfsense
       vars:
         vm_name: "{{lab_name}}_{{inventory_hostname}}"
         vm_datastore: "{{lab_vm_datastore}}"
-        vm_password_new: "{{lab_password}}"
+        vm_password_new: "{{lab_password}}"        
 
 - name: Build DC
   hosts: dc
@@ -127,6 +139,7 @@
       vars: 
         #ovf_file: "{{ova_location}}/{{vcenter_ova}}"
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_datastore: '{{ lab_vm_datastore }}'
         vm_hostname: '{{inventory_hostname}}'
         vm_domain: '{{lab_domain_name}}'
         vm_network: '{{lab_lan1_portgroup}}'
@@ -150,21 +163,22 @@
         ovf_version: "{{esx_version}}" #7.0u1, 7.0, 6.7u3, 6.7u2, 6.7u1, 6.7 ... 6.0?
         ovf_file: "files/VMware/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
         ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
-        vm_name: "{{lab_name}}_{{inventory_hostname}}"
-        vm_network: "{{lab_lan1_portgroup}}"
+        vm_name:      "{{lab_name}}_{{inventory_hostname}}"
+        vm_network:   "{{ lab_lan1_portgroup }}"
+        vm_datastore: "{{ lab_vm_datastore }}"
         # vm_memory_mb: "{{memory_mb}}"
         # vm_num_cpus: 2
-        ovf_hostname: "{{inventory_hostname}}"
-        ovf_address: "{{ip_address}}"
-        ovf_netmask: "{{lab_lan1_netmask}}"
-        ovf_gateway: "{{lab_lan1_gateway}}"
+        ovf_hostname: "{{ inventory_hostname }}"
+        ovf_address:  "{{ ip_address }}"
+        ovf_netmask:  "{{ lab_lan1_netmask }}"
+        ovf_gateway:  "{{ lab_lan1_gateway }}"
         ovf_vlan: ""
-        ovf_dns: "{{lab_lan1_dns_ip}}"
-        ovf_domain: "{{lab_domain_name}}"
-        ovf_ntp: "{{lab_lan1_gateway}}"
+        ovf_dns:      "{{ lab_lan1_dns_ip }}"
+        ovf_domain:   "{{lab_domain_name}}"
+        ovf_ntp:      "{{lab_lan1_gateway}}"
         ovf_syslog: "" # IP of syslog server
         ovf_password: "{{lab_password}}"
-        ovf_ssh: "{{enable_ssh|string}}"
+        ovf_ssh:      "{{enable_ssh|string}}"
         ovf_createvmfs: "{{create_local_vmfs|string}}"
 
 - name: Build Windows Servers

@@ -1,0 +1,18 @@
+---
+- name: "Prepare new lab pod"
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    ../vars/main.yml
+  tasks:
+  - debug: 
+      msg: 
+      - "lab name:           {{ lab_name|default('') }}"
+      - "lab_vm_datastore:   {{ lab_vm_datastore|default('') }}"
+      - "lab_lan1_portgroup: {{ lab_lan1_portgroup|default('') }}"
+      - "lab_lan2_portgroup: {{ lab_lan2_portgroup|default('') }}"
+
+# Create volume on SVM
+# Mound volume in the lab folder
+# Mound volume as datastore
+# Create portgroups on each host
