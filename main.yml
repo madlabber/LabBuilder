@@ -126,7 +126,7 @@
     loop:
       # Add vCenter DNS record
       - "Add-DnsServerResourceRecordA -Name {{inventory_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{ip_address}} -TimeToLive 01:00:00"
-    when: (skip_dns_records is undefined) or (skip_dns_records is False)
+    when: not skip_dns_records|default(false) 
 
 # Build vCenter Server(s)
 - name: Build vCenter
