@@ -15,17 +15,17 @@ all:
     lab_dc01_hostname: "dc01"
     lab_dc01_ip: "192.168.0.11"
   children:
-    pfsense:
-      hosts:
-        gateway:
-          #ip_address: 192.168.0.1
-          vm_network_wan: "{{lab_wan_portgroup}}"
-          vm_network_lan: "{{lab_lan1_portgroup}}"
-          config_xml_file: "files/pfsense/config.xml"
+    # pfsense:
+    #   hosts:
+    #     gateway:
+    #       #ip_address: 192.168.0.1
+    #       vm_network_wan: "{{lab_wan_portgroup}}"
+    #       vm_network_lan: "{{lab_lan1_portgroup}}"
+    #       config_xml_file: "files/pfsense/config.xml"
     dc:
       hosts:
         dc01:
-          version: "Server2019"
+          version: "Server2019eval"
           ip_address: 192.168.0.11
           extra_commands:
             # Install Chrome
@@ -74,15 +74,15 @@ all:
     #       vm_memory_mb: 2048
     #       vm_num_cpus: 2
     #       vm_disk_gb: 40
-    centos:
-      hosts:
-        ansible:
-          ip_address: 192.168.0.15
-          version: "CentOS7"
-        # centos1:
-        #   ip_address: 192.168.0.14
-        #   version: "CentOS7"
-      vars:
+    # centos:
+    #   hosts:
+    #     ansible:
+    #       ip_address: 192.168.0.15
+    #       version: "CentOS7"
+    #     # centos1:
+    #     #   ip_address: 192.168.0.14
+    #     #   version: "CentOS7"
+    #   vars:
     # vsims:
     #   hosts:
     #     vsim1-01:

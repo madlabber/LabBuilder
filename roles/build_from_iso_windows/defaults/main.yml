@@ -1,15 +1,18 @@
+# version
+version: "Server2019eval"
+
 # This is the ISO folname for the intall ISO
-install_iso: "17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
+# install_iso: "17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
 
 # This is the URL to download the ISO from the
-install_iso_url: "https://software-download.microsoft.com/download/pr/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
+# install_iso_url: "https://software-download.microsoft.com/download/pr/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
 
 # This is the filename of the ISO containing autounattend.xml
 # This ISO will be auto-generated and uploaded to the vm_datastore
-config_iso: "{{vm_name}}-Server2019eval.iso"
+config_iso: "{{ vm_name }}-{{ version }}.iso"
 
 # This is the location of the autounattend.xml file
-unattend_file: "files/Server2019eval/autounattend.xml"
+unattend_file: "{{ role_path }}/files/{{ version }}/autounattend.xml"
 
 # This is the default VM name
 #vm_name: WindowsVM

@@ -192,6 +192,8 @@
       keys_send: ENTER
       string_send: "{{item}}"
     delegate_to: localhost
+    loop_control:
+      pause: 5
     loop: 
       - "" # enter
       - "" # enter
@@ -212,6 +214,8 @@
       keys_send: ENTER
       string_send: "{{item}}"
     delegate_to: localhost
+    loop_control:
+      pause: 5
     loop: 
       - "" # enter 
       - "" # enter
@@ -231,6 +235,8 @@
       keys_send: ENTER
       string_send: "{{item}}"
     delegate_to: localhost
+    loop_control:
+      pause: 5
     loop: 
       - "8" # enter
       - "pkg-static install -y pfSense-pkg-Open-VM-Tools" # enter

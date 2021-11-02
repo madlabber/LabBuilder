@@ -25,13 +25,20 @@ all:
         dc01:
           version: "Server2019"
           ip_address: 192.168.0.11
+          extra_commands:
+            # Install Chrome
+            - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
+            - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+            # Install Putty
+            - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+            - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
     vcenter:
       hosts:
         vcsa:
           ip_address: 192.168.0.50        
           vm_fqdn: "vcsa.lab.local" 
           ova_location: "files/VMware"
-          vcenter_ova: "VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"          
+          vcenter_ova: "VMware-vCenter-Server-Appliance-7.0.2.00100-17920168_OVF10.ova"          
     nestedesx:
       hosts:
         esx01:
@@ -43,24 +50,13 @@ all:
         # esx04:
         #   ip_address: 192.168.0.54
       vars:
-          esx_version: "7.0u1"
+          esx_version: "7.0u2"
           vm_memory_mb: 24576
           vm_num_cpus: 6
           vm_disk1_size_gb: 40
           vm_disk2_size_gb: 2600
           create_local_vmfs: 'False'
           enable_ssh: 'True'
-    # winservers:
-    #   hosts:
-    #     win1:
-    #       ip_address: 192.168.0.41
-    #     win2:
-    #       ip_address: 192.168.0.42
-    #   vars:
-    #       version: "Server2016"      
-    #       vm_memory_mb: 2048
-    #       vm_num_cpus: 2
-    #       vm_disk_gb: 40
     # centos:
     #   hosts:
     #     ansible:

@@ -9,21 +9,6 @@
 #         - "{{ip_address|default('')}}"
 
 #   # ---
-# - name: Build pfSense VMs
-#   hosts: pfsense
-#   gather_facts: false
-#   vars_files:
-#     - vars/main.yml
-#   tasks:
-#   - name: Build lab pfSense Gateway
-#     block:
-#     - include_vars: defaults/Build_pfSense_from_ISO.yml
-#     - include_tasks: tasks/Build_pfSense_from_ISO.yml
-#       vars:
-#         vm_name: "{{lab_name}}_{{inventory_hostname}}"
-#         vm_datastore: "{{lab_vm_datastore}}"
-#         vm_password_new: "{{lab_password}}"
-
 - name: Build pfSense VMs
   hosts: pfsense
   gather_facts: false
@@ -34,26 +19,15 @@
       vars:
         vm_name: "{{lab_name}}_{{inventory_hostname}}"
         vm_datastore: "{{lab_vm_datastore}}"
-        vm_password_new: "{{lab_password}}"        
+        vm_password_new: "{{lab_password}}"   
 
 - name: Build DC
   hosts: dc
   gather_facts: false
   vars_files:
     - vars/main.yml
-  tasks:
-  - name: default version
-    set_fact:
-      version: "{{version | default('Server2019')}}"
-  - name: Build Windows VM - DC01
-    block:
-    - include_vars: defaults/Build_Server2012R2_VM_from_ISO.yml
-      when: version == "Server2012R2"
-    - include_vars: defaults/Build_Server2016_VM_from_ISO.yml
-      when: version == "Server2016"
-    - include_vars: defaults/Build_Server2019_VM_from_ISO.yml
-      when: version == "Server2019"
-    - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
+  roles:
+    - role: build_from_iso_windows
       vars:
         vm_name: '{{lab_name}}_{{inventory_hostname}}'
         vm_datastore: "{{lab_vm_datastore}}"
@@ -65,37 +39,43 @@
         vm_gateway: "{{lab_lan1_gateway}}"
         vm_dns_server: "{{lab_lan1_dns_ip}}"
         vm_domain: "{{lab_domain_name}}"
+        dcpromo: true
 
-  - name: Build a Active Directory Forest
-    block:
-    - include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
-      vars:
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'
-        vm_username: ".\\Administrator"
-        vm_password: "{{lab_password}}"
-        vm_dns_server: "{{lab_lan1_dns_ip}}"
-        vm_domain: "{{lab_domain_name}}"
+# - name: Configure DC
+#   hosts: dc
+#   gather_facts: false
+#   vars_files:
+#     - vars/main.yml
+#   tasks:
+#   - name: Create New Active Directory Forest
+#     include_tasks: tasks/Create_New_Active_Directory_using_vm_shell.yml
+#     vars:
+#       vm_name: '{{lab_name}}_{{inventory_hostname}}'
+#       vm_username: ".\\Administrator"
+#       vm_password: "{{lab_password}}"
+#       vm_dns_server: "{{lab_lan1_dns_ip}}"
+#       vm_domain: "{{lab_domain_name}}"
 
-  - name: Run extra commands in powershell
-    community.vmware.vmware_vm_shell:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'
-      validate_certs: no
-      vm_username: ".\\Administrator"
-      vm_password: "{{lab_password}}"
-      vm_id: '{{lab_name}}_{{inventory_hostname}}'
-      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: " -command \"({{item}})\""
-      wait_for_process: true
-    delegate_to: localhost
-    retries: 3
-    delay: 10
-    register: result
-    until: result is succeeded
-    ignore_errors: true
-    loop: "{{extra_commands}}"
-    when: extra_commands is defined
+  # - name: Run extra commands in powershell
+  #   community.vmware.vmware_vm_shell:
+  #     hostname: '{{ vcenter_address }}'
+  #     username: '{{ vcenter_username }}'
+  #     password: '{{ vcenter_password }}'
+  #     validate_certs: no
+  #     vm_username: ".\\Administrator"
+  #     vm_password: "{{lab_password}}"
+  #     vm_id: '{{lab_name}}_{{inventory_hostname}}'
+  #     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+  #     vm_shell_args: " -command \"({{item}})\""
+  #     wait_for_process: true
+  #   delegate_to: localhost
+  #   retries: 3
+  #   delay: 10
+  #   register: result
+  #   until: result is succeeded
+  #   ignore_errors: true
+  #   loop: "{{extra_commands}}"
+  #   when: extra_commands is defined
 
 # This play takes all the name/ip pairs from all hosts and adds DNS records on the DC
 - name: populate DNS records
@@ -181,54 +161,51 @@
         ovf_ssh:      "{{enable_ssh|string}}"
         ovf_createvmfs: "{{create_local_vmfs|string}}"
 
-- name: Build Windows Servers
+- name: Build DC
   hosts: winservers
   gather_facts: false
   vars_files:
     - vars/main.yml
-  tasks:
-  # - name: default version
-  #   set_fact:
-  #     version: "{{version | default('Server2019')}}"
-  - include_vars: defaults/Build_Server2012R2_VM_from_ISO.yml
-    when: version == "Server2012R2"
-  - include_vars: defaults/Build_Server2016_VM_from_ISO.yml
-    when: version == "Server2016"
-  - include_vars: defaults/Build_Server2019_VM_from_ISO.yml
-    when: version == "Server2019"
-  - include_tasks: tasks/Build_Windows_VM_from_ISO.yml
-    vars:
-      vm_name: '{{lab_name}}_{{inventory_hostname}}'
-      vm_datastore: "{{lab_vm_datastore}}"
-      vm_network: "{{lab_lan1_portgroup}}"
-      vm_password_new: "{{lab_password}}"
-      vm_hostname: "{{inventory_hostname}}"
-      vm_address: "{{ip_address}}"
-      vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
-      vm_gateway: "{{lab_lan1_gateway}}"
-      vm_dns_server: "{{lab_lan1_dns_ip}}"
-      vm_domain: "{{lab_domain_name}}"
+  roles:
+    - role: build_from_iso_windows
+      vars:
+        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_datastore: "{{lab_vm_datastore}}"
+        vm_network: "{{lab_lan1_portgroup}}"
+        vm_password_new: "{{lab_password}}"
+        vm_hostname: "{{inventory_hostname}}"
+        vm_address: "{{ip_address}}"
+        vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+        vm_gateway: "{{lab_lan1_gateway}}"
+        vm_dns_server: "{{lab_lan1_dns_ip}}"
+        vm_domain: "{{lab_domain_name}}"
 
-  - name: Run extra commands in powershell
-    community.vmware.vmware_vm_shell:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'
-      validate_certs: no
-      vm_username: ".\\Administrator"
-      vm_password: "{{lab_password}}"
-      vm_id: '{{lab_name}}_{{inventory_hostname}}'
-      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: " -command \"({{item}})\""
-      wait_for_process: true
-    delegate_to: localhost
-    retries: 3
-    delay: 10
-    register: result
-    until: result is succeeded
-    ignore_errors: true
-    loop: "{{extra_commands}}"
-    when: extra_commands is defined
+# - name: Build Windows Servers
+#   hosts: winservers
+#   gather_facts: false
+#   vars_files:
+#     - vars/main.yml
+#   tasks:
+#   - name: Run extra commands in powershell
+#     community.vmware.vmware_vm_shell:
+#       hostname: '{{ vcenter_address }}'
+#       username: '{{ vcenter_username }}'
+#       password: '{{ vcenter_password }}'
+#       validate_certs: no
+#       vm_username: ".\\Administrator"
+#       vm_password: "{{lab_password}}"
+#       vm_id: '{{lab_name}}_{{inventory_hostname}}'
+#       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+#       vm_shell_args: " -command \"({{item}})\""
+#       wait_for_process: true
+#     delegate_to: localhost
+#     retries: 3
+#     delay: 10
+#     register: result
+#     until: result is succeeded
+#     ignore_errors: true
+#     loop: "{{extra_commands}}"
+#     when: extra_commands is defined
 
 - name: Build CentOS VMs
   hosts: centos
