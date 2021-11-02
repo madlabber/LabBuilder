@@ -23,7 +23,7 @@ all:
     dc:
       hosts:
         dc01:
-          version: "Server2019"
+          version: "Server2019eval"
           ip_address: 192.168.0.11
           extra_commands:
             # Install Chrome
@@ -36,7 +36,7 @@ all:
       hosts:
         win1:
           ip_address: 192.168.0.12
-          version: "Server2019"      
+          version: "Server2019eval"      
           vm_memory_mb: 2048
           vm_num_cpus: 2
           vm_disk_gb: 40          
