@@ -1,0 +1,230 @@
+---
+# Node Setup
+- name: 'Run node setup on {{ vm_name }}'
+  block:
+  # vmware tools come up a little early so we need to pause for a bit
+  - name: 'Wait for {{ node_setup_delay|default(60) }} seconds for Startup to Complete'
+    wait_for: 'timeout={{ node_setup_delay|default(60) }}'
+    delegate_to: localhost
+
+  # Send keys via HID to complete setup at the vidconsole
+  - name: Complete Node Setup
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'     
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+      string_send: "{{ item }}"
+    delegate_to: localhost
+    loop: 
+      - "admin"
+      - "cluster setup"
+      - "yes"
+      - "e0c" # node mgmt port
+      - "{{ontap_node_mgmt_ip}}"
+      - "{{ontap_netmask}}"
+      - "{{ontap_gateway}}"
+      - "" # this completes the node setup phase
+  when: ontap_node_mgmt_ip|default("") != ""
+# block:end Node Setup
+
+# - name: 'set node admin password on {{ vm_name }}'
+#   community.vmware.vmware_guest_sendkey:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}'     
+#     validate_certs: no 
+#     name: "{{ vm_name }}"
+#     keys_send: ENTER
+#     string_send: "{{ item }}"
+#   delegate_to: localhost
+#   loop: 
+#     - "quit"
+#     - "security"
+#     - "login"
+#     - "password"
+#     - "" # at this point the admin password is blank
+#     - "{{ ontap_password }}"
+#     - "{{ ontap_password }}"
+#     - "" # this completes the node setup phase  
+#   when: 
+#     - ontap_cluster_mgmt_ip is undefined or ontap_cluster_mgmt_ip == ""
+
+# Run Cluster Setup
+- name: 'Run cluster setup on {{ vm_name }}'
+  block:
+  - name: Begin cluster setup
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'     
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+      string_send: "{{ item }}"
+    delegate_to: localhost
+    loop: 
+      - "create" # operation create|join
+      - "no" # single node cluster yes|no
+      - "yes" # use default cluster lif configuration
+      - "{{ ontap_password }}"
+      - "{{ ontap_password }}" # confirm password
+      - "{{ ontap_cluster_name | default(vm_name) }}"
+      - "" # This is here to force the enter key to be pressed
+
+  - name: Wait 120 seconds for cluster setup
+    wait_for: timeout=120
+    delegate_to: localhost
+
+  - name: Complete cluster setup
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'     
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+      string_send: "{{ item }}"
+    delegate_to: localhost
+    loop: 
+      - "e0c" # cluster mgmt port
+      - "{{ ontap_cluster_mgmt_ip }}"
+      - "{{ ontap_netmask }}"
+      - "{{ ontap_gateway }}"
+      - "{{ ontap_dns_domain }}" 
+      - "{{ ontap_dns_server }}"
+      - "{{ ontap_location }}" # single node cluster yes|no
+      - "" # this is here to force the enter key after the preceding command
+
+  #add_nodes_by_serial 
+  - name: Wait 60 seconds for command completion
+    wait_for: timeout=60
+    delegate_to: localhost
+    when: 
+      - add_nodes_by_serial|default("") != "" 
+
+# the login prompt is timing sensitive
+# this is only needed for versions older than 9.8 but should be tolerated by 9.8+
+  - name: login to ontap
+    block:
+    - name: enter username
+      community.vmware.vmware_guest_sendkey:
+        hostname: '{{ vcenter_address }}'
+        username: '{{ vcenter_username }}'
+        password: '{{ vcenter_password }}'     
+        validate_certs: no 
+        name: "{{ vm_name }}"
+        keys_send: ENTER
+        string_send: "{{ item }}"
+      delegate_to: localhost
+      loop_control:
+        pause: 5
+      loop: 
+        - "" #ENTER
+        - "admin"
+    - name: press enter
+      community.vmware.vmware_guest_sendkey:
+        hostname: '{{ vcenter_address }}'
+        username: '{{ vcenter_username }}'
+        password: '{{ vcenter_password }}'     
+        validate_certs: no 
+        name: "{{ vm_name }}"
+        keys_send: ENTER
+      delegate_to: localhost
+
+    - name: Wait 2 seconds for command completion
+      wait_for: timeout=2
+      delegate_to: localhost
+
+    - name: enter password
+      community.vmware.vmware_guest_sendkey:
+        hostname: '{{ vcenter_address }}'
+        username: '{{ vcenter_username }}'
+        password: '{{ vcenter_password }}'     
+        validate_certs: no 
+        name: "{{ vm_name }}"
+        string_send: "{{ ontap_password }}"
+      delegate_to: localhost
+
+    - name: press enter
+      community.vmware.vmware_guest_sendkey:
+        hostname: '{{ vcenter_address }}'
+        username: '{{ vcenter_username }}'
+        password: '{{ vcenter_password }}'     
+        validate_certs: no 
+        name: "{{ vm_name }}"
+        keys_send: ENTER
+      delegate_to: localhost
+
+    - name: Wait 2 seconds for command completion
+      wait_for: timeout=2
+      delegate_to: localhost
+
+    when: 
+      - add_nodes_by_serial|default("") != ""       
+
+  - name: Enter systemshell
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'     
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+      string_send: "{{ item }}"
+    delegate_to: localhost
+    loop_control:
+      pause: 5
+    loop: 
+      - "set diag -confirmations off" # cluster mgmt port
+      - "" #ENTER
+      - "systemshell local bash"
+      - "" #ENTER
+    when: 
+      - add_nodes_by_serial|default("") != "" 
+
+  - name: Add nodes by serial number
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'     
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+      string_send: "{{ item }}"
+    delegate_to: localhost
+    loop: 
+      - "ngsh -c \"add-node -cluster-ips $(ngsh -c 'show-discovered -fields address' | grep {{add_nodes_by_serial}}|cut -d' ' -f2)\""
+      - ""
+    when: 
+      - add_nodes_by_serial|default("") != "" 
+
+  - name: Wait 30 seconds for command completion
+    wait_for: timeout=30
+    delegate_to: localhost
+    when: 
+      - add_nodes_by_serial|default("") != "" 
+
+  - name: return to admin mode
+    community.vmware.vmware_guest_sendkey:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'     
+      validate_certs: no 
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+      string_send: "{{ item }}"
+    delegate_to: localhost
+    loop: 
+      - "exit"
+      - "set admin"
+      - "" # this is here to force the enter key after the preceding command
+    when: 
+      - add_nodes_by_serial|default("") != "" 
+
+  when: ontap_cluster_mgmt_ip|default("") != ""
+  #end block:
+
+

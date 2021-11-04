@@ -1,0 +1,286 @@
+---
+- name: set credentials
+  set_fact:
+    esxi_login: &esxi_login
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'   
+      validate_certs: no 
+
+- name: parse vars
+  include_tasks: parse_vars.yml
+
+# Now we can deploy the VM
+- name: 'Deploy ovf file: {{ovf_file}}' 
+  community.vmware.vmware_deploy_ovf:
+    <<: *esxi_login
+    datacenter: '{{ vcenter_datacenter }}'
+    cluster: '{{ vcenter_cluster }}'
+    datastore: "{{ vm_datastore }}"
+    name: "{{ vm_name }}"
+    ovf:  "{{ ovf_file }}"
+    disk_provisioning: "{{vm_disk_provisioning}}"
+    power_on: no
+    networks: "{u'hostonly':u'{{ cluster_network }}',u'nat':u'{{ data_network }}'}"
+    wait_for_ip_address: false
+  delegate_to: localhost
+  retries: 10
+  delay: 60
+  register: result           
+  until: result is succeeded 
+
+- name: Adjust VM Sizing
+  community.vmware.vmware_guest:
+    <<: *esxi_login
+    name: '{{ vm_name }}'
+    state: present
+    hardware:
+      memory_mb: "{{ vm_memory_mb}}"
+      num_cpus: '{{ vm_num_cpus }}'
+    advanced_settings:
+      - key: pciHole.start
+        value: 1024  # Moving the PCI hole here gives ONTAP access to more system ram
+      - key: "disk.EnableUUID"
+        value: "true"  # Required for vSCSI support
+  delegate_to: localhost
+
+- name: Build Disk Shelf 0
+  community.vmware.vmware_guest_disk:
+    <<: *esxi_login
+    datacenter: '{{vcenter_datacenter}}'
+    name: '{{ vm_name }}'
+    disk:
+      - { size_mb: '{{shelf0_size}}', scsi_controller: 0, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: thin, state: present, datastore: '{{vm_datastore}}'  }
+  delegate_to: localhost
+  when: 
+    - shelf0_disk_size|default("") != ""   
+    - item.disk <= shelf0_disk_count|default(shelf0_qty)|int 
+  loop:
+      - { disk:  1, unit_number: 0 }
+      - { disk:  2, unit_number: 1 }
+      - { disk:  3, unit_number: 2 }
+      - { disk:  4, unit_number: 3 }
+      - { disk:  5, unit_number: 4 }
+      - { disk:  6, unit_number: 5 }
+      - { disk:  7, unit_number: 6 }
+      - { disk:  8, unit_number: 8 }
+      - { disk:  9, unit_number: 9 }
+      - { disk: 10, unit_number: 10 }
+      - { disk: 11, unit_number: 11 }
+      - { disk: 12, unit_number: 12 }
+      - { disk: 13, unit_number: 13 }
+      - { disk: 14, unit_number: 14 }
+      - { disk: 15, unit_number: 15 }
+
+- name: Build Disk Shelf 1
+  community.vmware.vmware_guest_disk:
+    <<: *esxi_login
+    datacenter: '{{vcenter_datacenter}}'
+    name: '{{ vm_name }}'
+    disk:
+      - { size_mb: '{{shelf1_size}}', scsi_controller: 1, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: thin, state: present, datastore: '{{vm_datastore}}'  }
+  delegate_to: localhost
+  when: 
+    - shelf1_disk_size|default("") != ""   
+    - item.disk <= shelf1_disk_count|default(shelf1_qty)|int 
+  loop:
+      - { disk:  1, unit_number: 0 }
+      - { disk:  2, unit_number: 1 }
+      - { disk:  3, unit_number: 2 }
+      - { disk:  4, unit_number: 3 }
+      - { disk:  5, unit_number: 4 }
+      - { disk:  6, unit_number: 5 }
+      - { disk:  7, unit_number: 6 }
+      - { disk:  8, unit_number: 8 }
+      - { disk:  9, unit_number: 9 }
+      - { disk: 10, unit_number: 10 }
+      - { disk: 11, unit_number: 11 }
+      - { disk: 12, unit_number: 12 }
+      - { disk: 13, unit_number: 13 }
+      - { disk: 14, unit_number: 14 }
+      - { disk: 15, unit_number: 15 }
+
+- name: Build Disk Shelf 2
+  community.vmware.vmware_guest_disk:
+    <<: *esxi_login
+    datacenter: '{{vcenter_datacenter}}'
+    name: '{{ vm_name }}'
+    disk:
+      - { size_mb: '{{shelf2_size}}', scsi_controller: 2, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: thin, state: present, datastore: '{{vm_datastore}}'  }
+  delegate_to: localhost
+  when: 
+    - shelf2_disk_size|default("") != ""   
+    - item.disk <= shelf2_disk_count|default(shelf2_qty)|int 
+  loop:
+      - { disk:  1, unit_number: 0 }
+      - { disk:  2, unit_number: 1 }
+      - { disk:  3, unit_number: 2 }
+      - { disk:  4, unit_number: 3 }
+      - { disk:  5, unit_number: 4 }
+      - { disk:  6, unit_number: 5 }
+      - { disk:  7, unit_number: 6 }
+      - { disk:  8, unit_number: 8 }
+      - { disk:  9, unit_number: 9 }
+      - { disk: 10, unit_number: 10 }
+      - { disk: 11, unit_number: 11 }
+      - { disk: 12, unit_number: 12 }
+      - { disk: 13, unit_number: 13 }
+      - { disk: 14, unit_number: 14 }
+      - { disk: 15, unit_number: 15 }
+
+- name: Build Disk Shelf 3
+  community.vmware.vmware_guest_disk:
+    <<: *esxi_login
+    datacenter: '{{vcenter_datacenter}}'
+    name: '{{ vm_name }}'
+    disk:
+      - { size_mb: '{{shelf3_size}}', scsi_controller: 3, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: thin, state: present, datastore: '{{vm_datastore}}'  }
+  delegate_to: localhost
+  when: 
+    - shelf3_disk_size|default("") != ""   
+    - item.disk <= shelf3_disk_count|default(shelf3_qty)|int 
+  loop:
+      - { disk:  1, unit_number: 0 }
+      - { disk:  2, unit_number: 1 }
+      - { disk:  3, unit_number: 2 }
+      - { disk:  4, unit_number: 3 }
+      - { disk:  5, unit_number: 4 }
+      - { disk:  6, unit_number: 5 }
+      - { disk:  7, unit_number: 6 }
+      - { disk:  8, unit_number: 8 }
+      - { disk:  9, unit_number: 9 }
+      - { disk: 10, unit_number: 10 }
+      - { disk: 11, unit_number: 11 }
+      - { disk: 12, unit_number: 12 }
+      - { disk: 13, unit_number: 13 }
+      - { disk: 14, unit_number: 14 }
+      - { disk: 15, unit_number: 15 }
+
+- name: Start VM
+  community.vmware.vmware_guest:
+    <<: *esxi_login
+    name: '{{ vm_name }}'
+    state: poweredon
+    wait_for_ip_address: false
+  delegate_to: localhost
+
+- name: Wait for 10 seconds
+  wait_for: timeout=10
+  delegate_to: localhost
+
+- name: Press Space to interrupt autoboot
+  community.vmware.vmware_guest_sendkey:
+    <<: *esxi_login
+    name: "{{ vm_name }}"
+    keys_send: '{{item}}'
+  delegate_to: localhost
+  register: sendkeys_result
+  retries: 3
+  until: sendkeys_result is succeeded
+  loop: [ SPACE, SPACE, SPACE, SPACE, SPACE ]
+
+- name: configure loader variable via sendkeys
+  community.vmware.vmware_guest_sendkey:
+    <<: *esxi_login
+    name: "{{ vm_name }}"
+    keys_send: ENTER
+    string_send: "{{item}}"
+  delegate_to: localhost
+  register: sendkeys_result
+  retries: 3
+  until: sendkeys_result is succeeded
+  loop: 
+    # Set Serial Number and Sysid
+    - "setenv SYS_SERIAL_NUMBER {{sys_serial_number}}"
+    - "setenv bootarg.nvram.sysid {{nvram_sysid}}"
+    # Enable dhcp for node_mgmt
+    - "setenv bootarg.init.dhcp.disable false"
+    # Disable simulated disks
+    - "setenv bootarg.vm.sim.vdevinit false"
+    - "setenv bootarg.sim.vdevinit false"
+    - "setenv bootarg.srm.disk.simnames false"
+    - "setenv bootarg.srm.disk.simulated false"      
+    # Enable virtual disks
+    - "setenv bootarg.srm.disk.config.pci true"
+    - "setenv bootarg.srm.virtual.adapter true"
+    - "setenv bootarg.vm.data_diskmodel vscsi"  
+    # Set default raid type and checksum type    
+    - "setenv bootarg.vm.raidtype RAID-DP"
+    - "setenv bootarg.vm.checksum_type block"
+    # ADP Settings
+    - "setenv root-uses-shared-disks? {{adp_enabled|default('false')}}"
+    - "setenv allow-root-data1-data2-partitions? {{adp_enabled|default('false')}}"
+    # Trigger an automatic option 4
+    - "setenv bootarg.bootmenu.allow_opts true"
+    - "setenv bootarg.bootmenu.args 4a"
+    - "setenv bootarg.init.bootmenu true"
+    - ""
+
+- name: enable fake-ssd
+  community.vmware.vmware_guest_sendkey:
+    <<: *esxi_login
+    name: "{{ vm_name }}"
+    keys_send: ENTER
+    string_send: "{{item}}"
+  delegate_to: localhost
+  register: sendkeys_result
+  retries: 3
+  until: sendkeys_result is succeeded
+  loop: 
+    - "setenv wafl-idedupe-allow-lowend? true"
+    - "setenv allow-flash-optimized? true"
+    - "setenv bootarg.init.flash_optimized true"
+    - "setenv bootarg.vm.init.flash_optimized true"
+    - "setenv allow-ssd-partitions? true"
+    - "setenv fake-ssd {{ ((((fake_ssd_disk_size)-1/9)*8/9)|int)-6}}"
+    - ""
+  when: fake_ssd_disk_size|default(0) != 0
+
+# This prevents duplicate sysids from being used when the role is called
+# multiple times within a playbook's tasks section.
+- name: clear nvram_sysid
+  set_fact:
+    nvram_sysid: ""
+
+- name: set extra bootargs
+  community.vmware.vmware_guest_sendkey:
+    <<: *esxi_login
+    name: "{{ vm_name }}"
+    keys_send: ENTER
+    string_send: "set {{item}}"
+  delegate_to: localhost
+  register: sendkeys_result
+  retries: 3
+  until: sendkeys_result is succeeded
+  loop: "{{bootargs}}"
+  when: bootargs is defined
+
+- name: boot_ontap
+  community.vmware.vmware_guest_sendkey:
+    <<: *esxi_login
+    name: "{{ vm_name }}"
+    keys_send: ENTER
+    string_send: "{{item}}"
+  delegate_to: localhost
+  register: sendkeys_result
+  retries: 3
+  until: sendkeys_result is succeeded
+  loop: 
+    - "boot_ontap"
+    - "" # this is here to force the enter key after the preceding command
+
+- name: Wait for VMware tools to become available
+  community.vmware.vmware_guest_tools_wait:
+    <<: *esxi_login
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  retries: 3
+  delay: 15
+  register: result           
+  until: result is succeeded 
+
+- name: run setup
+  include_tasks: setup.yml
+
+
+

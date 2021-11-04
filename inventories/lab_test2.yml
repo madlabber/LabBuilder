@@ -100,4 +100,4 @@ all:
           sys_serial_number: "4034389-06-2"
           cluster_setup: false
       vars:
-          ontap_version: "9.9.1"
+          ovf_version: "9.9.1"

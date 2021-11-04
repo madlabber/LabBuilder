@@ -1,0 +1,156 @@
+---
+
+# ovf_file by default is in the role's files dir
+# but may be overridden by the user and contain a full path to the file
+# this checks to see if ovf_file exists in either case
+- name: locate ovf ovf_file
+  stat:
+    path: "{{ovf_file | default('')}}" 
+  delegate_to: localhost
+  register: ovf_location
+
+# check if the ovf_file is in the playbook's files directory
+- name: Check althernate ovf_file location
+  stat: 
+    path: "{{playbook_dir}}/files/vsim-netapp-DOT{{ovf_version}}-cm_nodar.ova"
+  delegate_to: localhost
+  register: ovf_playbook_dir
+  when: not ovf_location.stat.exists
+
+# this uses the playbook's files folder as a fallback 
+# when the ovf_file is not present
+- name: select ovf_file
+  set_fact: 
+    ovf_file: "{{playbook_dir}}/files/vsim-netapp-DOT{{ovf_version}}-cm_nodar.ova"
+  when:
+    - not ovf_location.stat.exists
+    - ovf_playbook_dir.stat.exists
+
+# if cluster network is not set, connect those ports to the data network
+- name: select cluster network
+  set_fact:
+    cluster_network: "{{ data_network }}"
+  when:
+    - (cluster_network is undefined) or (cluster_network == "")
+
+# Generate a random nvram_sysid 
+- name: generate sysid
+  set_fact:
+    nvram_sysid: "4082{{ 9 | random(start=0) }}{{ 9 | random(start=0) }}{{ 9 | random(start=0) }}{{ 9 | random(start=0) }}07" #the two current options are 408236507, or 4034389062
+  when: nvram_sysid == ""
+
+# Processing disk variables.
+# the vsim uses a variable called vdevinit to define its initial disk population
+# values are passed in the format of triples (disk_type:disk_qty:shelf[,...])
+# this section manipulates a set of inputs to parse vdevinit (by default)
+# or allow disk sizes to be passed in human readable form.  
+
+# these are lookup tables
+- name: disk tables
+  set_fact:
+    size_table: {
+      '0' : '',
+      '500': '35',
+      '1000': '23',
+      '2000': '30',
+      '4000': '31',
+      '9000': '36'
+    }
+    type_table: {
+      '0' : '',
+      '35': '500',
+      '23': '1000',
+      '30': '2000',
+      '31': '4000',
+      '36': '9000'      
+    }
+
+# override vdevinit if any capacities are specifieed
+- name: check for capacity overrides
+  set_fact:
+    vdevinit: ""
+  when: >
+    shelf0_disk_size|default(0)|int + 
+    shelf1_disk_size|default(0)|int + 
+    shelf2_disk_size|default(0)|int +
+    shelf3_disk_size|default(0)|int > 0
+
+# process vdevinit into component parts
+- name: parse vdevinit
+  set_fact:
+    shelf0_type:    '{{  (vdevinit.split(",")[0] | default("::0")).split(":")[0] | default("")}}'  
+    shelf0_qty:     '{{  (vdevinit.split(",")[0] | default("::0")).split(":")[1] | default("")}}' 
+    shelf0_shelf:   '{{  (vdevinit.split(",")[0] | default("::0")).split(":")[2] | default("")}}'   
+    shelf1_type:    '{{  (vdevinit.split(",")[1] | default("::1")).split(":")[0] | default("")}}'  
+    shelf1_qty:     '{{  (vdevinit.split(",")[1] | default("::1")).split(":")[1] | default("")}}' 
+    shelf1_shelf:   '{{  (vdevinit.split(",")[1] | default("::1")).split(":")[2] | default("")}}'      
+    shelf2_type:    '{{  (vdevinit.split(",")[2] | default("::2")).split(":")[0] | default("")}}'  
+    shelf2_qty:     '{{  (vdevinit.split(",")[2] | default("::2")).split(":")[1] | default("")}}' 
+    shelf2_shelf:   '{{  (vdevinit.split(",")[2] | default("::2")).split(":")[2] | default("")}}'  
+    shelf3_type:    '{{  (vdevinit.split(",")[3] | default("::3")).split(":")[0] | default("")}}'  
+    shelf3_qty:     '{{  (vdevinit.split(",")[3] | default("::3")).split(":")[1] | default("")}}' 
+    shelf3_shelf:   '{{  (vdevinit.split(",")[3] | default("::3")).split(":")[2] | default("")}}'   
+
+- name: parse shelfx_disk_type
+  set_fact:
+    shelf0_type: "{{ shelf0_disk_type|default(shelf0_type|default(''),true) }}"
+    shelf1_type: "{{ shelf1_disk_type|default(shelf1_type|default(''),true) }}"
+    shelf2_type: "{{ shelf2_disk_type|default(shelf2_type|default(''),true) }}"
+    shelf3_type: "{{ shelf3_disk_type|default(shelf3_type|default(''),true) }}"
+
+- name: parse shelfx_disk_size
+  set_fact:
+    shelf0_size: "{{ shelf0_disk_size|default(type_table[shelf0_type]|default(''),true) }}"
+    shelf1_size: "{{ shelf1_disk_size|default(type_table[shelf1_type]|default(''),true) }}"
+    shelf2_size: "{{ shelf2_disk_size|default(type_table[shelf2_type]|default(''),true) }}"
+    shelf3_size: "{{ shelf3_disk_size|default(type_table[shelf3_type]|default(''),true) }}"
+
+- name: lookup remaining disk_types 
+  set_fact:
+    shelf0_type: "{{ shelf0_type|default(size_table[shelf0_size]|default(''),true) }}"
+    shelf1_type: "{{ shelf1_type|default(size_table[shelf1_size]|default(''),true) }}"
+    shelf2_type: "{{ shelf2_type|default(size_table[shelf2_size]|default(''),true) }}"
+    shelf3_type: "{{ shelf3_type|default(size_table[shelf3_size]|default(''),true) }}"
+
+- name: parse shelfx_disk_count
+  set_fact:
+    shelf0_qty: "{{ shelf0_disk_count|default(shelf0_qty) }}"
+    shelf1_qty: "{{ shelf1_disk_count|default(shelf1_qty) }}"
+    shelf2_qty: "{{ shelf2_disk_count|default(shelf2_qty) }}"
+    shelf3_qty: "{{ shelf3_disk_count|default(shelf3_qty) }}"
+
+# - name: disk configuration
+#   debug:
+#     msg: 
+#       - "vdevinit: {{vdevinit}}"
+#       - "shelf0: size: {{shelf0_size}}, type: {{shelf0_type}}, qty: {{shelf0_qty}}"
+#       - "shelf1: size: {{shelf1_size}}, type: {{shelf1_type}}, qty: {{shelf1_qty}}"
+#       - "shelf2: size: {{shelf2_size}}, type: {{shelf2_type}}, qty: {{shelf2_qty}}"
+#       - "shelf3: size: {{shelf3_size}}, type: {{shelf3_type}}, qty: {{shelf3_qty}}"      
+
+# reassemble vdevinit
+- name: assemble vdevinit shelf0
+  set_fact:
+    vdevinit: "{{ shelf0_type }}:{{ shelf0_qty|default(14,true) }}:0"
+  when: shelf0_type|default("") != ""
+
+- name: assemble vdevinit shelf1
+  set_fact:
+    vdevinit: "{{ vdevinit }},{{ shelf1_type }}:{{ shelf1_qty|default(14,true) }}:1"
+  when: shelf1_type|default("") != ""
+
+- name: assemble vdevinit shelf2
+  set_fact:
+    vdevinit: "{{ vdevinit }},{{ shelf2_type }}:{{ shelf2_qty|default(14,true) }}:2"
+  when: shelf2_type|default("") != ""
+
+- name: assemble vdevinit shelf3
+  set_fact:
+    vdevinit: "{{ vdevinit }},{{ shelf3_type }}:{{ shelf3_qty|default(14,true) }}:3"
+  when: shelf3_type|default("") != ""
+
+# - name: final vdevinit
+#   debug:
+#     msg: 
+#       - "vdevinit: {{vdevinit}}"
+# - meta: end_host

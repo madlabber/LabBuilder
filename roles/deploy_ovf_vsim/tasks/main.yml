@@ -6,5 +6,12 @@
 - name: disk_model vha
   include_tasks: vha.yml
   when: 
-    - disk_model is undefined or disk_model == "vha"
+    - disk_model|default("vha") == "vha"
     - state == "present"
+
+- name: disk_model vscsi
+  include_tasks: vscsi.yml
+  when: 
+    - disk_model|default("vha") == "vscsi"
+    - state == "present"
+    

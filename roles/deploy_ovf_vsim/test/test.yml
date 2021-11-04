@@ -9,5 +9,5 @@
     - include_role: 
         name: ../deploy_ovf_vsim
       vars:
-        vm_name: "{{inventory_hostname}}"
+        vm_name: "{{ inventory_hostname }}"
   

@@ -6,6 +6,7 @@ all:
     lab_vm_datastore: lab_ansible_v2
     lab_wan_portgroup: "VM Network"
     lab_lan1_portgroup: "lab_ansible_v2_net1"
+    lab_lan2_portgroup: "lab_ansible_v2_net2"
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
@@ -54,18 +55,18 @@ all:
         vsim1-01:
           ip_address: 192.168.0.71
           sys_serial_number: "4082368-50-7"
-          cluster_setup: true
           cluster_name: vsim1
           cluster_mgmt_ip: 192.168.0.70
         vsim2-01:
           ip_address: 192.168.0.81
           sys_serial_number: "4082368-50-7"
-          cluster_setup: false
+          cluster_name: vsim2
+          cluster_mgmt_ip: 192.168.0.80
+          add_nodes_by_serial: "4034389-06-2"
         vsim2-02:
           ip_address: 192.168.0.82
           sys_serial_number: "4034389-06-2"
-          cluster_setup: false   
       vars:
-          ontap_version: "9.8"             
+          ovf_version: "9.9.1"             
 
 
