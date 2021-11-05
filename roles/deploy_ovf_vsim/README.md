@@ -66,6 +66,7 @@ Role Variables
 | shelf3_disk_count       |                     | (1-14) Number of disks to create on shelf 3 |
 | shelf3_disk_size        |                     | valid sizes are 500,1000,2000,4000, or 9000 |
 | shelf3_disk_type        |                     | valid type from 'vsim_makedisks -h'. See defaults/main.yml for examples. |
+| bootargs                |                     | A list of additional bootargs to set in the vloader |
 | force                   | **False**, True     | If true, existing VMs will be deleted and recreated |
 | node_setup_delay        | **60**              | Seconds to wait before attempting node setup |
 | partner_name            |                     | a valid VM name (vscsi only)|
@@ -133,16 +134,12 @@ Example Playbook
             ontap_cluster_name     "vsim1" 
             ontap_cluster_mgmt_ip: "192.168.0.80"
             shelf0_disk_count:     14  
-            shelf0_disk_size:      4000
-            shelf0_disk_type:      31 
+            shelf0_disk_size:      4000  # disks can be specified by size
             shelf1_disk_count:     14  
             shelf1_disk_size:      4000
-            shelf1_disk_type:      31
             shelf2_disk_count:     14  
-            shelf2_disk_size:      4000
-            shelf2_disk_type:      31
+            shelf2_disk_type:      31    # or disks can be specified by type
             shelf3_disk_count:     14  
-            shelf3_disk_size:      4000
             shelf3_disk_type:      31  
   
     ---
@@ -186,6 +183,39 @@ Example Playbook
             ontap_password:        "netapp123"
             ontap_cluster_mgmt_ip: "192.168.0.90"    
 
+    ---
+    - hosts: localhost 
+      name: Deploy a 2-node ONTAP Simulator HA Pair (experimental)
+      gather_facts: false
+      vars: 
+        vcenter_address:  vcenter.demo.lab
+        vcenter_username: administrator@vsphere.local
+        vcenter_password: ChangeMe2!
+        vcenter_datacenter: "Datacenter"
+        vcenter_cluster:    "Cluster1"
+      tasks:
+        # Deploy the second node first
+        - include_role: 
+            name: deploy_ovf_vsim
+          vars:
+            vm_name:               "vsim3-01"  
+            partner_name:          "vsim3-02"
+            vm_datastore:          "datastore1"
+            data_network:          "VM Network"
+            cluster_network:       "VM Network 2"
+            ontap_cluster_name:    "vsim3"
+            ontpa_cluster_mgmt_ip: "192.168.0.90"
+            sys_serial_number:     "4082368-50-7"
+            partner_serial:        "4034389-06-2"
+            ontap_node_mgmt_ip:    "192.168.0.91"  
+            partner_ip:            "192.168.0.92"
+            ontap_netmask:         "255.255.255.0"
+            ontap_gateway:         "192.168.0.1"
+            disk_model:            "vscsi"
+            shelf0_disk_count:     12  
+            shelf0_disk_size:      8192  # vscsi disk sizes are specified in mb
+            shelf1_disk_count:     12  
+            shelf1_disk_size:      8192
 
 NOTES
 -----

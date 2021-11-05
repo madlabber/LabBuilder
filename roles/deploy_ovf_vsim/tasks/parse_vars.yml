@@ -46,14 +46,20 @@
 # or allow disk sizes to be passed in human readable form.  
 
 # these are lookup tables
+# mapping common values to closest matching disk type
 - name: disk tables
   set_fact:
     size_table: {
       '0' : '',
       '500': '35',
       '1000': '23',
+      '1024': '23',
       '2000': '30',
+      '2048': '30',
       '4000': '31',
+      '4096': '31',
+      '8192': '36', 
+      '9216': '36',
       '9000': '36'
     }
     type_table: {

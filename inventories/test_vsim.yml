@@ -19,13 +19,13 @@ all:
   children:
     vsims:
       hosts:
-        demo2-01:  
-          partner:      "demo2-02"
-          cluster_name: "demo2"          
-          ovf_version:  "9.9.1"   
-          cluster_mgmt_ip: 192.168.0.90                  
-          ip_address:      192.168.0.91
-          partner_ip:      192.168.0.92
+        demo95p6b-01:  
+          partner:      "demo95p6b-02"
+          cluster_name: "demo95p6b"          
+          ovf_version:  "9.5P6"   
+          cluster_mgmt_ip: 192.168.0.130                  
+          ip_address:      192.168.0.131
+          partner_ip:      192.168.0.132
           disk_model: "vscsi"
           shelf0_disk_size: 8192
           shelf0_disk_count: 12
