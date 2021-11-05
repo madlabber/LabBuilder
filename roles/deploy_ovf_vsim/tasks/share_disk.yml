@@ -1,0 +1,57 @@
+---
+- name: '{{node1_name}}: Create Disk {{node1_scsi_controller}}:{{unit_number}}'
+  community.vmware.vmware_guest_disk:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    datacenter: '{{vcenter_datacenter}}'
+    name: '{{ node1_name }}'
+    disk:
+      - state: present
+        size_mb: '{{disk_size_mb}}'
+        scsi_controller: "{{node1_scsi_controller}}"
+        unit_number: "{{unit_number}}"
+        scsi_type: 'lsilogicsas'
+        type: "{{vm_disk_provisioning}}"
+        datastore: '{{vm_datastore}}' 
+  delegate_to: localhost
+  register: vmdisk
+
+- name: set lun number
+  set_fact:
+    lun_number: '{{unit_number|int}}'
+
+- name: get disk filename
+  set_fact:
+    disk_filename: "{{vmdisk['disk_data'][disk_item]['backing_filename']}}"
+  when: 
+    - vmdisk['disk_data'][disk_item]['controller_key'] == (1000+node1_scsi_controller)
+    - vmdisk['disk_data'][disk_item]['unit_number'] == lun_number|int
+  ignore_errors: true
+  loop: "{{ vmdisk['disk_data']|sort }}"
+  loop_control:
+    loop_var: disk_item
+
+- name: '{{node2_name}}: Attach Disk {{node2_scsi_controller}}:{{unit_number}}:{{disk_filename}}'
+  community.vmware.vmware_guest_disk:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    datacenter: '{{vcenter_datacenter}}'
+    name: '{{ node2_name }}'
+    disk:
+      - state: present
+        size_mb: '{{disk_size_mb}}'
+        scsi_controller: "{{node2_scsi_controller}}"
+        unit_number: "{{unit_number}}"
+        scsi_type: 'lsilogicsas'
+        type: "{{vm_disk_provisioning}}"
+        datastore: '{{vm_datastore}}'
+        filename: "{{ disk_filename }}"
+  delegate_to: localhost
+
+
+
+

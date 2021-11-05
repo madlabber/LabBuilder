@@ -68,6 +68,12 @@ Role Variables
 | shelf3_disk_type        |                     | valid type from 'vsim_makedisks -h'. See defaults/main.yml for examples. |
 | force                   | **False**, True     | If true, existing VMs will be deleted and recreated |
 | node_setup_delay        | **60**              | Seconds to wait before attempting node setup |
+| partner_name            |                     | a valid VM name (vscsi only)|
+| partner_serial          | **"4034389-06-2"**  | Partner ndoe serial number (vscsi only)|
+| partner_ip              |                     | Partner node management IP address (vscsi only)|
+| fake_ssd_disk_size      |                     | Disk size to mark as fake SSD (vscsi only) |
+| adp_enabled             | **False**, True     | Enables advanced disk partitioning (vscsi only) |
+
 
 Default Configuration(s)
 ------------------------  

@@ -317,6 +317,9 @@
   vars_files:
     - vars/main.yml
   tasks:
+    - set_fact:
+        partner_name: "{{ lab_name }}_{{ partner }}"
+      when: partner|default("") != ""
     - include_role: 
         name: deploy_ovf_vsim
       vars:

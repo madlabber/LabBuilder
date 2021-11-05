@@ -44,13 +44,19 @@
         value: "true"  # Required for vSCSI support
   delegate_to: localhost
 
+# This wierdness is because with_sequence evaluates and fails even when this task is not executed
+# bug closed as a wont_fix by ansible
+- name: add nics
+  include_tasks: add_nics.yml
+  when: vm_num_nics|int > 4
+
 - name: Build Disk Shelf 0
   community.vmware.vmware_guest_disk:
     <<: *esxi_login
     datacenter: '{{vcenter_datacenter}}'
     name: '{{ vm_name }}'
     disk:
-      - { size_mb: '{{shelf0_size}}', scsi_controller: 0, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: thin, state: present, datastore: '{{vm_datastore}}'  }
+      - { size_mb: '{{shelf0_size}}', scsi_controller: 0, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning}}", state: present, datastore: '{{vm_datastore}}'  }
   delegate_to: localhost
   when: 
     - shelf0_disk_size|default("") != ""   
@@ -78,7 +84,7 @@
     datacenter: '{{vcenter_datacenter}}'
     name: '{{ vm_name }}'
     disk:
-      - { size_mb: '{{shelf1_size}}', scsi_controller: 1, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: thin, state: present, datastore: '{{vm_datastore}}'  }
+      - { size_mb: '{{shelf1_size}}', scsi_controller: 1, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning}}", state: present, datastore: '{{vm_datastore}}'  }
   delegate_to: localhost
   when: 
     - shelf1_disk_size|default("") != ""   
@@ -106,7 +112,7 @@
     datacenter: '{{vcenter_datacenter}}'
     name: '{{ vm_name }}'
     disk:
-      - { size_mb: '{{shelf2_size}}', scsi_controller: 2, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: thin, state: present, datastore: '{{vm_datastore}}'  }
+      - { size_mb: '{{shelf2_size}}', scsi_controller: 2, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning}}", state: present, datastore: '{{vm_datastore}}'  }
   delegate_to: localhost
   when: 
     - shelf2_disk_size|default("") != ""   
@@ -134,7 +140,7 @@
     datacenter: '{{vcenter_datacenter}}'
     name: '{{ vm_name }}'
     disk:
-      - { size_mb: '{{shelf3_size}}', scsi_controller: 3, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: thin, state: present, datastore: '{{vm_datastore}}'  }
+      - { size_mb: '{{shelf3_size}}', scsi_controller: 3, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning}}", state: present, datastore: '{{vm_datastore}}'  }
   delegate_to: localhost
   when: 
     - shelf3_disk_size|default("") != ""   
@@ -191,7 +197,7 @@
   until: sendkeys_result is succeeded
   loop: 
     # Set Serial Number and Sysid
-    - "setenv SYS_SERIAL_NUMBER {{sys_serial_number}}"
+    - "setenv SYS_SERIAL_NUM {{sys_serial_number}}"
     - "setenv bootarg.nvram.sysid {{nvram_sysid}}"
     # Enable dhcp for node_mgmt
     - "setenv bootarg.init.dhcp.disable false"

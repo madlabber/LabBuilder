@@ -13,5 +13,13 @@
   include_tasks: vscsi.yml
   when: 
     - disk_model|default("vha") == "vscsi"
+    - partner_name|default("") == ""
     - state == "present"
-    
+
+- name: disk_model shared
+  include_tasks: shared.yml
+  when: 
+    - disk_model|default("vha") == "vscsi"
+    - partner_name|default("") != ""
+    - state == "present"
+

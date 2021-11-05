@@ -15,18 +15,23 @@ all:
     lab_domain_name: "lab.local"
     lab_dc01_hostname: "dc01"
     lab_dc01_ip: "192.168.0.11"
+    skip_dns_records: true
   children:
     vsims:
       hosts:
-        vscsi1-01:  
-          ovf_version: "9.9.1"           
-          ip_address:    192.168.0.136
-          cluster_name:    "demo"
-          cluster_mgmt_ip: 192.168.0.135
+        demo2-01:  
+          partner:      "demo2-02"
+          cluster_name: "demo2"          
+          ovf_version:  "9.9.1"   
+          cluster_mgmt_ip: 192.168.0.90                  
+          ip_address:      192.168.0.91
+          partner_ip:      192.168.0.92
           disk_model: "vscsi"
-          shelf0_disk_size: 12288
-          shelf0_disk_count: 6
-          fake_ssd_disk_size: 12288
+          shelf0_disk_size: 8192
+          shelf0_disk_count: 12
+          shelf1_disk_size: 8192
+          shelf1_disk_count: 12
+          fake_ssd_disk_size: 8192
           adp_enabled: "true"
           # bootargs:
           #   - "testarg=true"
