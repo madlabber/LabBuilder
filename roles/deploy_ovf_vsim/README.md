@@ -74,7 +74,9 @@ Role Variables
 | partner_ip              |                     | Partner node management IP address (vscsi only)|
 | fake_ssd_disk_size      |                     | Disk size to mark as fake SSD (vscsi only) |
 | adp_enabled             | **False**, True     | Enables advanced disk partitioning (vscsi only) |
-
+| adpv2_enabled           | **False**, True     | Enables ADPv2 Root-Data-Data partitioning (vscsi only) |
+| serial_ports            | **False**, True, <spec> | If true serial ports are created with a default backing spec.  If serial_ports contains a serial port backing spec, it will override the default|
+| partner_serial_ports    | **False**, True, <spec> | If true serial ports are created with a default backing spec.  If serial_ports contains a serial port backing spec, it will override the default|
 
 Default Configuration(s)
 ------------------------  
@@ -194,7 +196,7 @@ Example Playbook
         vcenter_datacenter: "Datacenter"
         vcenter_cluster:    "Cluster1"
       tasks:
-        # Deploy the second node first
+        # In this scenario the partner node is deployed automatically
         - include_role: 
             name: deploy_ovf_vsim
           vars:

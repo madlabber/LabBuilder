@@ -1,0 +1,86 @@
+all:
+  hosts:
+  vars:
+    lab_name: lab_vlan126
+    lab_netmask: 255.255.255.0
+    lab_password: P@ssw0rd
+    lab_vm_datastore: lab_vlan126
+    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "VLAN126"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.126.1"
+    lab_lan1_dns_ip: "192.168.126.11"
+    lab_lan2_portgroup: "lab_vlan126_net2"
+    lab_domain_name: "lab126.madlabber.com"
+    lab_dc01_hostname: "dc01"
+    lab_dc01_ip: "192.168.126.11"
+  children:
+    # dc:
+    #   hosts:
+    #     dc01:
+    #       version: "Server2019eval"
+    #       ip_address: 192.168.126.11
+    #       extra_commands:
+    #         # Install Chrome
+    #         - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
+    #         - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+    #         # Install Putty
+    #         - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+    #         - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+    # winservers:
+    #   hosts:
+    #     gateway:
+    #       ip_address: 192.168.126.12
+    #       version: "Server2019eval"
+    #       vm_memory_mb: 2048
+    #       vm_num_cpus: 2
+    #       vm_disk_gb: 40
+    #       extra_commands:
+    #         # Install Chrome
+    #         - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
+    #         - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+    #         # Install Putty
+    #         - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+    #         - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+    vsims:
+      hosts:
+        # demo1-01:  
+        #   partner:      "demo1-02"
+        #   cluster_name: "demo1"          
+        #   ovf_version:  "9.9.1"   
+        #   cluster_mgmt_ip: 192.168.126.90                  
+        #   ip_address:      192.168.126.91
+        #   partner_ip:      192.168.126.92
+        #   disk_model: "vscsi"
+        #   shelf0_disk_size: 12288
+        #   shelf0_disk_count: 6
+        #   shelf1_disk_size: 12288
+        #   shelf1_disk_count: 6
+        #   fake_ssd_disk_size: 12288
+        #   adp_enabled: "true"
+        #   adpv2_enabled: "true"
+        #   serial_ports: true
+        #   partner_serial_ports: true
+          
+        demo2-01:  
+          partner:      "demo2-02"
+          cluster_name: "demo2"          
+          ovf_version:  "9.9.1"   
+          cluster_mgmt_ip: 192.168.126.80                  
+          ip_address:      192.168.126.81
+          partner_ip:      192.168.126.82
+          disk_model: "vscsi"
+          shelf0_disk_size: 12288
+          shelf0_disk_count: 6
+          shelf1_disk_size: 12288
+          shelf1_disk_count: 6
+          fake_ssd_disk_size: 12288
+          adp_enabled: "true"
+          adpv2_enabled: "true"
+          serial_ports: true
+          partner_serial_ports: true
+
+          # bootargs:
+          # - "testarg=true"
+          # - "testarg2=true"

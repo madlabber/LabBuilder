@@ -1,5 +1,5 @@
 ---
-- name: '{{node1_name}}: Create Disk {{node1_scsi_controller}}:{{unit_number}}'
+- name: '{{node1_name}}: Create Disk {{node1_scsi_controller}}:{{lun_number}}'
   community.vmware.vmware_guest_disk:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
@@ -11,16 +11,16 @@
       - state: present
         size_mb: '{{disk_size_mb}}'
         scsi_controller: "{{node1_scsi_controller}}"
-        unit_number: "{{unit_number}}"
+        unit_number: "{{lun_number}}"
         scsi_type: 'lsilogicsas'
         type: "{{vm_disk_provisioning}}"
         datastore: '{{vm_datastore}}' 
   delegate_to: localhost
   register: vmdisk
 
-- name: set lun number
-  set_fact:
-    lun_number: '{{unit_number|int}}'
+# - name: set lun number
+#   set_fact:
+#     lun_number: '{{unit_number|int}}'
 
 - name: get disk filename
   set_fact:
@@ -33,7 +33,7 @@
   loop_control:
     loop_var: disk_item
 
-- name: '{{node2_name}}: Attach Disk {{node2_scsi_controller}}:{{unit_number}}:{{disk_filename}}'
+- name: '{{node2_name}}: Attach Disk {{node2_scsi_controller}}:{{lun_number}}:{{disk_filename}}'
   community.vmware.vmware_guest_disk:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
@@ -45,7 +45,7 @@
       - state: present
         size_mb: '{{disk_size_mb}}'
         scsi_controller: "{{node2_scsi_controller}}"
-        unit_number: "{{unit_number}}"
+        unit_number: "{{lun_number}}"
         scsi_type: 'lsilogicsas'
         type: "{{vm_disk_provisioning}}"
         datastore: '{{vm_datastore}}'

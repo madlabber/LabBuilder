@@ -209,6 +209,32 @@
   delegate_to: localhost
   register: vm_boot_order
 
+- set_fact:
+    serial_ports:
+      - type: 'pipe'
+        pipe_name: '\\.\pipe\{{ vm_name }}_com1'
+        endpoint: 'client'
+      - type: 'pipe'
+        pipe_name: '\\.\pipe\{{ vm_name }}_com2'
+        endpoint: 'client'
+  when: 
+    - serial_ports|default(false) is true
+
+# Create serial ports
+- name: Create multiple serial ports with Backing type - network, pipe, device and file
+  community.vmware.vmware_guest_serial_port:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no 
+    name: '{{ vm_name }}'
+    backings: "{{serial_ports}}"
+  delegate_to: localhost
+  register: create_serial_ports
+  when: 
+    - serial_ports is defined
+    - serial_ports is not false
+
 - name: Power-On the virtual machine
   community.vmware.vmware_guest_powerstate:
     hostname: '{{ vcenter_address }}'

@@ -3,3 +3,4 @@
 *.ova
 *.OVA
 test/private.yml
+meta/.galaxy_install_info

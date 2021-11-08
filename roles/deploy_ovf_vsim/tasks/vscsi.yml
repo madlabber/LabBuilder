@@ -50,6 +50,32 @@
   include_tasks: add_nics.yml
   when: vm_num_nics|int > 4
 
+- set_fact:
+    serial_ports:
+      - type: 'pipe'
+        pipe_name: '\\.\pipe\{{ vm_name}}_com1'
+        endpoint: 'client'
+      - type: 'pipe'
+        pipe_name: '\\.\pipe\{{ vm_name}}_com2'
+        endpoint: 'client'
+  when: 
+    - serial_ports|default(false) is true
+
+# Create serial ports
+- name: Create multiple serial ports with Backing type - network, pipe, device and file
+  community.vmware.vmware_guest_serial_port:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no 
+    name: '{{ vm_name }}'
+    backings: "{{serial_ports}}"
+  delegate_to: localhost
+  register: create_serial_ports
+  when: 
+    - serial_ports is defined
+    - serial_ports is not false
+
 - name: Build Disk Shelf 0
   community.vmware.vmware_guest_disk:
     <<: *esxi_login
@@ -201,6 +227,8 @@
     - "setenv bootarg.nvram.sysid {{nvram_sysid}}"
     # Enable dhcp for node_mgmt
     - "setenv bootarg.init.dhcp.disable false"
+    # Ensure cluster lifs are auto-generated
+    - "setenv bootarg.init.auto_cluster_lif.disable false"
     # Disable simulated disks
     - "setenv bootarg.vm.sim.vdevinit false"
     - "setenv bootarg.sim.vdevinit false"
@@ -215,11 +243,12 @@
     - "setenv bootarg.vm.checksum_type block"
     # ADP Settings
     - "setenv root-uses-shared-disks? {{adp_enabled|default('false')}}"
-    - "setenv allow-root-data1-data2-partitions? {{adp_enabled|default('false')}}"
+    - "setenv allow-root-data1-data2-partitions? {{adpv2_enabled|default('false')}}"
     # Trigger an automatic option 4
     - "setenv bootarg.bootmenu.allow_opts true"
     - "setenv bootarg.bootmenu.args 4a"
-    - "setenv bootarg.init.bootmenu true"
+    - "setenv bootarg.init.initnextV2 true"
+    - "setenv bootarg.init.wipeclean true"
     - ""
 
 - name: enable fake-ssd
@@ -234,9 +263,6 @@
   until: sendkeys_result is succeeded
   loop: 
     - "setenv wafl-idedupe-allow-lowend? true"
-    - "setenv allow-flash-optimized? true"
-    - "setenv bootarg.init.flash_optimized true"
-    - "setenv bootarg.vm.init.flash_optimized true"
     - "setenv allow-ssd-partitions? true"
     - "setenv fake-ssd {{ ((((fake_ssd_disk_size)-1/9)*8/9)|int)-6}}"
     - ""

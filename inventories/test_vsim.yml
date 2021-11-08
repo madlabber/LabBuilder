@@ -19,26 +19,46 @@ all:
   children:
     vsims:
       hosts:
-        demo95p6b-01:  
-          partner:      "demo95p6b-02"
-          cluster_name: "demo95p6b"          
-          ovf_version:  "9.5P6"   
-          cluster_mgmt_ip: 192.168.0.130                  
-          ip_address:      192.168.0.131
-          partner_ip:      192.168.0.132
-          disk_model: "vscsi"
-          shelf0_disk_size: 8192
-          shelf0_disk_count: 12
-          shelf1_disk_size: 8192
-          shelf1_disk_count: 12
-          fake_ssd_disk_size: 8192
-          adp_enabled: "true"
-          # bootargs:
-          #   - "testarg=true"
-          #   - "testarg2=true"
+        # demo1-01:  
+        #   partner:      "demo1-02"
+        #   cluster_name: "demo1"          
+        #   ovf_version:  "9.7"   
+        #   cluster_mgmt_ip: 192.168.0.90                  
+        #   ip_address:      192.168.0.91
+        #   partner_ip:      192.168.0.92
+        #   disk_model: "vscsi"
+        #   shelf0_disk_size: 12288
+        #   shelf0_disk_count: 12
+        #   shelf1_disk_size: 12288
+        #   shelf1_disk_count: 12
+        #   fake_ssd_disk_size: 12288
+        #   adp_enabled: "true"
+        #   # bootargs:
+        #   #   - "testarg=true"
+        #   #   - "testarg2=true"
+        vha7-01:  
+          ovf_version: "9.9.1"           
+          ip_address:    192.168.0.141
+          cluster_name:    "demo2"
+          cluster_mgmt_ip: 192.168.0.140
+          serial_ports: true
+
         # vha-01:  
         #   ovf_version: "9.9.1"           
-        #   ip_address:    192.168.0.145
+        #   ip_address:    192.168.0.141
         #   cluster_name:    "demo2"
-        #   cluster_mgmt_ip: 192.168.0.144
-        #   disk_model: "vha"
+        #   cluster_mgmt_ip: 192.168.0.140
+        #   sys_serial_number: "408236-85-07"
+        #   add_nodes_by_serial: "408236-85-08,408236-85-09,408236-85-10"
+        # vha-02:  
+        #   ovf_version: "9.9.1"           
+        #   ip_address:    192.168.0.142
+        #   sys_serial_number: "408236-85-08"
+        # vha-03:  
+        #   ovf_version: "9.9.1"           
+        #   ip_address:    192.168.0.143
+        #   sys_serial_number: "408236-85-09"
+        # vha-04:  
+        #   ovf_version: "9.9.1"           
+        #   ip_address:    192.168.0.144    
+        #   sys_serial_number: "408236-85-10"

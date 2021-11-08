@@ -1,0 +1,28 @@
+
+# Add node by serial
+# expects to be in the systemshell
+---
+- name: Add nodes by serial number
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'     
+    validate_certs: no 
+    name: "{{ vm_name }}"
+    keys_send: ENTER
+    string_send: "ngsh -c \"add-node -cluster-ips $(ngsh -c 'show-discovered -fields address' | grep {{item_serial}}|cut -d' ' -f2)\""
+  delegate_to: localhost
+
+- name: press enter
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'     
+    validate_certs: no 
+    name: "{{ vm_name }}"
+    keys_send: ENTER
+  delegate_to: localhost
+
+- name: Wait 30 seconds for command completion
+  wait_for: timeout=30
+  delegate_to: localhost
