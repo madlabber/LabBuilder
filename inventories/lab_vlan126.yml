@@ -2,6 +2,7 @@ all:
   hosts:
   vars:
     lab_name: lab_vlan126
+    lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
     lab_vm_datastore: lab_vlan126
@@ -13,8 +14,7 @@ all:
     lab_lan1_dns_ip: "192.168.126.11"
     lab_lan2_portgroup: "lab_vlan126_net2"
     lab_domain_name: "lab126.madlabber.com"
-    lab_dc01_hostname: "dc01"
-    lab_dc01_ip: "192.168.126.11"
+    lab_domain_controller: "dc01"
   children:
     # dc:
     #   hosts:
@@ -62,7 +62,7 @@ all:
         #   adpv2_enabled: "true"
         #   serial_ports: true
         #   partner_serial_ports: true
-          
+
         demo2-01:  
           partner:      "demo2-02"
           cluster_name: "demo2"          

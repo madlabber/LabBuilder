@@ -2,6 +2,7 @@ all:
   hosts:
   vars:
     lab_name: lab_ncie_san_v991
+    lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
     lab_vm_datastore: lab_ncie_san_v991
@@ -12,9 +13,8 @@ all:
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
     lab_lan1_dns_ip: "192.168.0.11"
-    lab_domain_name: "lab.local"
-    lab_dc01_hostname: "dc01"
-    lab_dc01_ip: "192.168.0.11"
+    lab_domain_name:   "lab.local"
+    lab_domain_controller: "dc01"
   children:
     pfsense:
       hosts:
@@ -82,7 +82,7 @@ all:
           shelf1_disk_count: 12
           fake_ssd_disk_size: 8192
           adp_enabled: "true"
-        # Cluster2 will be a snigle node cluster
+        # Cluster2 will be a single node cluster
         cluster2-01:  
           cluster_name: "cluster2"          
           ovf_version:  "9.9.1"   

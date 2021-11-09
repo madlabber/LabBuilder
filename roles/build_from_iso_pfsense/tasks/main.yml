@@ -195,13 +195,14 @@
     loop_control:
       pause: 5
     loop: 
+      - "" # enter # ACCEPT
       - "" # enter
       - "" # enter
-      - "" # enter
-      - "" # enter
+      - "" # enter # AutoFS-OK
 
-  - name: Wait 120 seconds for install
-    wait_for: timeout=120
+  - name: 'Wait {{install_timer|default(180)}} seconds for install'
+    wait_for: 
+      timeout: "{{install_timer|default(180)}}"
     delegate_to: localhost
 
   - name: Blind Install part 2
@@ -217,9 +218,9 @@
     loop_control:
       pause: 5
     loop: 
-      - "" # enter 
-      - "" # enter
-      - "" # enter
+      - "" # enter # open shell? -> No
+      - "" # enter # reboot
+      - "" # enter # extra enter
 
   - name: Wait 120 seconds for reboot
     wait_for: timeout=120

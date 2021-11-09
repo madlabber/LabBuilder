@@ -2,6 +2,7 @@ all:
   hosts:
   vars:
     lab_name: lab_template
+    lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
     lab_vm_datastore: lab_template
@@ -11,9 +12,8 @@ all:
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
     lab_lan1_dns_ip: "192.168.0.11"
-    lab_domain_name: "lab.local"
-    lab_dc01_hostname: "dc01"
-    lab_dc01_ip: "192.168.0.11"
+    lab_domain_name:   "lab.local"
+    lab_domain_controller: "dc01"
   children:
     # pfsense:
     #   hosts:

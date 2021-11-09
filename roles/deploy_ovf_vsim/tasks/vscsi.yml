@@ -82,7 +82,7 @@
     datacenter: '{{vcenter_datacenter}}'
     name: '{{ vm_name }}'
     disk:
-      - { size_mb: '{{shelf0_size}}', scsi_controller: 0, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning}}", state: present, datastore: '{{vm_datastore}}'  }
+      - { size_mb: '{{shelf0_size}}', scsi_controller: 0, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning|lower}}", state: present, datastore: '{{vm_datastore}}'  }
   delegate_to: localhost
   when: 
     - shelf0_disk_size|default("") != ""   
@@ -110,7 +110,7 @@
     datacenter: '{{vcenter_datacenter}}'
     name: '{{ vm_name }}'
     disk:
-      - { size_mb: '{{shelf1_size}}', scsi_controller: 1, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning}}", state: present, datastore: '{{vm_datastore}}'  }
+      - { size_mb: '{{shelf1_size}}', scsi_controller: 1, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning|lower}}", state: present, datastore: '{{vm_datastore}}'  }
   delegate_to: localhost
   when: 
     - shelf1_disk_size|default("") != ""   
@@ -138,7 +138,7 @@
     datacenter: '{{vcenter_datacenter}}'
     name: '{{ vm_name }}'
     disk:
-      - { size_mb: '{{shelf2_size}}', scsi_controller: 2, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning}}", state: present, datastore: '{{vm_datastore}}'  }
+      - { size_mb: '{{shelf2_size}}', scsi_controller: 2, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning|lower}}", state: present, datastore: '{{vm_datastore}}'  }
   delegate_to: localhost
   when: 
     - shelf2_disk_size|default("") != ""   
@@ -166,7 +166,7 @@
     datacenter: '{{vcenter_datacenter}}'
     name: '{{ vm_name }}'
     disk:
-      - { size_mb: '{{shelf3_size}}', scsi_controller: 3, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning}}", state: present, datastore: '{{vm_datastore}}'  }
+      - { size_mb: '{{shelf3_size}}', scsi_controller: 3, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning|lower}}", state: present, datastore: '{{vm_datastore}}'  }
   delegate_to: localhost
   when: 
     - shelf3_disk_size|default("") != ""   

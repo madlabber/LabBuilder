@@ -13,7 +13,7 @@
         scsi_controller: "{{node1_scsi_controller}}"
         unit_number: "{{lun_number}}"
         scsi_type: 'lsilogicsas'
-        type: "{{vm_disk_provisioning}}"
+        type: "{{vm_disk_provisioning|lower}}"
         datastore: '{{vm_datastore}}' 
   delegate_to: localhost
   register: vmdisk
@@ -47,7 +47,7 @@
         scsi_controller: "{{node2_scsi_controller}}"
         unit_number: "{{lun_number}}"
         scsi_type: 'lsilogicsas'
-        type: "{{vm_disk_provisioning}}"
+        type: "{{vm_disk_provisioning|lower}}"
         datastore: '{{vm_datastore}}'
         filename: "{{ disk_filename }}"
   delegate_to: localhost

@@ -2,6 +2,7 @@ all:
   hosts:
   vars:
     lab_name: test_ontapselecteval
+    lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
     lab_vm_datastore: TestVMs
@@ -12,8 +13,7 @@ all:
     lab_lan1_gateway: "192.168.123.1"
     lab_lan1_dns_ip: "192.168.123.21"
     lab_domain_name: "lab.local"
-    lab_dc01_hostname: "labdc01"
-    lab_dc01_ip: "192.168.123.21"
+    lab_domain_controller: "labdc01"
   children:
     ontapselecteval:
       hosts:

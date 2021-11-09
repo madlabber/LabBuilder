@@ -17,8 +17,8 @@
   roles:
     - role: build_from_iso_pfsense
       vars:
-        vm_name: "{{lab_name}}_{{inventory_hostname}}"
-        vm_datastore: "{{lab_vm_datastore}}"
+        vm_name:         "{{lab_prefix | default('')}}{{inventory_hostname}}"
+        vm_datastore:    "{{lab_vm_datastore}}"
         vm_password_new: "{{lab_password}}"   
 
 - name: Build DC
@@ -29,16 +29,16 @@
   roles:
     - role: build_from_iso_windows
       vars:
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'
-        vm_datastore: "{{lab_vm_datastore}}"
-        vm_network: "{{lab_lan1_portgroup}}"
+        vm_name:         "{{lab_prefix | default('')}}{{inventory_hostname}}"
+        vm_datastore:    "{{lab_vm_datastore}}"
+        vm_network:      "{{lab_lan1_portgroup}}"
         vm_password_new: "{{lab_password}}"
-        vm_hostname: "{{inventory_hostname}}"
-        vm_address: "{{ip_address}}"
+        vm_hostname:     "{{inventory_hostname}}"
+        vm_address:      "{{ip_address}}"
         vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
-        vm_gateway: "{{lab_lan1_gateway}}"
-        vm_dns_server: "{{lab_lan1_dns_ip}}"
-        vm_domain: "{{lab_domain_name}}"
+        vm_gateway:      "{{lab_lan1_gateway}}"
+        vm_dns_server:   "{{lab_lan1_dns_ip}}"
+        vm_domain:       "{{lab_domain_name}}"
         dcpromo: true
 
 # This play takes all the name/ip pairs from all hosts and adds DNS records on the DC
@@ -57,7 +57,7 @@
       validate_certs: no
       vm_username: ".\\Administrator"
       vm_password: "{{lab_password}}"
-      vm_id: '{{lab_name}}_{{lab_dc01_hostname}}'
+      vm_id: "{{lab_prefix | default('')}}{{lab_domain_controller}}"
       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
       vm_shell_args: " -command \"({{item}})\""
       wait_for_process: true
@@ -70,7 +70,7 @@
     loop:
       # Add vCenter DNS record
       - "Add-DnsServerResourceRecordA -Name {{inventory_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{ip_address}} -TimeToLive 01:00:00"
-    when: not skip_dns_records|default(false) 
+    when: lab_domain_controller|default("") != "" 
 
 # Build vCenter Server(s)
 - name: Build vCenter
@@ -82,7 +82,7 @@
     - role: deploy_ovf_vcenter
       vars: 
         #ovf_file: "{{ova_location}}/{{vcenter_ova}}"
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_name: "{{ lab_prefix | default('') }}{{inventory_hostname}}"
         vm_datastore: '{{ lab_vm_datastore }}'
         vm_hostname: '{{inventory_hostname}}'
         vm_domain: '{{lab_domain_name}}'
@@ -107,7 +107,7 @@
         ovf_version: "{{esx_version}}" #7.0u1, 7.0, 6.7u3, 6.7u2, 6.7u1, 6.7 ... 6.0?
         ovf_file: "files/VMware/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
         ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
-        vm_name:      "{{lab_name}}_{{inventory_hostname}}"
+        vm_name:      "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_network:   "{{ lab_lan1_portgroup }}"
         vm_datastore: "{{ lab_vm_datastore }}"
         # vm_memory_mb: "{{memory_mb}}"
@@ -133,7 +133,7 @@
   roles:
     - role: build_from_iso_windows
       vars:
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_name: "{{lab_prefix default('')}}{{inventory_hostname}}"
         vm_datastore: "{{lab_vm_datastore}}"
         vm_network: "{{lab_lan1_portgroup}}"
         vm_password_new: "{{lab_password}}"
@@ -157,7 +157,7 @@
       vars:
         vm_hostname: "{{inventory_hostname}}"
         vm_address: "{{ip_address}}"
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_network: "{{lab_lan1_portgroup}}"
         vm_password_new: "{{lab_password}}"
         vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
@@ -167,7 +167,7 @@
         vm_datastore: "{{lab_vm_datastore}}"
     - include_tasks: tasks/install_xrdp_in_CentOS8_with_vm_shell.yml
       vars:
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_username: 'root'
         vm_password: '{{lab_password}}'
       when:
@@ -175,7 +175,7 @@
         - install_xrdp is true
     - include_tasks: tasks/install_ansible_in_CentOS8_with_vm_shell.yml
       vars:
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_username: 'root'
         vm_password: '{{lab_password}}'
       when:
@@ -190,7 +190,7 @@
       vars:
         vm_hostname: "{{inventory_hostname}}"
         vm_address: "{{ip_address}}"
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_network: "{{lab_lan1_portgroup}}"
         vm_password_new: "{{lab_password}}"
         vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
@@ -200,7 +200,7 @@
         vm_datastore: "{{lab_vm_datastore}}"
     - include_tasks: tasks/install_xrdp_in_CentOS7_with_vm_shell.yml
       vars:
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_username: 'root'
         vm_password: '{{lab_password}}'
       when:
@@ -208,7 +208,7 @@
         - install_xrdp is true
     - include_tasks: tasks/install_ansible_in_CentOS7_with_vm_shell.yml
       vars:
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_username: 'root'
         vm_password: '{{lab_password}}'
       when:
@@ -216,7 +216,7 @@
         - install_ansible is true
     - include_tasks: tasks/install_AWX_in_CentOS7_with_vm_shell.yml
       vars:
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'
+        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_username: 'root'
         vm_password: '{{lab_password}}'
       when:
@@ -232,7 +232,7 @@
       validate_certs: no
       vm_username: "root"
       vm_password: '{{ lab_password }}'
-      vm_id: '{{lab_name}}_{{inventory_hostname}}'
+      vm_id: "{{lab_prefix | default('')}}{{inventory_hostname}}"
       vm_shell: '/usr/bin/sh'
       vm_shell_args: " -c \"{{item}}\""
       wait_for_process: true
@@ -284,7 +284,7 @@
   roles:
     - role: deploy_ovf_ontapselecteval
       vars:
-        vm_name:               "{{lab_name}}_{{inventory_hostname}}"
+        vm_name:               "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_datastore:          "{{lab_vm_datastore}}"
         vm_network:            "{{lab_lan1_portgroup}}"        
         ontap_netmask:         "{{lab_lan1_netmask}}"
@@ -299,14 +299,14 @@
   roles:
     - role: deploy_ovf_storagegrid
       vars:
-        vm_name: '{{lab_name}}_{{inventory_hostname}}'
-        ovf_hostname: '{{inventory_hostname}}'        
-        vm_datastore: "{{lab_vm_datastore}}"
-        grid_network_name: "{{lab_lan1_portgroup}}"        
-        grid_network_config: "STATIC" # "STATIC", "DHCP"
-        grid_network_ip: "{{ip_address}}"
-        grid_network_mask: "{{lab_lan1_netmask}}"
-        grid_network_gateway: "{{lab_lan1_gateway}}"        
+        vm_name:               "{{lab_prefix | default('')}}{{inventory_hostname}}"
+        ovf_hostname:          "{{inventory_hostname}}"        
+        vm_datastore:          "{{lab_vm_datastore}}"
+        grid_network_name:     "{{lab_lan1_portgroup}}"        
+        grid_network_config:   "STATIC" # "STATIC", "DHCP"
+        grid_network_ip:       "{{ip_address}}"
+        grid_network_mask:     "{{lab_lan1_netmask}}"
+        grid_network_gateway:  "{{lab_lan1_gateway}}"        
   vars_files:
     - vars/main.yml
 
@@ -320,7 +320,7 @@
       name: deploy_ovf_aiqum
     vars:
       # ovf_file: "files/AIQUM/ActiveIQUnifiedManager-9.9.ova"          
-      vm_name:          "{{lab_name}}_{{inventory_hostname}}"
+      vm_name:          "{{lab_prefix | default('')}}{{inventory_hostname}}"
       vm_fqdn:          "{{inventory_hostname}}.{{lab_domain_name}}"
       vm_username:      "admin"
       vm_password:      "{{lab_password |default('netapp123')}}"    
@@ -346,7 +346,7 @@
       datacenter: '{{ vcenter_datacenter }}'
       cluster: '{{ vcenter_cluster }}'
       datastore: "{{lab_vm_datastore}}"
-      name: '{{lab_name}}_{{inventory_hostname}}'
+      name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
       ovf: '{{ ovf_file }}'
       disk_provisioning: thin
       power_on: yes
