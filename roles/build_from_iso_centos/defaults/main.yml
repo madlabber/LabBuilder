@@ -1,0 +1,9 @@
+centos7_iso: "CentOS-7-x86_64-DVD-2009.iso"
+centos7_iso_url: "http://mirror.fileplanet.com/centos/7.9.2009/isos/x86_64/CentOS-7-x86_64-DVD-2009.iso"
+centos7_kickstart_file: "{{role_path}}/files/CentOS7/ks.cfg"
+centos7_kickstart_password: Changeme!
+centos8_iso: "CentOS-8.3.2011-x86_64-dvd1.iso"
+centos8_iso_url: "https://mirrors.xtom.com/centos/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso"
+centos8_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
+centos8_kickstart_password: Changeme!
+

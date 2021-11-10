@@ -1,0 +1,68 @@
+all:
+  hosts:
+  vars:
+    lab_name: lab_template
+    lab_prefix: "{{ lab_name }}_"
+    lab_netmask: 255.255.255.0
+    lab_password: P@ssw0rd
+    lab_vm_datastore: lab_template
+    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "lab_template_net1"
+    lab_lan2_portgroup: "lab_template_net2"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.11"
+    lab_domain_name:   "lab.local"
+    # lab_domain_controller: "dc01"
+  children:
+    # pfsense:
+    #   hosts:
+    #     gateway:
+    #       vm_network_wan: "{{lab_wan_portgroup}}"
+    #       vm_network_lan: "{{lab_lan1_portgroup}}"
+    #       config_xml_file: "files/pfsense/config.xml"
+    # dc:
+    #   hosts:
+    #     dc01:
+    #       version: "Server2019eval"
+    #       ip_address: 192.168.0.11     
+    centos:
+      vars:
+        vm_memory_mb: 2048
+        vm_num_cpus: 2
+        vm_disk_gb: 40 
+        install_xrdp: true
+      hosts:
+        # centos7-1:
+        #   ip_address: 192.168.0.171
+        #   version: "CentOS7"
+        centos7-3:
+          ip_address: 192.168.0.173
+          version: "CentOS7"
+          install_ansible: true
+          extra_commands:
+            # Install Docker-CE
+            - "yum install -y epel-release"
+            - "yum remove -y python-docker-py docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine"
+            - "yum-config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+            - "yum install -y docker-ce docker-ce-cli containerd.io"
+            - "systemctl enable docker --now"
+        # centos8-1:
+        #   ip_address: 192.168.0.181
+        #   version: "CentOS8"
+        #   install_ansible: true
+        centos8-3:
+          ip_address: 192.168.0.183
+          version: "CentOS8"
+          extra_commands:
+            # Install Docker-CE
+            - "dnf install -y epel-release"
+            - "dnf remove -y python-docker-py docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine"
+            - "dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+            - "dnf install -y docker-ce docker-ce-cli containerd.io"
+            - "systemctl enable docker --now"
+
+
+
+
