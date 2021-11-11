@@ -20,14 +20,14 @@
 
 - name: Check althernate ovf_file location
   stat: 
-    path: "{{playbook_dir}}/files/{{ontap_version}}_DataONTAPv-esx-standalone-eval-nodar.ova'"
+    path: "{{playbook_dir}}/files/{{ontap_version}}_DataONTAPv-esx-standalone-eval-nodar.ova"
   delegate_to: localhost
   register: ovf_playbook_dir
   when: not ovf_location.stat.exists
 
 - name: select ovf_file
   set_fact: 
-    ovf_file: "{{playbook_dir}}/files/{{ontap_version}}_DataONTAPv-esx-standalone-eval-nodar.ova'"
+    ovf_file: "{{playbook_dir}}/files/{{ontap_version}}_DataONTAPv-esx-standalone-eval-nodar.ova"
   when:
     - not ovf_location.stat.exists
     - ovf_playbook_dir.stat.exists

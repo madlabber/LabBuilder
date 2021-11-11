@@ -421,6 +421,7 @@
     - "pip3 install pyvmomi"
     - "pip3 install pywinrm"
     - "pip3 install pycdlib" 
+  when: install_ansible|default(false)
 
 - name: Run extra shell command via vm_shell
   community.vmware.vmware_vm_shell:
