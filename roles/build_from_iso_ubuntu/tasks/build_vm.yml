@@ -9,36 +9,22 @@
     vm_hostname:     "{{vm_hostname     | default('centosvm') }}"
     vm_name:         "{{vm_name         | default('centosvm') }}"
     vm_eth_name:     "{{vm_eth_name     | default('ens32') }}"
-    vm_password_old: "{{kickstart_password | default('Changeme!') }}"
-    vm_password_new: "{{vm_password_new | default('P@ssw0rd') }}"
-    config_iso:      "{{vm_name}}-ks.iso"
-
-- name: set centos7 facts
-  set_fact:
-    dnf_or_yum: "yum"
-    install_iso:        "{{ install_iso | default( centos7_iso ) }}"
-    install_iso_url:    "{{ install_iso_url | default( centos7_iso_url ) }}"
-    kickstart_file:     "{{ kickstart_file | default( centos7_kickstart_file | default( role_path + '/files/CentOS7/ks.cfg' )) }}"
-    kickstart_password: "{{ kickstart_password | default( centos7_kickstart_password | default('Changeme!')) }}"
-  when: version|lower == "centos7"
-
-- name: set centos8 facts
-  set_fact:
-    dnf_or_yum: "dnf"
-    install_iso:        "{{ install_iso | default( centos8_iso ) }}"
-    install_iso_url:    "{{ install_iso_url | default( centos8_iso_url ) }}"
-    kickstart_file:     "{{ kickstart_file | default( centos8_kickstart_file | default( role_path + '/files/CentOS8/ks.cfg' )) }}"
-    kickstart_password: "{{ kickstart_password | default( centos8_kickstart_password | default('Changeme!')) }}"
-  when: version|lower == "centos8"
+    vm_username:     "ubuntu"
+    # vm_password:     "P@ssw0rd2"
+    vm_password_old: "ubuntu" #"{{cloudinit_password | default('Changeme!') }}"
+    vm_password:     "{{ vm_password | default('P@ssw0rd') }}"
+    config_iso:      "{{ vm_name }}-seed.iso"
+    dnf_or_yum:      "yum"
 
 - name: Create kickstart ISO
   community.general.iso_create:
+    dest_iso: "{{ role_path }}/files/{{config_iso}}"    
     src_files:
-      - "{{kickstart_file}}"
-    dest_iso: "{{ role_path }}/files/{{config_iso}}"
-    interchange_level: 3
+      - "{{ cloudinit_userdata }}"
+      - "{{ cloudinit_metadata }}"
+    interchange_level: 4
     joliet: 3
-    vol_ident: OEMDRV
+    vol_ident: cidata
   delegate_to: localhost
 
 - name: Copy kickstart iso to datastore
@@ -53,6 +39,34 @@
     path: "{{config_iso}}"
   delegate_to: localhost
   ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
+
+- name: Check if install ISO exists
+  community.vmware.vsphere_file:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no
+    datacenter: "{{vcenter_datacenter}}"
+    datastore: "{{ iso_datastore }}"
+    path: "{{ install_iso }}"
+    state: file
+  register: install_iso_exists
+  delegate_to: localhost
+  ignore_errors: true 
+
+- name: Copy install iso to datastore
+  community.vmware.vsphere_copy:
+    hostname:   "{{ vcenter_address }}"
+    username:   "{{ vcenter_username }}"
+    password:   "{{ vcenter_password }}"
+    validate_certs: no 
+    src:        "{{ role_path }}/files/{{install_iso}}"
+    datacenter: "{{ vcenter_datacenter}}"
+    datastore:  "{{ iso_datastore }}"
+    path:       "{{ install_iso }}"
+  delegate_to: localhost
+  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
+  when: install_iso_exists.failed
 
 - name: Check if install ISO exists
   community.vmware.vsphere_file:
@@ -204,18 +218,18 @@
   delegate_to: localhost
   register: powerstate
 
-- name: Wait for 30 seconds for menu
-  wait_for: timeout=30
+- name: Wait for 120 seconds for cloudinit
+  wait_for: timeout=120
   delegate_to: localhost
 
-- name: press I
+- name: type yes
   community.vmware.vmware_guest_sendkey:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'     
     validate_certs: no 
     name: "{{ vm_name }}"
-    string_send: "i"
+    string_send: "yes"
   delegate_to: localhost
 
 - name: press enter
@@ -241,17 +255,21 @@
   register: result           
   until: result is succeeded
 
-- name: Set root Passwd
+- name: Wait for 15 minutes for cloudinit
+  wait_for: timeout=900
+  delegate_to: localhost
+
+- name: Set ubuntu Passwd
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'    
     validate_certs: no 
-    vm_username: "root"
+    vm_username: "{{ vm_username }}"
     vm_password: '{{ vm_password_old }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
-    vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin root\""
+    vm_shell_args: "-c \"echo -e '{{vm_password_old}}\n{{vm_password}}\n{{vm_password}}' | passwd \""
     wait_for_process: true
   delegate_to: localhost
   ignore_errors: yes   
@@ -262,8 +280,8 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'   
     validate_certs: no 
-    vm_username: "{{ vm_username | default('root') }}"
-    vm_password: '{{ vm_password_new }}'
+    vm_username: "{{ vm_username }}"
+    vm_password: '{{ vm_password }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"[ $(hostname) == {{ vm_hostname }}.{{ vm_domain }} ]\""
@@ -272,106 +290,13 @@
   delegate_to: localhost 
   ignore_errors: true 
 
-- name: Run shell command via vm_shell
+- name: Configure network with nmcli
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'   
     validate_certs: no 
-    vm_username: "root"
-    vm_password: '{{ vm_password_new }}'
-    vm_id: '{{ vm_name }}'
-    vm_shell: '/usr/bin/sh'
-    vm_shell_args: "{{item}}"
-    wait_for_process: true
-  delegate_to: localhost  
-  retries: 3
-  delay: 5
-  register: result           
-  until: result is succeeded
-  loop:
-    - "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
-    - "-c \"hostnamectl set-hostname {{ vm_hostname }}.{{ vm_domain }}\""
-    - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.address {{vm_address}}/{{vm_netmask_cidr}} IPv4.gateway {{vm_gateway}} IPv4.method manual\""
-    - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.dns {{vm_dns_server}}\""
-
-- name: Check selinux
-  community.vmware.vmware_vm_shell:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
-    vm_username: "root"
-    vm_password: '{{ vm_password_new }}'
-    vm_id: '{{ vm_name }}'
-    vm_shell: '/usr/bin/sh'
-    vm_shell_args: " -c \"[ $(cat /etc/selinux/config | grep ^SELINUX=) == SELINUX=disabled ]\""
-    wait_for_process: true
-  register: checkselinux
-  delegate_to: localhost 
-  ignore_errors: true 
-
-- name: Disable SELinux
-  community.vmware.vmware_vm_shell:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
-    vm_username: "root"
-    vm_password: '{{ vm_password_new }}'
-    vm_id: '{{ vm_name }}'
-    vm_shell: '/usr/bin/sh'
-    vm_shell_args: " -c \"{{item}}\""
-    wait_for_process: true
-  delegate_to: localhost
-  when: checkselinux is failed  
-  loop:
-    - "sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config"
-    - "sed -i 's/SELINUX=permissive/SELINUX=disabled/' /etc/selinux/config" 
-
-- name: reboot guest
-  block:
-  - name: Reboot-Guest
-    community.vmware.vmware_guest_powerstate:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no  
-      name: '{{ vm_name }}'
-      state: reboot-guest
-    delegate_to: localhost
-    register: deploy
-
-  - name: Wait for 30 seconds
-    wait_for: timeout=30
-    delegate_to: localhost
-
-  - name: Wait for VMware tools to become available by name
-    community.vmware.vmware_guest_tools_wait:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'    
-      validate_certs: no 
-      name: '{{ vm_name }}'
-    delegate_to: localhost
-    retries: 3
-    delay: 15
-    register: result           
-    until: result is succeeded 
-
-  - name: Wait for 30 seconds for VMware Tools refresh
-    wait_for: timeout=30
-    delegate_to: localhost
-  when: (checkhostname is failed) or (checkselinux is failed)
-###end: reboot guest
-
-- name: Install xRDP
-  community.vmware.vmware_vm_shell:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
-    vm_username: "{{ vm_username | default('root') }}"
+    vm_username: "{{ vm_username }}"
     vm_password: '{{ vm_password }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
@@ -382,46 +307,91 @@
   delay: 5
   register: result           
   until: result is succeeded
-  ignore_errors: true 
   loop:
-    - "{{dnf_or_yum}} install -y epel-release"
-    - "{{dnf_or_yum}} install -y xrdp"
-    - "xrdp-keygen xrdp auto"
-    - "systemctl enable xrdp --now"
-    - "firewall-cmd --permanent --add-port=3389/tcp"
-    - "firewall-cmd --reload"
-  when: install_xrdp|default(false)
+    # - "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
+    - "echo {{vm_password }} | sudo -S sed -i 's/managed=false/managed=true/' /etc/NetworkManager/NetworkManager.conf"
+    - "echo {{vm_password }} | sudo -S service network-manager restart"
+    - "echo {{vm_password }} | sudo -S nmcli dev set {{vm_eth_name}} managed yes"
+    - "echo {{vm_password }} | sudo -S hostnamectl set-hostname {{ vm_hostname }}.{{ vm_domain }}"
+    - "echo {{vm_password }} | sudo -S nmcli connection modify {{vm_eth_name}} IPv4.address {{vm_address}}/{{vm_netmask_cidr}} IPv4.gateway {{vm_gateway}} IPv4.method manual"
+    - "echo {{vm_password }} | sudo -S nmcli connection modify {{vm_eth_name}} IPv4.dns {{vm_dns_server}}"
 
-- name: Install Ansible and related components
-  community.vmware.vmware_vm_shell:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
-    vm_username: "{{ vm_username | default('root') }}"
-    vm_password: '{{ vm_password }}'
-    vm_id: '{{ vm_name }}'
-    vm_shell: '/usr/bin/sh'
-    vm_shell_args: " -c \"{{item}}\""
-    wait_for_process: true
-  delegate_to: localhost  
-  retries: 3
-  delay: 5
-  register: result           
-  until: result is succeeded
-  ignore_errors: true 
-  loop:
-    - "{{dnf_or_yum}} install -y epel-release"
-    - "{{dnf_or_yum}} install -y ansible"
-    - "{{dnf_or_yum}} install -y python3-pip"
-    - "{{dnf_or_yum}} install -y python3-devel"
-    - "{{dnf_or_yum}} groupinstall -y 'development tools'"
-    - "pip3 install --upgrade pip"
-    - "pip3 install netapp-lib"
-    - "pip3 install pyvmomi"
-    - "pip3 install pywinrm"
-    - "pip3 install pycdlib" 
-  when: install_ansible|default(false)
+#   - name: Wait for VMware tools to become available by name
+#     community.vmware.vmware_guest_tools_wait:
+#       hostname: '{{ vcenter_address }}'
+#       username: '{{ vcenter_username }}'
+#       password: '{{ vcenter_password }}'    
+#       validate_certs: no 
+#       name: '{{ vm_name }}'
+#     delegate_to: localhost
+#     retries: 3
+#     delay: 15
+#     register: result           
+#     until: result is succeeded 
+
+#   - name: Wait for 30 seconds for VMware Tools refresh
+#     wait_for: timeout=30
+#     delegate_to: localhost
+#   when: (checkhostname is failed) or (checkselinux is failed)
+# ###end: reboot guest
+
+# - name: Install xRDP
+#   community.vmware.vmware_vm_shell:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}'   
+#     validate_certs: no 
+#     vm_username: "{{ vm_username | default('root') }}"
+#     vm_password: '{{ vm_password }}'
+#     vm_id: '{{ vm_name }}'
+#     vm_shell: '/usr/bin/sh'
+#     vm_shell_args: " -c \"{{item}}\""
+#     wait_for_process: true
+#   delegate_to: localhost  
+#   retries: 3
+#   delay: 5
+#   register: result           
+#   until: result is succeeded
+#   ignore_errors: true 
+#   loop:
+#     - "{{dnf_or_yum}} install -y epel-release"
+#     - "{{dnf_or_yum}} install -y xrdp"
+#     - "xrdp-keygen xrdp auto"
+#     - "systemctl enable xrdp --now"
+#     - "firewall-cmd --permanent --add-port=3389/tcp"
+#     - "firewall-cmd --reload"
+#   when: install_xrdp|default(false)
+
+# - name: Install Ansible and related components
+#   community.vmware.vmware_vm_shell:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}'   
+#     validate_certs: no 
+#     vm_username: "{{ vm_username | default('root') }}"
+#     vm_password: '{{ vm_password }}'
+#     vm_id: '{{ vm_name }}'
+#     vm_shell: '/usr/bin/sh'
+#     vm_shell_args: " -c \"{{item}}\""
+#     wait_for_process: true
+#   delegate_to: localhost  
+#   retries: 3
+#   delay: 5
+#   register: result           
+#   until: result is succeeded
+#   ignore_errors: true 
+#   loop:
+#     - "{{dnf_or_yum}} install -y epel-release"
+#     - "{{dnf_or_yum}} install -y ansible"
+#     - "{{dnf_or_yum}} install -y python3-pip"
+#     - "{{dnf_or_yum}} install -y python3-devel"
+#     - "{{dnf_or_yum}} groupinstall -y 'development tools'"
+#     - "pip3 install --upgrade pip"
+#     - "pip3 install netapp-lib"
+#     - "pip3 install pyvmomi"
+#     - "pip3 install pywinrm"
+#     - "pip3 install pycdlib" 
+#   when: install_ansible|default(false)
 
 - name: Run extra shell command via vm_shell
   community.vmware.vmware_vm_shell:

@@ -63,23 +63,23 @@ all:
         #   serial_ports: true
         #   partner_serial_ports: true
 
-        demo2-01:  
-          partner:      "demo2-02"
-          cluster_name: "demo2"          
-          ovf_version:  "9.9.1"   
-          cluster_mgmt_ip: 192.168.126.80                  
-          ip_address:      192.168.126.81
-          partner_ip:      192.168.126.82
-          disk_model: "vscsi"
-          shelf0_disk_size: 12288
-          shelf0_disk_count: 6
-          shelf1_disk_size: 12288
-          shelf1_disk_count: 6
-          fake_ssd_disk_size: 12288
-          adp_enabled: "true"
-          adpv2_enabled: "true"
-          serial_ports: true
-          partner_serial_ports: true
+        # demo2-01:  
+        #   partner:      "demo2-02"
+        #   cluster_name: "demo2"          
+        #   ovf_version:  "9.9.1"   
+        #   cluster_mgmt_ip: 192.168.126.80                  
+        #   ip_address:      192.168.126.81
+        #   partner_ip:      192.168.126.82
+        #   disk_model: "vscsi"
+        #   shelf0_disk_size: 12288
+        #   shelf0_disk_count: 6
+        #   shelf1_disk_size: 12288
+        #   shelf1_disk_count: 6
+        #   fake_ssd_disk_size: 12288
+        #   adp_enabled: "true"
+        #   adpv2_enabled: "true"
+        #   serial_ports: true
+        #   partner_serial_ports: true
 
           # bootargs:
           # - "testarg=true"
