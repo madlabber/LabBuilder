@@ -19,7 +19,7 @@
       vars:
         vm_name:         "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_datastore:    "{{lab_vm_datastore}}"
-        vm_password_new: "{{lab_password}}"   
+        vm_password_new: "{{lab_password}}"
 
 - name: Build DC
   hosts: dc
@@ -70,7 +70,7 @@
     loop:
       # Add vCenter DNS record
       - "Add-DnsServerResourceRecordA -Name {{inventory_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{ip_address}} -TimeToLive 01:00:00"
-    when: lab_domain_controller|default("") != "" 
+    when: lab_domain_controller|default("") != ""
 
 # Build vCenter Server(s)
 - name: Build vCenter
@@ -80,7 +80,7 @@
     - vars/main.yml
   roles:
     - role: deploy_ovf_vcenter
-      vars: 
+      vars:
         #ovf_file: "{{ova_location}}/{{vcenter_ova}}"
         vm_name: "{{ lab_prefix | default('') }}{{inventory_hostname}}"
         vm_datastore: '{{ lab_vm_datastore }}'
@@ -133,7 +133,7 @@
   roles:
     - role: build_from_iso_windows
       vars:
-        vm_name: "{{lab_prefix default('')}}{{inventory_hostname}}"
+        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_datastore: "{{lab_vm_datastore}}"
         vm_network: "{{lab_lan1_portgroup}}"
         vm_password_new: "{{lab_password}}"
@@ -187,7 +187,7 @@
         vm_password: '{{lab_password}}'
 
 - name: Build ONTAP Simulator from OVA
-  hosts: vsims 
+  hosts: vsims
   strategy: free
   gather_facts: false
   vars_files:
@@ -196,15 +196,15 @@
     - set_fact:
         partner_name: "{{ lab_name }}_{{ partner }}"
       when: partner|default("") != ""
-    - include_role: 
+    - include_role:
         name: deploy_ovf_vsim
       vars:
         vm_name:         "{{ lab_name }}_{{ inventory_hostname }}"
-        vm_datastore:    "{{ lab_vm_datastore }}"  
+        vm_datastore:    "{{ lab_vm_datastore }}"
         data_network:    "{{ lab_lan1_portgroup }}"
-        cluster_network: "{{ lab_lan2_portgroup | default(lab_lan1_portgroup) }}"     
+        cluster_network: "{{ lab_lan2_portgroup | default(lab_lan1_portgroup) }}"
         # node setup vars
-        ontap_node_mgmt_ip: "{{ ip_address }}"                         
+        ontap_node_mgmt_ip: "{{ ip_address }}"
         ontap_netmask:      "{{ lab_lan1_netmask }}"
         ontap_gateway:      "{{ lab_lan1_gateway }}"
         # cluster setup vars
@@ -219,13 +219,13 @@
   hosts: ontapselecteval
   gather_facts: false
   vars_files:
-    - vars/main.yml  
+    - vars/main.yml
   roles:
     - role: deploy_ovf_ontapselecteval
       vars:
         vm_name:               "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_datastore:          "{{lab_vm_datastore}}"
-        vm_network:            "{{lab_lan1_portgroup}}"        
+        vm_network:            "{{lab_lan1_portgroup}}"
         ontap_netmask:         "{{lab_lan1_netmask}}"
         ontap_gateway:         "{{lab_lan1_gateway}}"
         ontap_password:        "{{lab_password |default('netapp123')}}"
@@ -239,13 +239,13 @@
     - role: deploy_ovf_storagegrid
       vars:
         vm_name:               "{{lab_prefix | default('')}}{{inventory_hostname}}"
-        ovf_hostname:          "{{inventory_hostname}}"        
+        ovf_hostname:          "{{inventory_hostname}}"
         vm_datastore:          "{{lab_vm_datastore}}"
-        grid_network_name:     "{{lab_lan1_portgroup}}"        
+        grid_network_name:     "{{lab_lan1_portgroup}}"
         grid_network_config:   "STATIC" # "STATIC", "DHCP"
         grid_network_ip:       "{{ip_address}}"
         grid_network_mask:     "{{lab_lan1_netmask}}"
-        grid_network_gateway:  "{{lab_lan1_gateway}}"        
+        grid_network_gateway:  "{{lab_lan1_gateway}}"
   vars_files:
     - vars/main.yml
 
@@ -255,14 +255,14 @@
   vars_files:
     - vars/main.yml
   tasks:
-  - include_role: 
+  - include_role:
       name: deploy_ovf_aiqum
     vars:
-      # ovf_file: "files/AIQUM/ActiveIQUnifiedManager-9.9.ova"          
+      # ovf_file: "files/AIQUM/ActiveIQUnifiedManager-9.9.ova"
       vm_name:          "{{lab_prefix | default('')}}{{inventory_hostname}}"
       vm_fqdn:          "{{inventory_hostname}}.{{lab_domain_name}}"
       vm_username:      "admin"
-      vm_password:      "{{lab_password |default('netapp123')}}"    
+      vm_password:      "{{lab_password |default('netapp123')}}"
       vm_datastore:     "{{lab_vm_datastore}}"
       vm_network:       "{{lab_lan1_portgroup}}"
       vm_address:       "{{ip_address}}"
