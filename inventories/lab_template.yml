@@ -15,13 +15,13 @@ all:
     lab_domain_name:   "lab.local"
     lab_domain_controller: "dc01"
   children:
-    # pfsense:
-    #   hosts:
-    #     gateway:
-    #       #ip_address: 192.168.0.1
-    #       vm_network_wan: "{{lab_wan_portgroup}}"
-    #       vm_network_lan: "{{lab_lan1_portgroup}}"
-    #       config_xml_file: "files/pfsense/config.xml"
+    pfsense:
+      hosts:
+        gateway:
+          #ip_address: 192.168.0.1
+          vm_network_wan: "{{lab_wan_portgroup}}"
+          vm_network_lan: "{{lab_lan1_portgroup}}"
+          config_xml_file: "files/pfsense/config.xml"
     dc:
       hosts:
         dc01:

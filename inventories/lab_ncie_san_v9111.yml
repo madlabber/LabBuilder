@@ -1,7 +1,7 @@
 all:
   hosts:
   vars:
-    lab_name: lab_ncie_san_v991
+    lab_name: lab_ncie_san_v9111
     lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
@@ -59,7 +59,7 @@ all:
         cluster1-01:
           partner:      "cluster1-02"
           cluster_name: "cluster1"
-          ovf_version:  "9.9.1"
+          ovf_version:  "9.11.1X12"
           cluster_mgmt_ip: 192.168.0.90
           ip_address:      192.168.0.91
           partner_ip:      192.168.0.92
@@ -72,7 +72,7 @@ all:
           adp_enabled: "true"
         cluster1-03:
           partner:      "cluster1-04"
-          ovf_version:  "9.9.1"
+          ovf_version:  "9.11.1X12"
           ip_address:      192.168.0.93
           partner_ip:      192.168.0.94
           disk_model: "vscsi"
@@ -85,7 +85,7 @@ all:
         # Cluster2 will be a single node cluster
         cluster2-01:
           cluster_name: "cluster2"
-          ovf_version:  "9.9.1"
+          ovf_version:  "9.11.1X12"
           cluster_mgmt_ip: 192.168.0.80
           ip_address:      192.168.0.81
           disk_model: "vscsi"
