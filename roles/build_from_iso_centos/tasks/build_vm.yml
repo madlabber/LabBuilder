@@ -31,6 +31,15 @@
     kickstart_password: "{{ kickstart_password | default( centos8_kickstart_password | default('Changeme!')) }}"
   when: version|lower == "centos8"
 
+- name: set rocky8 facts
+  set_fact:
+    dnf_or_yum: "dnf"
+    install_iso:        "{{ install_iso | default( rocky8_iso ) }}"
+    install_iso_url:    "{{ install_iso_url | default( rocky8_iso_url ) }}"
+    kickstart_file:     "{{ kickstart_file | default( centos8_kickstart_file | default( role_path + '/files/rocky8/ks.cfg' )) }}"
+    kickstart_password: "{{ kickstart_password | default( rocky8_kickstart_password | default('Changeme!')) }}"
+  when: version|lower == "rocky8"
+
 - name: Create kickstart ISO
   community.general.iso_create:
     src_files:
@@ -364,6 +373,31 @@
     delegate_to: localhost
   when: (checkhostname is failed) or (checkselinux is failed)
 ###end: reboot guest
+
+- name: CentOS 8 defibrilator
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "{{ vm_username | default('root') }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"{{item}}\""
+    wait_for_process: true
+  delegate_to: localhost  
+  retries: 3
+  delay: 5
+  register: result           
+  until: result is succeeded
+  ignore_errors: true 
+  loop:
+    - "sed -i -e 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*"
+    - "sed -i -e 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*"
+  when: version|lower == "centos8"
+
+
 
 - name: Install xRDP
   community.vmware.vmware_vm_shell:

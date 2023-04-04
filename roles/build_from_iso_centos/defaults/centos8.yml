@@ -1,4 +1,0 @@
-install_iso: "CentOS-8.3.2011-x86_64-dvd1.iso"
-install_iso_url: "https://mirrors.xtom.com/centos/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso"
-kickstart_file: "files/CentOS8/ks.cfg"
-kickstart_password: Changeme!
