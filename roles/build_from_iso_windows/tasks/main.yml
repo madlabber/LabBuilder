@@ -150,6 +150,7 @@
   delegate_to: localhost
   when: tsm_service.changed
 
+- debug: msg="vm_network - {{ vm_network }}" 
 - name: Create VM
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'

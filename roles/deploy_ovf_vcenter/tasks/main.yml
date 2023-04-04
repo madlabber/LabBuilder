@@ -30,6 +30,7 @@
       guestinfo.cis.appliance.root.passwd: '{{ vm_password }}' 
 #      guestinfo.cis.deployment.autoconfig: 'True' # Auto-configure after deployment
       guestinfo.cis.vmdir.password: '{{ vm_password }}' # SSO Password for administrator@vsphere.local
+#      guestinfo.cis.upgrade.import.directory: "/storage/seat/cis-export-folder" #FIX for VCSA 8.0
       domain: '{{ vm_domain }}'
       searchpath: '{{ searchpath }}'
   delegate_to: localhost
@@ -99,6 +100,7 @@
       guestinfo.cis.deployment.autoconfig: '{{vm_autoconfig|string}}' # Auto-configure after deployment
       guestinfo.cis.vmdir.password: '{{ vm_password }}' # SSO Password for administrator@vsphere.local
       guestinfo.cis.appliance.ssh.enabled: '{{vm_enable_ssh|string}}'
+      guestinfo.cis.upgrade.import.directory: "/storage/seat/cis-export-folder" #FIX for VCSA 8.0
       domain: '{{ vm_domain }}'
       searchpath: '{{ searchpath }}'
   delegate_to: localhost

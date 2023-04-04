@@ -8,7 +8,7 @@
 
 #2.5.1
 install_iso: "pfSense-CE-2.5.1-RELEASE-amd64.iso"
-install_iso_url: "http://nyifiles.netgate.com/mirror/downloads/pfSense-CE-2.5.1-RELEASE-amd64.iso.gz"
+install_iso_url: "http://atxfiles.netgate.com/mirror/downloads/pfSense-CE-2.5.1-RELEASE-amd64.iso.gz"
 
 # #2.5.2
 # install_iso: "pfSense-CE-2.5.2-RELEASE-amd64.iso"
