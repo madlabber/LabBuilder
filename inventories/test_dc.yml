@@ -14,7 +14,6 @@ all:
     lab_lan1_dns_ip: "192.168.0.11"
     lab_domain_name: "lab.local"
     lab_domain_controller: "dc01"
-    lab_dc01_ip: "192.168.0.11"
   children:
     dc:
       hosts:

@@ -103,7 +103,7 @@
     delegate_to: localhost
 
   - name: Download the Centos ISO
-    shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ install_iso_url }}'
+    shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ install_iso_url }} --no-check-certificate'
     args:
       creates: '/vmfs/volumes/{{ iso_datastore }}/{{ install_iso }}'
     delegate_to: '{{ esxi_address }}'
