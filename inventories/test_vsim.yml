@@ -32,11 +32,11 @@ all:
           shelf1_disk_count: 12
           fake_ssd_disk_size: 12288
           adp_enabled: "true"
-          bootargs:
-            - "testarg=true"
-            - "testarg2=true"
+        #   bootargs:
+        #     - "testarg=true"
+        #     - "testarg2=true"
         # vha7-01:  
-        #   ovf_version: "9.11.1"           
+        #   ovf_version: "9.12.1"           
         #   ip_address:    192.168.0.141
         #   cluster_name:    "demo2"
         #   cluster_mgmt_ip: 192.168.0.140

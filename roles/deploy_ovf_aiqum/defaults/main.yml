@@ -8,7 +8,7 @@
 # vcenter_cluster: "Cluster"
 
 ## ovf_file information
-ovf_version: "9.9"
+ovf_version: "9.12"
 ovf_file: "{{role_path}}/files/ActiveIQUnifiedManager-{{ovf_version}}.ova"
 
 ## VM configuration
