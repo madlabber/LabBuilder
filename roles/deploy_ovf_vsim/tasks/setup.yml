@@ -175,6 +175,8 @@
     loop_control:
       pause: 5
     loop: 
+      - "security login unlock diag"
+      - "" #ENTER
       - "set diag -confirmations off" # cluster mgmt port
       - "" #ENTER
       - "systemshell local bash"

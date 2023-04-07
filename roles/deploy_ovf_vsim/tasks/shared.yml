@@ -153,7 +153,7 @@
         pipe_name: '\\.\pipe\{{ node1_name }}_com2'
         endpoint: 'client'
   when: 
-    - serial_ports|default(false) is true
+    - serial_ports|default(false)
 
 # Create serial ports
 - name: Create multiple serial ports with Backing type - network, pipe, device and file
@@ -179,7 +179,7 @@
         pipe_name: '\\.\pipe\{{ node2_name}}_com2'
         endpoint: 'client'
   when: 
-    - partner_serial_ports|default(false) is true
+    - partner_serial_ports|default(false)
 
 # Create serial ports
 - name: Create multiple serial ports with Backing type - network, pipe, device and file

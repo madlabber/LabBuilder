@@ -59,7 +59,7 @@
         pipe_name: '\\.\pipe\{{ vm_name}}_com2'
         endpoint: 'client'
   when: 
-    - serial_ports|default(false) is true
+    - serial_ports|default(false)
 
 # Create serial ports
 - name: Create multiple serial ports with Backing type - network, pipe, device and file
