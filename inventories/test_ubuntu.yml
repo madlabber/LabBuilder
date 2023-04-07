@@ -1,35 +1,23 @@
 all:
   hosts:
   vars:
-    lab_name: lab_template
+    lab_name: lab_test
     lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
-    lab_vm_datastore: lab_template
+    lab_vm_datastore: "datastore1"
     lab_wan_portgroup: "VM Network"
-    lab_lan1_portgroup: "lab_template_net1"
-    lab_lan2_portgroup: "lab_template_net2"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
     lab_lan1_dns_ip: "192.168.0.11"
-    lab_domain_name:   "lab.local"
-    # lab_domain_controller: "dc01"
-  children:
-    # pfsense:
-    #   hosts:
-    #     gateway:
-    #       vm_network_wan: "{{lab_wan_portgroup}}"
-    #       vm_network_lan: "{{lab_lan1_portgroup}}"
-    #       config_xml_file: "files/pfsense/config.xml"
-    # dc:
-    #   hosts:
-    #     dc01:
-    #       version: "Server2019eval"
-    #       ip_address: 192.168.0.11     
+    lab_domain_name: "lab.local"
+    #lab_domain_controller: "dc01"
+  children: 
     ubuntu:
       vars:
-        vm_memory_mb: 2048
+        vm_memory_mb: 4096
         vm_num_cpus: 2
         vm_disk_gb: 40 
         install_xrdp: true

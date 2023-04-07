@@ -117,7 +117,7 @@
     delegate_to: localhost
 
   - name: Download the Centos ISO
-    shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ install_iso_url }}'
+    shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ install_iso_url }} --no-check-certificate'
     args:
       creates: '/vmfs/volumes/{{ iso_datastore }}/{{ install_iso }}'
     delegate_to: '{{ esxi_address }}'
@@ -159,7 +159,7 @@
     folder: /
     name: '{{ vm_name }}'
     state: present
-    guest_id: centos7_64Guest
+    guest_id: ubuntu64Guest
     cdrom:
         - controller_number: 0
           unit_number: 0
@@ -255,8 +255,8 @@
   register: result           
   until: result is succeeded
 
-- name: Wait for 15 minutes for cloudinit
-  wait_for: timeout=900
+- name: Wait for 10 minutes for cloudinit
+  wait_for: timeout=600
   delegate_to: localhost
 
 - name: Set ubuntu Passwd
@@ -269,10 +269,26 @@
     vm_password: '{{ vm_password_old }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
-    vm_shell_args: "-c \"echo -e '{{vm_password_old}}\n{{vm_password}}\n{{vm_password}}' | passwd \""
+    vm_shell_args: " -c \"echo {{vm_password_old }} | sudo -S echo -e '{{vm_password_old}}\n{{vm_password}}\n{{vm_password}}' | passwd \""
     wait_for_process: true
   delegate_to: localhost
   ignore_errors: yes   
+
+- name: Verify password
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "{{ vm_username }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"echo {{vm_password }} | sudo -S ls\""
+    wait_for_process: true
+  register: verifypassword
+  delegate_to: localhost 
+  ignore_errors: false
 
 - name: Check Hostname
   community.vmware.vmware_vm_shell:
@@ -284,7 +300,7 @@
     vm_password: '{{ vm_password }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
-    vm_shell_args: " -c \"[ $(hostname) == {{ vm_hostname }}.{{ vm_domain }} ]\""
+    vm_shell_args: " -c \"echo {{vm_password }} | sudo -S [ $(hostname) == {{ vm_hostname }}.{{ vm_domain }} ]\""
     wait_for_process: true
   register: checkhostname
   delegate_to: localhost 
@@ -300,7 +316,7 @@
     vm_password: '{{ vm_password }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
-    vm_shell_args: " -c \"{{item}}\""
+    vm_shell_args: " -c \"echo {{ vm_password }} | sudo -S {{item}}\""
     wait_for_process: true
   delegate_to: localhost  
   retries: 3
@@ -309,89 +325,93 @@
   until: result is succeeded
   loop:
     # - "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
-    - "echo {{vm_password }} | sudo -S sed -i 's/managed=false/managed=true/' /etc/NetworkManager/NetworkManager.conf"
-    - "echo {{vm_password }} | sudo -S service network-manager restart"
-    - "echo {{vm_password }} | sudo -S nmcli dev set {{vm_eth_name}} managed yes"
-    - "echo {{vm_password }} | sudo -S hostnamectl set-hostname {{ vm_hostname }}.{{ vm_domain }}"
-    - "echo {{vm_password }} | sudo -S nmcli connection modify {{vm_eth_name}} IPv4.address {{vm_address}}/{{vm_netmask_cidr}} IPv4.gateway {{vm_gateway}} IPv4.method manual"
-    - "echo {{vm_password }} | sudo -S nmcli connection modify {{vm_eth_name}} IPv4.dns {{vm_dns_server}}"
+    - "apt install net-tools"
+    - "sed -i 's/managed=false/managed=true/' /etc/NetworkManager/NetworkManager.conf"
+    - "sed -i '/renderer/d' /etc/netplan/00-installer-config.yaml"
+    - "sed -i '3 i \\  renderer: NetworkManager' /etc/netplan/00-installer-config.yaml"    
+    - "netplan apply"
+    - "service network-manager restart"
+    - "nmcli dev set {{vm_eth_name}} managed yes"
+    - "nmcli connection add type ethernet ifname {{vm_eth_name}} con-name {{vm_eth_name}}"    
+    - "hostnamectl set-hostname {{ vm_hostname }}.{{ vm_domain }}"
+    - "nmcli connection modify {{vm_eth_name}} IPv4.address {{vm_address}}/{{vm_netmask_cidr}} IPv4.gateway {{vm_gateway}} IPv4.method manual"
+    - "nmcli connection modify {{vm_eth_name}} IPv4.dns {{vm_dns_server}}"
+    - "nmcli connection up {{vm_eth_name}}"
+    - "nmcli connection delete netplan-{{vm_eth_name}}"
 
-#   - name: Wait for VMware tools to become available by name
-#     community.vmware.vmware_guest_tools_wait:
-#       hostname: '{{ vcenter_address }}'
-#       username: '{{ vcenter_username }}'
-#       password: '{{ vcenter_password }}'    
-#       validate_certs: no 
-#       name: '{{ vm_name }}'
-#     delegate_to: localhost
-#     retries: 3
-#     delay: 15
-#     register: result           
-#     until: result is succeeded 
 
-#   - name: Wait for 30 seconds for VMware Tools refresh
-#     wait_for: timeout=30
-#     delegate_to: localhost
-#   when: (checkhostname is failed) or (checkselinux is failed)
-# ###end: reboot guest
+- name: Wait for VMware tools to become available by name
+  community.vmware.vmware_guest_tools_wait:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  retries: 3
+  delay: 15
+  register: result           
+  until: result is succeeded 
 
-# - name: Install xRDP
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'   
-#     validate_certs: no 
-#     vm_username: "{{ vm_username | default('root') }}"
-#     vm_password: '{{ vm_password }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: " -c \"{{item}}\""
-#     wait_for_process: true
-#   delegate_to: localhost  
-#   retries: 3
-#   delay: 5
-#   register: result           
-#   until: result is succeeded
-#   ignore_errors: true 
-#   loop:
-#     - "{{dnf_or_yum}} install -y epel-release"
-#     - "{{dnf_or_yum}} install -y xrdp"
-#     - "xrdp-keygen xrdp auto"
-#     - "systemctl enable xrdp --now"
-#     - "firewall-cmd --permanent --add-port=3389/tcp"
-#     - "firewall-cmd --reload"
-#   when: install_xrdp|default(false)
+- name: Wait for 30 seconds for VMware Tools refresh
+  wait_for: timeout=30
+  delegate_to: localhost
+  when: (checkhostname is failed) or (checkselinux is failed)
+###end: reboot guest
 
-# - name: Install Ansible and related components
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'   
-#     validate_certs: no 
-#     vm_username: "{{ vm_username | default('root') }}"
-#     vm_password: '{{ vm_password }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: " -c \"{{item}}\""
-#     wait_for_process: true
-#   delegate_to: localhost  
-#   retries: 3
-#   delay: 5
-#   register: result           
-#   until: result is succeeded
-#   ignore_errors: true 
-#   loop:
-#     - "{{dnf_or_yum}} install -y epel-release"
-#     - "{{dnf_or_yum}} install -y ansible"
-#     - "{{dnf_or_yum}} install -y python3-pip"
-#     - "{{dnf_or_yum}} install -y python3-devel"
-#     - "{{dnf_or_yum}} groupinstall -y 'development tools'"
-#     - "pip3 install --upgrade pip"
-#     - "pip3 install netapp-lib"
-#     - "pip3 install pyvmomi"
-#     - "pip3 install pywinrm"
-#     - "pip3 install pycdlib" 
-#   when: install_ansible|default(false)
+- name: Install xRDP
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "{{ vm_username | default('root') }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"echo {{ vm_password }} | sudo -S {{item}}\""
+    wait_for_process: true
+  delegate_to: localhost  
+  retries: 3
+  delay: 5
+  register: result           
+  until: result is succeeded
+  ignore_errors: true 
+  loop:
+    - "apt install -y xrdp"
+    - "xrdp-keygen xrdp auto"
+    - "systemctl enable xrdp --now"
+    - "ufw allow 3389"
+  when: install_xrdp|default(false)
+
+- name: Install Ansible and related components
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "{{ vm_username | default('root') }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"{{item}}\""
+    wait_for_process: true
+  delegate_to: localhost  
+  retries: 3
+  delay: 5
+  register: result           
+  until: result is succeeded
+  ignore_errors: true 
+  loop:
+    - "echo {{ vm_password }} | sudo -S apt install -y ansible"
+    - "echo {{ vm_password }} | sudo -S apt install -y python3-pip"
+    - "echo {{ vm_password }} | sudo -S apt install -y python3-dev"
+    - "pip3 install --upgrade pip"
+    - "pip3 install netapp-lib"
+    - "pip3 install pyvmomi"
+    - "pip3 install pywinrm"
+    - "pip3 install pycdlib" 
+  when: install_ansible|default(false)
 
 - name: Run extra shell command via vm_shell
   community.vmware.vmware_vm_shell:
@@ -403,7 +423,7 @@
     vm_password: '{{ vm_password }}'
     vm_id: "{{ vm_name }}"
     vm_shell: '/usr/bin/sh'
-    vm_shell_args: " -c \"{{item}}\""
+    vm_shell_args: " -c \"echo {{ vm_password }} | sudo -S {{item}}\""
     wait_for_process: true
     timeout: 3600
   delegate_to: localhost
