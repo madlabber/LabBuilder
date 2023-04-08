@@ -30,6 +30,9 @@ iso_datastore: "ISOs"
 # Default portgroup for new VMs
 vm_network: "VM Network"
 
+# Default vswitch for new portgroups
+esxi_vswitch: "vSwitch1"
+
 # uncomment to test ESX target mode
 # vcenter_address: 192.168.123.49
 # vcenter_username: root

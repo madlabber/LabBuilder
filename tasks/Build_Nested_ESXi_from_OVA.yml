@@ -1,7 +1,7 @@
 ---
 - name: variables processing
   set_fact:
-    ovf_file: "{{ovf_file | default('files/VMware/Nested_ESXi7.0_Appliance_Template_v1.ova')}}"
+    ovf_file: "{{ovf_file | default('files/Nested_ESXi7.0_Appliance_Template_v1.ova')}}"
     ovf_url: "{{ovf_url | default('https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi7.0_Appliance_Template_v1.ova')}}"
     vm_name: "{{vm_name | default('esxvm') }}"
     vm_network: "{{vm_network | default('VM Network') }}"

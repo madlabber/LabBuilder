@@ -105,7 +105,7 @@
     - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
       vars:
         ovf_version: "{{esx_version}}" #7.0u1, 7.0, 6.7u3, 6.7u2, 6.7u1, 6.7 ... 6.0?
-        ovf_file: "files/VMware/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
+        ovf_file: "files/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
         ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
         vm_name:      "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_network:   "{{ lab_lan1_portgroup }}"
