@@ -2,6 +2,7 @@
 *.iso
 *.ova
 *.DS_Store
+vars/rhsm_secrets.yml
 files/.DS_Store
 files/CentOS8/.DS_Store
 .DS_Store

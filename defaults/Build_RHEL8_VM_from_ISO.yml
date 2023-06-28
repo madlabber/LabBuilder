@@ -1,4 +1,4 @@
-install_iso: "rhel-8.1-x86_64-dvd.iso"
-install_iso_url: "https://developers.redhat.com/download-manager/file/rhel-8.1-x86_64-dvd.iso"
-kickstart_file: "files/RHEL8/ks.cfg"
+install_iso: "rhel-8.8-x86_64-dvd.iso"
+install_iso_url: "https://developers.redhat.com/download-manager/file/rhel-8.8-x86_64-dvd.iso"
+kickstart_file: "../files/RHEL8/ks.cfg"
 kickstart_password: Changeme!

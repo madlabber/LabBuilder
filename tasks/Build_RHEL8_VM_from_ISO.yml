@@ -27,8 +27,8 @@
   community.vmware.vsphere_copy:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     src: "files/{{config_iso}}"
     datacenter: "{{vcenter_datacenter}}"
     datastore: "{{ vm_datastore }}"
@@ -40,7 +40,7 @@
   community.vmware.vsphere_file:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
+    password: '{{ vcenter_password }}'
     validate_certs: no
     datacenter: "{{vcenter_datacenter}}"
     datastore: "{{ iso_datastore }}"
@@ -48,7 +48,7 @@
     state: file
   register: install_iso_exists
   delegate_to: localhost
-  ignore_errors: true 
+  ignore_errors: true
 
 - name: If the ISO is not present have ESXi download it
   block:
@@ -64,8 +64,8 @@
     community.vmware.vmware_host_service_manager:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       esxi_hostname: '{{ esxi_hostname }}'
       service_name: TSM-SSH
       state: present
@@ -76,8 +76,8 @@
     community.vmware.vmware_host_service_manager:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'    
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       esxi_hostname: '{{ esxi_hostname }}'
       service_name: TSM
       state: present
@@ -94,8 +94,8 @@
     community.vmware.vmware_host_service_manager:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'    
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       esxi_hostname: '{{ esxi_hostname }}'
       service_name: TSM-SSH
       state: absent
@@ -106,8 +106,8 @@
     community.vmware.vmware_host_service_manager:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       esxi_hostname: '{{ esxi_hostname }}'
       service_name: TSM
       state: absent
@@ -120,10 +120,10 @@
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}' 
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     datacenter: "{{vcenter_datacenter}}"
-    cluster: '{{vcenter_cluster}}'    
+    cluster: '{{vcenter_cluster}}'
     folder: /
     name: '{{ vm_name }}'
     state: present
@@ -158,8 +158,8 @@
   community.vmware.vmware_guest_boot_manager:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no  
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ vm_name }}'
     boot_delay: 1000
     enter_bios_setup: False
@@ -179,32 +179,56 @@
   community.vmware.vmware_guest_powerstate:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'    
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ vm_name }}'
     state: powered-on
   delegate_to: localhost
   register: powerstate
+  
+- name: Wait for 30 seconds for menu
+  wait_for: timeout=30
+  delegate_to: localhost
 
-- name: Wait for VMware tools to become available 
+- name: press I
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: "{{ vm_name }}"
+    string_send: "i"
+  delegate_to: localhost
+
+- name: press enter
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: "{{ vm_name }}"
+    keys_send: ENTER
+  delegate_to: localhost
+
+- name: Wait for VMware tools to become available
   community.vmware.vmware_guest_tools_wait:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ vm_name }}'
   delegate_to: localhost
   retries: 10
   delay: 60
-  register: result           
+  register: result
   until: result is succeeded
 
 - name: Set root Passwd
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'    
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "root"
     vm_password: '{{ vm_password_old }}'
     vm_id: '{{ vm_name }}'
@@ -212,14 +236,14 @@
     vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin root\""
     wait_for_process: true
   delegate_to: localhost
-  ignore_errors: yes   
+  ignore_errors: yes
 
 - name: Check Hostname
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "root"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
@@ -227,25 +251,25 @@
     vm_shell_args: " -c \"[ $(hostname) == {{ vm_hostname }}.{{ vm_domain }} ]\""
     wait_for_process: true
   register: checkhostname
-  delegate_to: localhost 
-  ignore_errors: true 
+  delegate_to: localhost
+  ignore_errors: true
 
 - name: Run shell command via vm_shell
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "root"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: "{{item}}"
     wait_for_process: true
-  delegate_to: localhost  
+  delegate_to: localhost
   retries: 3
   delay: 5
-  register: result           
+  register: result
   until: result is succeeded
   loop:
     - "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
@@ -257,25 +281,25 @@
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "root"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"[ $(cat /etc/selinux/config | grep ^SELINUX=) == SELINUX=disabled ]\""
     wait_for_process: true
-  delegate_to: localhost  
+  delegate_to: localhost
   register: checkselinux
-  delegate_to: localhost 
-  ignore_errors: true 
+  delegate_to: localhost
+  ignore_errors: true
 
 - name: Disable SELinux
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "root"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
@@ -283,10 +307,10 @@
     vm_shell_args: " -c \"{{item}}\""
     wait_for_process: true
   delegate_to: localhost
-  when: checkselinux is failed  
+  when: checkselinux is failed
   loop:
     - "sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config"
-    - "sed -i 's/SELINUX=permissive/SELINUX=disabled/' /etc/selinux/config" 
+    - "sed -i 's/SELINUX=permissive/SELINUX=disabled/' /etc/selinux/config"
 
 - name: reboot guest
   block:
@@ -294,8 +318,8 @@
     community.vmware.vmware_guest_powerstate:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no  
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       name: '{{ vm_name }}'
       state: reboot-guest
     delegate_to: localhost
@@ -309,18 +333,17 @@
     community.vmware.vmware_guest_tools_wait:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'    
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       name: '{{ vm_name }}'
     delegate_to: localhost
     retries: 3
     delay: 15
-    register: result           
-    until: result is succeeded 
+    register: result
+    until: result is succeeded
 
   - name: Wait for 30 seconds for VMware Tools refresh
     wait_for: timeout=30
     delegate_to: localhost
   when: (checkhostname is failed) or (checkselinux is failed)
 ###end: reboot guest
-
