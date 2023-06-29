@@ -368,3 +368,87 @@
   until: result is succeeded
   loop:
     - "subscription-manager register --org {{ rhsm_orgid }} --activationkey {{ rhsm_activationkey }}"
+
+
+- name: Install xRDP
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{ vm_username | default('root') }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"{{item}}\""
+    wait_for_process: true
+  delegate_to: localhost
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop:
+    - "subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms"
+    - "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
+    - "yum install -y xrdp"
+    - "xrdp-keygen xrdp auto"
+    - "systemctl enable xrdp --now"
+    - "firewall-cmd --permanent --add-port=3389/tcp"
+    - "firewall-cmd --reload"
+  when: install_xrdp|default(false)
+
+- name: Install Ansible and related components
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{ vm_username | default('root') }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"{{item}}\""
+    wait_for_process: true
+  delegate_to: localhost
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop:
+    - "subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms"
+    - "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
+    - "yum install -y ansible"
+    - "yum install -y python3-pip"
+    - "yum install -y python3-devel"
+    - "yum groupinstall -y 'development tools'"
+    - "pip3 install --upgrade pip"
+    - "pip3 install netapp-lib"
+    - "pip3 install pyvmomi"
+    - "pip3 install pywinrm"
+    - "pip3 install pycdlib" 
+  when: install_ansible|default(false)
+
+- name: Run extra shell command via vm_shell
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{ vm_username | default('root') }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: "{{ vm_name }}"
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"{{item}}\""
+    wait_for_process: true
+    timeout: 3600
+  delegate_to: localhost
+  retries: 3
+  delay: 60
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop: "{{ extra_commands }}"
+  when:
+    - extra_commands is defined
