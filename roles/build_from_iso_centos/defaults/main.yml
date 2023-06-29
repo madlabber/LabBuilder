@@ -10,3 +10,16 @@ rocky8_iso: "Rocky-8.8-x86_64-dvd1.iso"
 rocky8_iso_url: "https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.8-x86_64-dvd1.iso"
 rocky8_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8_kickstart_password: Changeme!
+
+#Older rocky builds are moved to the vault, i.e.
+# https://dl.rockylinux.org/vault/rocky/8.7/isos/x86_64/Rocky-8.7-x86_64-dvd1.iso
+# https://dl.rockylinux.org/vault/rocky/8.6/isos/x86_64/Rocky-8.6-x86_64-dvd1.iso
+# https://dl.rockylinux.org/vault/rocky/8.5/isos/x86_64/Rocky-8.5-x86_64-dvd1.iso
+# https://dl.rockylinux.org/vault/rocky/8.4/isos/x86_64/Rocky-8.4-x86_64-dvd1.iso
+# https://dl.rockylinux.org/vault/rocky/8.3/isos/x86_64/Rocky-8.3-x86_64-dvd1.iso
+#
+#For anything older use CentOS
+# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso
+# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.2.2004/isos/x86_64/CentOS-8.2.2004-x86_64-dvd1.iso
+# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-dvd1.iso
+# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.0.1905/isos/x86_64/CentOS-8-x86_64-1905-dvd1.iso
