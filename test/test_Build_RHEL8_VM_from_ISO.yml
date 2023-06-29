@@ -9,14 +9,14 @@
     - include_vars: ../defaults/Build_RHEL8_VM_from_ISO.yml
     - include_tasks: ../tasks/Build_RHEL8_VM_from_ISO.yml
       vars:
-        vm_name: TEST_RHEL8VM6
+        vm_name: TEST_RHEL8VM5
         # vm_num_cpus: 2
         # vm_memory_mb: 3078
         # vm_disk_gb: 40
         vm_datastore: "Staging"
         vm_network: "VM Network"
         vm_password_new: P@ssw0rd
-        vm_hostname: rhel8vm6
+        vm_hostname: rhel8vm5
         vm_address: 192.168.123.196
         vm_netmask_cidr: 24
         vm_gateway: 192.168.123.1
@@ -38,3 +38,10 @@
             type: thin
           - size_gb: 200
             type: thin
+        networks:
+          - name: "{{ vm_network }}"
+            device_type: e1000
+          - name: "{{ vm_network }}"
+            device_type: e1000
+          - name: "{{ vm_network }}"
+            device_type: e1000
