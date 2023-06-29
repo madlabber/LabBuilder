@@ -153,8 +153,6 @@
           type: iso
           iso_path: '[{{ vm_datastore }}] {{config_iso}}'
     disk: '{{ disks|default(default_disks) }}'
-    # - size_gb: '{{ vm_disk_gb | default(40) }}'
-    #   type: thin
     hardware:
       memory_mb: '{{ vm_memory_mb | default(2048) }}'
       num_cpus: '{{ vm_num_cpus | default(2) }}'
@@ -358,7 +356,6 @@
   when: (checkhostname is failed) or (checkselinux is failed)
   ###end: reboot guest
 
-
 - name: Run shell command via vm_shell
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
@@ -379,7 +376,6 @@
   ignore_errors: true
   loop:
     - "subscription-manager register --org {{ rhsm_orgid }} --activationkey {{ rhsm_activationkey }}"
-
 
 - name: Install xRDP
   community.vmware.vmware_vm_shell:

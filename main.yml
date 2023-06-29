@@ -149,8 +149,11 @@
   gather_facts: false
   vars_files:
     - vars/main.yml
-  roles:
-    - role: build_from_iso_centos
+  tasks:
+    - include_vars: vars/rhsm_secrets.yml
+      ignore_errors: true
+    - include_role:
+        name: build_from_iso_centos
       vars:
         vm_hostname: "{{inventory_hostname}}"
         vm_address: "{{ip_address}}"

@@ -1,16 +1,25 @@
+# centos7
 centos7_iso: "CentOS-7-x86_64-DVD-2009.iso"
 centos7_iso_url: "http://mirror.fileplanet.com/centos/7.9.2009/isos/x86_64/CentOS-7-x86_64-DVD-2009.iso"
 centos7_kickstart_file: "{{role_path}}/files/CentOS7/ks.cfg"
 centos7_kickstart_password: Changeme!
+
+# centos8
 centos8_iso: "CentOS-8.3.2011-x86_64-dvd1.iso"
 centos8_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso"
 centos8_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
 centos8_kickstart_password: Changeme!
+#Older builds linger in old mirrors
+# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso
+# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.2.2004/isos/x86_64/CentOS-8.2.2004-x86_64-dvd1.iso
+# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-dvd1.iso
+# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.0.1905/isos/x86_64/CentOS-8-x86_64-1905-dvd1.iso
+
+# rocky8 defaults
 rocky8_iso: "Rocky-8.8-x86_64-dvd1.iso"
 rocky8_iso_url: "https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.8-x86_64-dvd1.iso"
 rocky8_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8_kickstart_password: Changeme!
-
 #Older rocky builds are moved to the vault, i.e.
 # https://dl.rockylinux.org/vault/rocky/8.7/isos/x86_64/Rocky-8.7-x86_64-dvd1.iso
 # https://dl.rockylinux.org/vault/rocky/8.6/isos/x86_64/Rocky-8.6-x86_64-dvd1.iso
@@ -19,7 +28,10 @@ rocky8_kickstart_password: Changeme!
 # https://dl.rockylinux.org/vault/rocky/8.3/isos/x86_64/Rocky-8.3-x86_64-dvd1.iso
 #
 #For anything older use CentOS
-# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso
-# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.2.2004/isos/x86_64/CentOS-8.2.2004-x86_64-dvd1.iso
-# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-dvd1.iso
-# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.0.1905/isos/x86_64/CentOS-8-x86_64-1905-dvd1.iso
+
+# rhel8
+rhel8_iso: "rhel-8.8-x86_64-dvd.iso"
+rhel8_iso_url: "https://developers.redhat.com/download-manager/file/rhel-8.8-x86_64-dvd.iso"
+rhel8_file: "{{role_path}}/files/RHEL8/ks.cfg"
+rhel8_password: Changeme!
+# note: rhel URLs rarely if ever work.  When they don't, pre-stage the ISO in the datastore

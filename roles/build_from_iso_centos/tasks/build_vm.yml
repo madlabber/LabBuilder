@@ -36,9 +36,18 @@
     dnf_or_yum: "dnf"
     install_iso:        "{{ install_iso | default( rocky8_iso ) }}"
     install_iso_url:    "{{ install_iso_url | default( rocky8_iso_url ) }}"
-    kickstart_file:     "{{ kickstart_file | default( centos8_kickstart_file | default( role_path + '/files/rocky8/ks.cfg' )) }}"
+    kickstart_file:     "{{ kickstart_file | default( rocky8_kickstart_file | default( role_path + '/files/rocky8/ks.cfg' )) }}"
     kickstart_password: "{{ kickstart_password | default( rocky8_kickstart_password | default('Changeme!')) }}"
   when: version|lower == "rocky8"
+
+- name: set rhel8 facts
+  set_fact:
+    dnf_or_yum: "dnf"
+    install_iso:        "{{ install_iso | default( rhel8_iso ) }}"
+    install_iso_url:    "{{ install_iso_url | default( rhel8_iso_url ) }}"
+    kickstart_file:     "{{ kickstart_file | default( rhel8_kickstart_file | default( role_path + '/files/rocky8/ks.cfg' )) }}"
+    kickstart_password: "{{ kickstart_password | default( rhel8_kickstart_password | default('Changeme!')) }}"
+  when: version|lower == "rhel8"
 
 - name: Create kickstart ISO
   community.general.iso_create:
@@ -54,8 +63,8 @@
   community.vmware.vsphere_copy:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     src: "{{ role_path }}/files/{{config_iso}}"
     datacenter: "{{vcenter_datacenter}}"
     datastore: "{{ vm_datastore }}"
@@ -67,7 +76,7 @@
   community.vmware.vsphere_file:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
+    password: '{{ vcenter_password }}'
     validate_certs: no
     datacenter: "{{vcenter_datacenter}}"
     datastore: "{{ iso_datastore }}"
@@ -75,7 +84,7 @@
     state: file
   register: install_iso_exists
   delegate_to: localhost
-  ignore_errors: true 
+  ignore_errors: true
 
 - name: If the ISO is not present have ESXi download it
   block:
@@ -91,8 +100,8 @@
     community.vmware.vmware_host_service_manager:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       esxi_hostname: '{{ esxi_hostname }}'
       service_name: TSM-SSH
       state: present
@@ -103,8 +112,8 @@
     community.vmware.vmware_host_service_manager:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'    
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       esxi_hostname: '{{ esxi_hostname }}'
       service_name: TSM
       state: present
@@ -121,8 +130,8 @@
     community.vmware.vmware_host_service_manager:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'    
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       esxi_hostname: '{{ esxi_hostname }}'
       service_name: TSM-SSH
       state: absent
@@ -133,8 +142,8 @@
     community.vmware.vmware_host_service_manager:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       esxi_hostname: '{{ esxi_hostname }}'
       service_name: TSM
       state: absent
@@ -143,18 +152,31 @@
   when: install_iso_exists.failed
 ## End Block
 
+- name: set default disks
+  set_fact:
+    default_disks:
+      - size_gb: '{{ vm_disk_gb | default(40) }}'
+        type: thin
+
+- name: set default networks
+  set_fact:
+    default_networks:
+      - name: "{{ vm_network | default('VM Network') }}"
+        device_type: e1000
+
 - name: Create VM
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}' 
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     datacenter: "{{vcenter_datacenter}}"
-    cluster: '{{vcenter_cluster}}'    
+    cluster: '{{vcenter_cluster}}'
     folder: /
     name: '{{ vm_name }}'
     state: present
     guest_id: centos7_64Guest
+    datastore: '{{ vm_datastore }}'
     cdrom:
         - controller_number: 0
           unit_number: 0
@@ -166,17 +188,13 @@
           state: present
           type: iso
           iso_path: '[{{ vm_datastore }}] {{config_iso}}'
-    disk:
-    - size_gb: '{{ vm_disk_gb | default(40) }}'
-      type: thin
-      datastore: '{{ vm_datastore }}'
+    disk: '{{ disks|default(default_disks) }}'
     hardware:
       memory_mb: '{{ vm_memory_mb | default(2048) }}'
       num_cpus: '{{ vm_num_cpus | default(2) }}'
+      nested_virt: '{{ nested_virtualization|default(false) }}'
       scsi: lsilogicsas
-    networks:
-    - name: "{{ vm_network | default('VM Network') }}"
-      device_type: e1000
+    networks: '{{ networks|default(default_networks) }}'
     wait_for_ip_address: no
   delegate_to: localhost
   register: deploy_vm
@@ -185,8 +203,8 @@
   community.vmware.vmware_guest_boot_manager:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no  
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ vm_name }}'
     boot_delay: 1000
     enter_bios_setup: False
@@ -206,8 +224,8 @@
   community.vmware.vmware_guest_powerstate:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'    
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ vm_name }}'
     state: powered-on
   delegate_to: localhost
@@ -221,8 +239,8 @@
   community.vmware.vmware_guest_sendkey:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'     
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: "{{ vm_name }}"
     string_send: "i"
   delegate_to: localhost
@@ -231,31 +249,31 @@
   community.vmware.vmware_guest_sendkey:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'     
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: "{{ vm_name }}"
     keys_send: ENTER
   delegate_to: localhost
 
-- name: Wait for VMware tools to become available 
+- name: Wait for VMware tools to become available
   community.vmware.vmware_guest_tools_wait:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ vm_name }}'
   delegate_to: localhost
   retries: 10
   delay: 60
-  register: result           
+  register: result
   until: result is succeeded
 
 - name: Set root Passwd
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'    
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "root"
     vm_password: '{{ vm_password_old }}'
     vm_id: '{{ vm_name }}'
@@ -263,14 +281,14 @@
     vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin root\""
     wait_for_process: true
   delegate_to: localhost
-  ignore_errors: yes   
+  ignore_errors: yes
 
 - name: Check Hostname
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "{{ vm_username | default('root') }}"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
@@ -278,25 +296,25 @@
     vm_shell_args: " -c \"[ $(hostname) == {{ vm_hostname }}.{{ vm_domain }} ]\""
     wait_for_process: true
   register: checkhostname
-  delegate_to: localhost 
-  ignore_errors: true 
+  delegate_to: localhost
+  ignore_errors: true
 
 - name: Run shell command via vm_shell
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "root"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: "{{item}}"
     wait_for_process: true
-  delegate_to: localhost  
+  delegate_to: localhost
   retries: 3
   delay: 5
-  register: result           
+  register: result
   until: result is succeeded
   loop:
     - "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
@@ -308,8 +326,8 @@
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "root"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
@@ -317,15 +335,15 @@
     vm_shell_args: " -c \"[ $(cat /etc/selinux/config | grep ^SELINUX=) == SELINUX=disabled ]\""
     wait_for_process: true
   register: checkselinux
-  delegate_to: localhost 
-  ignore_errors: true 
+  delegate_to: localhost
+  ignore_errors: true
 
 - name: Disable SELinux
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "root"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
@@ -333,10 +351,10 @@
     vm_shell_args: " -c \"{{item}}\""
     wait_for_process: true
   delegate_to: localhost
-  when: checkselinux is failed  
+  when: checkselinux is failed
   loop:
     - "sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config"
-    - "sed -i 's/SELINUX=permissive/SELINUX=disabled/' /etc/selinux/config" 
+    - "sed -i 's/SELINUX=permissive/SELINUX=disabled/' /etc/selinux/config"
 
 - name: reboot guest
   block:
@@ -344,8 +362,8 @@
     community.vmware.vmware_guest_powerstate:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no  
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       name: '{{ vm_name }}'
       state: reboot-guest
     delegate_to: localhost
@@ -359,14 +377,14 @@
     community.vmware.vmware_guest_tools_wait:
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'    
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
       name: '{{ vm_name }}'
     delegate_to: localhost
     retries: 3
     delay: 15
-    register: result           
-    until: result is succeeded 
+    register: result
+    until: result is succeeded
 
   - name: Wait for 30 seconds for VMware Tools refresh
     wait_for: timeout=30
@@ -378,45 +396,67 @@
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "{{ vm_username | default('root') }}"
     vm_password: '{{ vm_password }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"{{item}}\""
     wait_for_process: true
-  delegate_to: localhost  
+  delegate_to: localhost
   retries: 3
   delay: 5
-  register: result           
+  register: result
   until: result is succeeded
-  ignore_errors: true 
+  ignore_errors: true
   loop:
     - "sed -i -e 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*"
     - "sed -i -e 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*"
   when: version|lower == "centos8"
 
-
+- name: scale the paywall
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "root"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"{{item}}\""
+    wait_for_process: true
+  delegate_to: localhost
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop:
+    - "subscription-manager register --org {{ rhsm_orgid }} --activationkey {{ rhsm_activationkey }}"
+    - "subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms"
+    - "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
+  when: version|lower == "rhel8"
 
 - name: Install xRDP
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "{{ vm_username | default('root') }}"
     vm_password: '{{ vm_password }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"{{item}}\""
     wait_for_process: true
-  delegate_to: localhost  
+  delegate_to: localhost
   retries: 3
   delay: 5
-  register: result           
+  register: result
   until: result is succeeded
-  ignore_errors: true 
+  ignore_errors: true
   loop:
     - "{{dnf_or_yum}} install -y epel-release"
     - "{{dnf_or_yum}} install -y xrdp"
@@ -430,20 +470,20 @@
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "{{ vm_username | default('root') }}"
     vm_password: '{{ vm_password }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"{{item}}\""
     wait_for_process: true
-  delegate_to: localhost  
+  delegate_to: localhost
   retries: 3
   delay: 5
-  register: result           
+  register: result
   until: result is succeeded
-  ignore_errors: true 
+  ignore_errors: true
   loop:
     - "{{dnf_or_yum}} install -y epel-release"
     - "{{dnf_or_yum}} install -y ansible"
@@ -454,7 +494,7 @@
     - "pip3 install netapp-lib"
     - "pip3 install pyvmomi"
     - "pip3 install pywinrm"
-    - "pip3 install pycdlib" 
+    - "pip3 install pycdlib"
   when: install_ansible|default(false)
 
 - name: Run extra shell command via vm_shell
