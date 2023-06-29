@@ -185,7 +185,7 @@
     state: powered-on
   delegate_to: localhost
   register: powerstate
-  
+
 - name: Wait for 30 seconds for menu
   wait_for: timeout=30
   delegate_to: localhost
@@ -346,4 +346,25 @@
     wait_for: timeout=30
     delegate_to: localhost
   when: (checkhostname is failed) or (checkselinux is failed)
-###end: reboot guest
+  ###end: reboot guest
+
+
+- name: Run shell command via vm_shell
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "root"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"{{item}}\""
+    wait_for_process: true
+  delegate_to: localhost
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  loop:
+    - "subscription-manager register --org {{ rhsm_orgid }} --activationkey {{ rhsm_activationkey }}"

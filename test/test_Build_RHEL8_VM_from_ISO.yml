@@ -9,7 +9,7 @@
     - include_vars: ../defaults/Build_RHEL8_VM_from_ISO.yml
     - include_tasks: ../tasks/Build_RHEL8_VM_from_ISO.yml
       vars:
-        vm_name: TEST_RHEL8VM2
+        vm_name: TEST_RHEL8VM3
         # vm_num_cpus: 2
         # vm_memory_mb: 3078
         # vm_disk_gb: 40
@@ -17,7 +17,7 @@
         vm_network: "VM Network"
         vm_password_new: P@ssw0rd
         vm_hostname: rhel8vm2
-        vm_address: 192.168.123.192
+        vm_address: 192.168.123.193
         vm_netmask_cidr: 24
         vm_gateway: 192.168.123.1
         vm_dns_server: 192.168.123.1
