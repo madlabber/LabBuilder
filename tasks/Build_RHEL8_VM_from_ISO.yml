@@ -158,6 +158,7 @@
     hardware:
       memory_mb: '{{ vm_memory_mb | default(2048) }}'
       num_cpus: '{{ vm_num_cpus | default(2) }}'
+      nested_virt: '{{ nested_virtualization|default(false) }}'
       scsi: lsilogicsas
     networks: '{{ networks|default(default_networks) }}'
     wait_for_ip_address: no

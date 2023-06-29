@@ -24,6 +24,7 @@
         vm_domain: lab.local
         install_xrdp: true
         install_ansible: true
+        nested_virtualization: true
         extra_commands:
           - "touch /tmp/test.txt"
           - "echo 123 >> /tmp/test.txt"
