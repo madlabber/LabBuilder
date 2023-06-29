@@ -302,7 +302,6 @@
     wait_for_process: true
   delegate_to: localhost
   register: checkselinux
-  delegate_to: localhost
   ignore_errors: true
 
 - name: Disable SELinux
