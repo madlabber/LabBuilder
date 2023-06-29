@@ -366,6 +366,7 @@
   delay: 5
   register: result
   until: result is succeeded
+  ignore_errors: true
   loop:
     - "subscription-manager register --org {{ rhsm_orgid }} --activationkey {{ rhsm_activationkey }}"
 
@@ -377,7 +378,7 @@
     password: '{{ vcenter_password }}'
     validate_certs: no
     vm_username: "{{ vm_username | default('root') }}"
-    vm_password: '{{ vm_password }}'
+    vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"{{item}}\""
@@ -405,7 +406,7 @@
     password: '{{ vcenter_password }}'
     validate_certs: no
     vm_username: "{{ vm_username | default('root') }}"
-    vm_password: '{{ vm_password }}'
+    vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"{{item}}\""
@@ -427,7 +428,7 @@
     - "pip3 install netapp-lib"
     - "pip3 install pyvmomi"
     - "pip3 install pywinrm"
-    - "pip3 install pycdlib" 
+    - "pip3 install pycdlib"
   when: install_ansible|default(false)
 
 - name: Run extra shell command via vm_shell
@@ -437,7 +438,7 @@
     password: '{{ vcenter_password }}'
     validate_certs: no
     vm_username: "{{ vm_username | default('root') }}"
-    vm_password: '{{ vm_password }}'
+    vm_password: '{{ vm_password_new }}'
     vm_id: "{{ vm_name }}"
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"{{item}}\""
