@@ -39,7 +39,8 @@ all:
       hosts:
         kvm1:
           ip_address: 192.168.0.14
-          version: "rhel8"
+          distro: "rhel"
+          version: "8"
           nested_virtualization: true
           disks:
             - size_gb: 160

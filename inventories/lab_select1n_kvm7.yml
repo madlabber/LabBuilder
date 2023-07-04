@@ -31,19 +31,26 @@ all:
             - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
             # Install Putty
             - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
-            - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"     
+            - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
             # Install WinSCP
             - "Invoke-WebRequest -Uri https://winscp.net/download/WinSCP-5.19.5-Setup.exe -OutFile C:\\Windows\\temp\\WinSCP-Setup.exe"
-            - "C:\\Windows\\temp\\WinSCP-Setup.exe /SILENT /ALLUSERS"  
+            - "C:\\Windows\\temp\\WinSCP-Setup.exe /SILENT /ALLUSERS"
     centos:
       hosts:
         kvm1:
           ip_address: 192.168.0.14
-          version: "CentOS7"
+          distro: "centos"
+          version: "7"
+          nested_virtualization: true
+          disks:
+            - size_gb: 160
+              type: thin
+            - size_gb: 2048
+              type: thin
       vars:
         vm_memory_mb: 24576
         vm_num_cpus: 6
-        vm_disk_gb: 100
+        vm_disk_gb: 160
         install_xrdp: true
         install_ansible: true
       # FIXME: Add support for more disks

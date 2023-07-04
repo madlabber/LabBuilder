@@ -37,10 +37,10 @@ all:
     vcenter:
       hosts:
         vcsa:
-          ip_address:   192.168.0.50      
-          vm_fqdn:      "vcsa.lab.local" 
+          ip_address:   192.168.0.50
+          vm_fqdn:      "vcsa.lab.local"
           ova_location: "files/VMware"
-          vcenter_ova:  "VMware-vCenter-Server-Appliance-6.7.0.45000-16708996_OVF10.ova"          
+          vcenter_ova:  "VMware-vCenter-Server-Appliance-6.7.0.45000-16708996_OVF10.ova"
     nestedesx:
       hosts:
         # This host is just for running the ONTAP Deploy VM
@@ -48,7 +48,7 @@ all:
           ip_address: 192.168.0.51
           vm_num_cpus: 2
           vm_memory_mb: 8192
-          vm_disk2_size_gb: 80          
+          vm_disk2_size_gb: 80
         # 02 and 03 are staging hosts for Deploy to provision ONTAP Select nodes
         esx02:
           ip_address: 192.168.0.52
@@ -65,8 +65,8 @@ all:
           vm_disk2_size_gb: 500
         esx05:
           ip_address: 192.168.0.55
-          vm_memory_mb: 22528   
-          vm_disk2_size_gb: 500       
+          vm_memory_mb: 22528
+          vm_disk2_size_gb: 500
       vars:
           esx_version: "6.7u3"
           vm_num_cpus: 6
@@ -78,12 +78,13 @@ all:
       hosts:
         ansible:
           ip_address: 192.168.0.19
-          version: "CentOS7"
+          distro: "centos"
+          version: "7"
           install_ansible: true
           install_awx: true
     #     centos1:
     #       ip_address: 192.168.0.44
-    #       version: "CentOS7"
+    #       version: "7"
     #   vars:
     # winservers:
     #   hosts:
@@ -92,9 +93,7 @@ all:
     #     win2:
     #       ip_address: 192.168.0.42
     #   vars:
-    #       version: "Server2016"      
+    #       version: "Server2016"
     #       vm_memory_mb: 2048
     #       vm_num_cpus: 2
     #       vm_disk_gb: 40
-
-

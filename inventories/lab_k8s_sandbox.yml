@@ -25,14 +25,15 @@ all:
       hosts:
         dc01:
           version: "Server2019eval"
-          ip_address: 192.168.0.10     
+          ip_address: 192.168.0.10
     centos:
       vars:
         vm_memory_mb: 4096
         vm_num_cpus: 2
-        vm_disk_gb: 40 
+        vm_disk_gb: 40
         install_xrdp: true
-        version: "CentOS8"
+        distro: "centos"
+        version: "8"
       hosts:
         jumphost:
           ip_address: 192.168.0.11
@@ -44,8 +45,3 @@ all:
           ip_address: 192.168.0.42
         k8s-node3:
           ip_address: 192.168.0.43
-
-
-
-
-

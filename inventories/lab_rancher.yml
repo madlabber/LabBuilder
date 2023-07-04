@@ -25,14 +25,15 @@ all:
       hosts:
         dc01:
           version: "Server2019eval"
-          ip_address: 192.168.0.11     
+          ip_address: 192.168.0.11
     centos:
       vars:
         vm_memory_mb: 4096
         vm_num_cpus: 2
-        vm_disk_gb: 40 
+        vm_disk_gb: 40
         install_xrdp: true
-        version: "CentOS7"
+        distro: "centos"
+        version: "7"
       hosts:
         rancher:
           ip_address: 192.168.0.40
@@ -85,7 +86,3 @@ all:
           cluster_create: true
           cluster_name: vsim1
           cluster_mgmt_ip: 192.168.0.70
-
-
-
-

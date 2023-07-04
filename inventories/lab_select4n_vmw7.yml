@@ -37,10 +37,10 @@ all:
     vcenter:
       hosts:
         vcsa:
-          ip_address: 192.168.0.50       
-          vm_fqdn: "vcsa.lab.local" 
+          ip_address: 192.168.0.50
+          vm_fqdn: "vcsa.lab.local"
           ova_location: "files/VMware"
-          vcenter_ova: "VMware-vCenter-Server-Appliance-7.0.2.00100-17920168_OVF10.ova"         
+          vcenter_ova: "VMware-vCenter-Server-Appliance-7.0.2.00100-17920168_OVF10.ova"
     nestedesx:
       hosts:
         esx01:
@@ -69,7 +69,7 @@ all:
     #     win2:
     #       ip_address: 192.168.0.42
     #   vars:
-    #       version: "Server2016eval"      
+    #       version: "Server2016eval"
     #       vm_memory_mb: 2048
     #       vm_num_cpus: 2
     #       vm_disk_gb: 40
@@ -77,11 +77,8 @@ all:
     #   hosts:
     #     ansible:
     #       ip_address: 192.168.0.43
-    #       version: "CentOS8"
+    #       version: "8"
     #     centos1:
     #       ip_address: 192.168.0.44
-    #       version: "CentOS7"
+    #       version: "7"
     #   vars:
-
-
-

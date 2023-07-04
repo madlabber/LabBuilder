@@ -36,22 +36,23 @@ all:
       hosts:
         win1:
           ip_address: 192.168.0.12
-          version: "Server2016eval"      
+          version: "Server2016eval"
           vm_memory_mb: 2048
           vm_num_cpus: 2
-          vm_disk_gb: 40          
+          vm_disk_gb: 40
     centos:
       hosts:
         ansible:
           ip_address: 192.168.0.15
-          version: "CentOS7"
+          version: "7"
           install_ansible: true
           install_awx: true
         centos1:
           ip_address: 192.168.0.14
-          version: "CentOS7"
+          version: "7"
       vars:
           install_xrdp: true
+          distro: "centos"
     vsims:
       hosts:
         vsim1-01:
@@ -67,8 +68,6 @@ all:
         vsim2-02:
           ip_address: 192.168.0.82
           sys_serial_number: "4034389-06-2"
-          cluster_setup: false   
+          cluster_setup: false
       vars:
-          ovf_version: "9.7"             
-
-
+          ovf_version: "9.7"

@@ -37,10 +37,10 @@ all:
       hosts:
         win1:
           ip_address: 192.168.0.12
-          version: "Server2019eval"      
+          version: "Server2019eval"
           vm_memory_mb: 2048
           vm_num_cpus: 2
-          vm_disk_gb: 40          
+          vm_disk_gb: 40
     centos:
       hosts:
         ansible:
@@ -48,7 +48,8 @@ all:
         centos1:
           ip_address: 192.168.0.14
       vars:
-        version: "CentOS8"
+        distro: "centos"
+        version: "8"
     vsims:
       hosts:
         vsim1-01:
@@ -66,6 +67,4 @@ all:
           ip_address: 192.168.0.82
           sys_serial_number: "4034389-06-2"
       vars:
-          ovf_version: "9.9.1"             
-
-
+          ovf_version: "9.9.1"

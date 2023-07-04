@@ -78,10 +78,10 @@ all:
       hosts:
         ansible:
           ip_address: 192.168.0.15
-          version: "CentOS7"
+          version: "7"
         centos1:
           ip_address: 192.168.0.14
-          version: "CentOS7"
+          version: "7"
       vars:
     vsims:
       hosts:
