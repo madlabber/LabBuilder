@@ -13,50 +13,37 @@
     vm_password_new: "{{vm_password_new | default('P@ssw0rd') }}"
     config_iso:      "{{vm_name}}-ks.iso"
 
+#Translate old version format to new version format
 - name: set centos7 facts
   set_fact:
-    dnf_or_yum: "yum"
-    install_iso:        "{{ install_iso | default( centos7_iso ) }}"
-    install_iso_url:    "{{ install_iso_url | default( centos7_iso_url ) }}"
-    kickstart_file:     "{{ kickstart_file | default( centos7_kickstart_file | default( role_path + '/files/CentOS7/ks.cfg' )) }}"
-    kickstart_password: "{{ kickstart_password | default( centos7_kickstart_password | default('Changeme!')) }}"
+    distro: "centos"
+    version: "7"
   when: version|lower == "centos7"
 
 - name: set centos8 facts
   set_fact:
-    dnf_or_yum: "dnf"
-    install_iso:        "{{ install_iso | default( centos8_iso ) }}"
-    install_iso_url:    "{{ install_iso_url | default( centos8_iso_url ) }}"
-    kickstart_file:     "{{ kickstart_file | default( centos8_kickstart_file | default( role_path + '/files/CentOS8/ks.cfg' )) }}"
-    kickstart_password: "{{ kickstart_password | default( centos8_kickstart_password | default('Changeme!')) }}"
+    distro: "centos"
+    version: "8"
   when: version|lower == "centos8"
 
 - name: set rocky8 facts
   set_fact:
-    dnf_or_yum: "dnf"
-    install_iso:        "{{ install_iso | default( rocky8_iso ) }}"
-    install_iso_url:    "{{ install_iso_url | default( rocky8_iso_url ) }}"
-    kickstart_file:     "{{ kickstart_file | default( rocky8_kickstart_file | default( role_path + '/files/rocky8/ks.cfg' )) }}"
-    kickstart_password: "{{ kickstart_password | default( rocky8_kickstart_password | default('Changeme!')) }}"
+    distro: "rocky"
+    version: "8"
   when: version|lower == "rocky8"
 
 - name: set alma8 facts
   set_fact:
-    dnf_or_yum: "dnf"
-    install_iso:        "{{ install_iso | default( alma8_iso ) }}"
-    install_iso_url:    "{{ install_iso_url | default( alma8_iso_url ) }}"
-    kickstart_file:     "{{ kickstart_file | default( alma8_kickstart_file | default( role_path + '/files/alma8/ks.cfg' )) }}"
-    kickstart_password: "{{ kickstart_password | default( alma8_kickstart_password | default('Changeme!')) }}"
+    distro: "alma"
+    version: "8"
   when: version|lower == "alma8"
 
 - name: set rhel8 facts
   set_fact:
-    dnf_or_yum: "dnf"
-    install_iso:        "{{ install_iso | default( rhel8_iso ) }}"
-    install_iso_url:    "{{ install_iso_url | default( rhel8_iso_url ) }}"
-    kickstart_file:     "{{ kickstart_file | default( rhel8_kickstart_file | default( role_path + '/files/rocky8/ks.cfg' )) }}"
-    kickstart_password: "{{ kickstart_password | default( rhel8_kickstart_password | default('Changeme!')) }}"
+    distro: "rhel"
+    version: "8"
   when: version|lower == "rhel8"
+# end of version translation
 
 - name: distro and version vars lookup
   set_fact:
@@ -140,7 +127,7 @@
     register: tsm_service
     delegate_to: localhost
 
-  # Toggle the httpClient firewall rule because esxi8 will claim its enabled when it is not
+  # Toggle the httpClient firewall rule because esxi8 will claim it is enabled when it is not
   - name: Disable httpClient
     shell: 'esxcli network firewall ruleset set --enabled=false --ruleset-id=httpClient'
     delegate_to: '{{ esxi_address }}'
