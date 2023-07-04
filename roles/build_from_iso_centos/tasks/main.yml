@@ -1,16 +1,8 @@
 ---
-# - name: Build CentOS Linux VMs
-#   hosts: centos
-#   gather_facts: false
-#   vars_files:
-#     - vars/main.yml
-#   tasks:
+- name: remove if absent
+  include_tasks: absent.yml
+  when: state == "absent" or force
+
 - name: Build CentOS VM - ansible
   include_tasks: build_vm.yml
-
-- name: install awx - ansible
-  block:
-  - include_tasks: tasks/install_AWX_in_CentOS7_with_vm_shell.yml
-    when: install_awx|default(false)
-  when: version|lower == "centos7"
-
+  when: state|default('present') == "present"
