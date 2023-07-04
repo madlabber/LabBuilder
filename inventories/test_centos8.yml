@@ -13,31 +13,28 @@ all:
     lab_lan1_gateway: "192.168.0.1"
     lab_lan1_dns_ip: "192.168.0.11"
     lab_domain_name: "lab.local"
-    lab_domain_controller: "dc01"
+    # lab_domain_controller: "dc01"
   children:
     centos:
       vars:
         vm_memory_mb: 2048
         vm_num_cpus: 2
-        vm_disk_gb: 40 
+        vm_disk_gb: 40
         install_xrdp: true
+        distro: "stream"
       hosts:
         centos8-1:
           ip_address: 192.168.0.181
-          version: "CentOS8"
+          version: "8"
           install_ansible: true
-        centos8-3:
-          ip_address: 192.168.0.183
-          version: "CentOS8"
-          extra_commands:
-            # Install Docker-CE
-            - "dnf install -y epel-release"
-            - "dnf remove -y python-docker-py docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine"
-            - "dnf remove -y runc podman buildah"
-            - "dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
-            - "dnf install -y docker-ce docker-ce-cli containerd.io"
-            - "systemctl enable docker --now"
-
-
-
-
+        # centos8-3:
+        #   ip_address: 192.168.0.183
+        #   version: "CentOS8"
+        #   extra_commands:
+        #     # Install Docker-CE
+        #     - "dnf install -y epel-release"
+        #     - "dnf remove -y python-docker-py docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine"
+        #     - "dnf remove -y runc podman buildah"
+        #     - "dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+        #     - "dnf install -y docker-ce docker-ce-cli containerd.io"
+        #     - "systemctl enable docker --now"

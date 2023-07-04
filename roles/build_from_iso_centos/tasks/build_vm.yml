@@ -40,6 +40,15 @@
     kickstart_password: "{{ kickstart_password | default( rocky8_kickstart_password | default('Changeme!')) }}"
   when: version|lower == "rocky8"
 
+- name: set alma8 facts
+  set_fact:
+    dnf_or_yum: "dnf"
+    install_iso:        "{{ install_iso | default( alma8_iso ) }}"
+    install_iso_url:    "{{ install_iso_url | default( alma8_iso_url ) }}"
+    kickstart_file:     "{{ kickstart_file | default( alma8_kickstart_file | default( role_path + '/files/alma8/ks.cfg' )) }}"
+    kickstart_password: "{{ kickstart_password | default( alma8_kickstart_password | default('Changeme!')) }}"
+  when: version|lower == "alma8"
+
 - name: set rhel8 facts
   set_fact:
     dnf_or_yum: "dnf"
@@ -48,6 +57,17 @@
     kickstart_file:     "{{ kickstart_file | default( rhel8_kickstart_file | default( role_path + '/files/rocky8/ks.cfg' )) }}"
     kickstart_password: "{{ kickstart_password | default( rhel8_kickstart_password | default('Changeme!')) }}"
   when: version|lower == "rhel8"
+
+- name: distro and version vars lookup
+  set_fact:
+    dnf_or_yum: "{{ lookup('vars', distro + version + '_dnf_or_yum') }}"
+    install_iso: "{{ lookup('vars', distro + version + '_iso') }}"
+    install_iso_url: "{{ lookup('vars', distro + version + '_iso_url') }}"
+    kickstart_file:  "{{ lookup('vars', distro + version + '_kickstart_file') }}"
+    kickstart_password: "{{ lookup('vars', distro + version + '_kickstart_password') }}"
+
+- debug:
+    msg: "{{distro}}: {{dnf_or_yum}}"
 
 - name: Create kickstart ISO
   community.general.iso_create:
@@ -119,6 +139,15 @@
       state: present
     register: tsm_service
     delegate_to: localhost
+
+  # Toggle the httpClient firewall rule because esxi8 will claim its enabled when it is not
+  - name: Disable httpClient
+    shell: 'esxcli network firewall ruleset set --enabled=false --ruleset-id=httpClient'
+    delegate_to: '{{ esxi_address }}'
+  - name: Enable httpClient
+    shell: 'esxcli network firewall ruleset set --enabled=true --ruleset-id=httpClient'
+    delegate_to: '{{ esxi_address }}'
+
 
   - name: Download the Centos ISO
     shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ install_iso_url }} --no-check-certificate'
@@ -413,7 +442,9 @@
   loop:
     - "sed -i -e 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*"
     - "sed -i -e 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*"
-  when: version|lower == "centos8"
+  when:
+    - distro|lower == "centos"
+    - version|float >= 8
 
 - name: scale the paywall
   community.vmware.vmware_vm_shell:
@@ -437,7 +468,7 @@
     - "subscription-manager register --org {{ rhsm_orgid }} --activationkey {{ rhsm_activationkey }}"
     - "subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms"
     - "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
-  when: version|lower == "rhel8"
+  when: distro|lower == "rhel"
 
 - name: Install xRDP
   community.vmware.vmware_vm_shell:

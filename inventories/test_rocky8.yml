@@ -13,22 +13,23 @@ all:
     lab_lan1_gateway: "192.168.0.1"
     lab_lan1_dns_ip: "192.168.0.11"
     lab_domain_name: "lab.local"
-    lab_domain_controller: "dc01"
+    # lab_domain_controller: "dc01"
   children:
     centos:
       vars:
         vm_memory_mb: 2048
         vm_num_cpus: 2
-        vm_disk_gb: 40 
+        vm_disk_gb: 40
         install_xrdp: true
+        distro: "rocky"
       hosts:
-        rocky8-1:
-          ip_address: 192.168.0.184
-          version: "rocky8"
-          install_ansible: true
+        # rocky8-1:
+        #   ip_address: 192.168.0.184
+        #   version: "8.8"
+        #   install_ansible: true
         rocky8-2:
           ip_address: 192.168.0.185
-          version: "rocky8"
+          version: "8.7"
           extra_commands:
             # Install Docker-CE
             - "dnf install -y epel-release"

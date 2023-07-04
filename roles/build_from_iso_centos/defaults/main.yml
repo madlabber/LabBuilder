@@ -1,14 +1,19 @@
+#default distro:
+distro: "centos"
+
 # centos7
 centos7_iso: "CentOS-7-x86_64-DVD-2009.iso"
 centos7_iso_url: "http://mirror.fileplanet.com/centos/7.9.2009/isos/x86_64/CentOS-7-x86_64-DVD-2009.iso"
 centos7_kickstart_file: "{{role_path}}/files/CentOS7/ks.cfg"
 centos7_kickstart_password: Changeme!
+centos7_dnf_or_yum: "yum"
 
 # centos8
 centos8_iso: "CentOS-8.3.2011-x86_64-dvd1.iso"
 centos8_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso"
 centos8_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
 centos8_kickstart_password: Changeme!
+centos8_dnf_or_yum: "dnf"
 #Older builds linger in old mirrors
 # https://mirror.chpc.utah.edu/pub/vault.centos.org/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso
 # https://mirror.chpc.utah.edu/pub/vault.centos.org/8.2.2004/isos/x86_64/CentOS-8.2.2004-x86_64-dvd1.iso
@@ -20,18 +25,81 @@ rocky8_iso: "Rocky-8.8-x86_64-dvd1.iso"
 rocky8_iso_url: "https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.8-x86_64-dvd1.iso"
 rocky8_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8_kickstart_password: Changeme!
-#Older rocky builds are moved to the vault, i.e.
-# https://dl.rockylinux.org/vault/rocky/8.7/isos/x86_64/Rocky-8.7-x86_64-dvd1.iso
-# https://dl.rockylinux.org/vault/rocky/8.6/isos/x86_64/Rocky-8.6-x86_64-dvd1.iso
-# https://dl.rockylinux.org/vault/rocky/8.5/isos/x86_64/Rocky-8.5-x86_64-dvd1.iso
-# https://dl.rockylinux.org/vault/rocky/8.4/isos/x86_64/Rocky-8.4-x86_64-dvd1.iso
-# https://dl.rockylinux.org/vault/rocky/8.3/isos/x86_64/Rocky-8.3-x86_64-dvd1.iso
-#
+rocky8_dnf_or_yum: "dnf"
+# rocky 8.8
+rocky8.8_iso: "Rocky-8.8-x86_64-dvd1.iso"
+rocky8.8_iso_url: "https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.8-x86_64-dvd1.iso"
+rocky8.8_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
+rocky8.8_kickstart_password: Changeme!
+rocky8.8_dnf_or_yum: "dnf"
+# rocky 8.7
+rocky8.7_iso: "Rocky-8.7-x86_64-dvd1.iso"
+rocky8.7_iso_url: "https://dl.rockylinux.org/vault/rocky/8.7/isos/x86_64/Rocky-8.7-x86_64-dvd1.iso"
+rocky8.7_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
+rocky8.7_kickstart_password: Changeme!
+rocky8.7_dnf_or_yum: "dnf"
+# rocky 8.6
+rocky8.6_iso: "Rocky-8.6-x86_64-dvd1.iso"
+rocky8.6_iso_url: "https://dl.rockylinux.org/vault/rocky/8.6/isos/x86_64/Rocky-8.6-x86_64-dvd1.iso"
+rocky8.6_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
+rocky8.6_kickstart_password: Changeme!
+rocky8.6_dnf_or_yum: "dnf"
+# rocky 8.5
+rocky8.5_iso: "Rocky-8.5-x86_64-dvd1.iso"
+rocky8.5_iso_url: "https://dl.rockylinux.org/vault/rocky/8.5/isos/x86_64/Rocky-8.5-x86_64-dvd1.iso"
+rocky8.5_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
+rocky8.5_kickstart_password: Changeme!
+rocky8.5_dnf_or_yum: "dnf"
+# rocky 8.4
+rocky8.4_iso: "Rocky-8.4-x86_64-dvd1.iso"
+rocky8.4_iso_url: "https://dl.rockylinux.org/vault/rocky/8.4/isos/x86_64/Rocky-8.4-x86_64-dvd1.iso"
+rocky8.4_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
+rocky8.4_kickstart_password: Changeme!
+rocky8.4_dnf_or_yum: "dnf"
+# rocky 8.3
+rocky8.3_iso: "Rocky-8.3-x86_64-dvd1.iso"
+rocky8.3_iso_url: "https://dl.rockylinux.org/vault/rocky/8.3/isos/x86_64/Rocky-8.3-x86_64-dvd1.iso"
+rocky8.3_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
+rocky8.3_kickstart_password: Changeme!
+rocky8.3_dnf_or_yum: "dnf"
 #For anything older use CentOS
+
+# alma8 defaults
+alma8_iso: "AlmaLinux-8.8-x86_64-dvd.iso"
+alma8_iso_url: "http://ftp.ucsb.edu/pub/mirrors/linux/almalinux/8.8/isos/x86_64/AlmaLinux-8.8-x86_64-dvd.iso"
+alma8_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
+alma8_kickstart_password: Changeme!
+alma8_dnf_or_yum: "dnf"
+# alma8.8 defaults
+alma8.8_iso: "AlmaLinux-8.8-x86_64-dvd.iso"
+alma8.8_iso_url: "http://ftp.ucsb.edu/pub/mirrors/linux/almalinux/8.8/isos/x86_64/AlmaLinux-8.8-x86_64-dvd.iso"
+alma8.8_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
+alma8.8_kickstart_password: Changeme!
+alma8.8_dnf_or_yum: "dnf"
+# alma8.7 defaults
+alma8.7_iso: "AlmaLinux-8.7-x86_64-dvd.iso"
+alma8.7_iso_url: "http://ftp.ucsb.edu/pub/mirrors/linux/almalinux/8.7/isos/x86_64/AlmaLinux-8.7-x86_64-dvd.iso"
+alma8.7_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
+alma8.7_kickstart_password: Changeme!
+alma8.7_dnf_or_yum: "dnf"
 
 # rhel8
 rhel8_iso: "rhel-8.8-x86_64-dvd.iso"
 rhel8_iso_url: "https://developers.redhat.com/download-manager/file/rhel-8.8-x86_64-dvd.iso"
 rhel8_file: "{{role_path}}/files/RHEL8/ks.cfg"
 rhel8_password: Changeme!
+rhel8_dnf_or_yum: "dnf"
+# rhel8
+rhel8.8_iso: "rhel-8.8-x86_64-dvd.iso"
+rhel8.8_iso_url: "https://developers.redhat.com/download-manager/file/rhel-8.8-x86_64-dvd.iso"
+rhel8.8_kickstart_file: "{{role_path}}/files/RHEL8/ks.cfg"
+rhel8.8_kickstart_password: Changeme!
+rhel8.8_dnf_or_yum: "dnf"
 # note: rhel URLs rarely if ever work.  When they don't, pre-stage the ISO in the datastore
+
+# stream  - because why not
+stream8_iso: "CentOS-Stream-8-x86_64-latest-dvd1.iso"
+stream8_iso_url: "http://linux.mirrors.es.net/centos/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-latest-dvd1.iso"
+stream8_kickstart_file: "{{role_path}}/files/stream8/ks.cfg"
+stream8_kickstart_password: Changeme!
+stream8_dnf_or_yum: "dnf"
