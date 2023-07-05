@@ -20,9 +20,9 @@ Role Variables
 
 | Variable                | **Default**/Example | Comments  |
 |-------------------------|---------------------|-----------|
-| state                   | **present**,absent,force  | present creates VMs, absent deletes them, force recreates them|
-| vm_name                 | **SimulateONTAP**   | a valid VM name |
-| **vm_datastore**        | **datastore1**      | the VMware datastore where the node will be placed |
+| state                   | **present**,absent,force | present creates VMs, absent deletes them, force recreates them|
+| vm_name                 | **centos**               | a valid VM name |
+| **vm_datastore**        | **datastore1**           | the VMware datastore where the node will be placed |
 
 
 Dependencies
