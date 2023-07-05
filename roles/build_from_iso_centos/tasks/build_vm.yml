@@ -10,7 +10,7 @@
     vm_name:         "{{vm_name         | default('centosvm') }}"
     vm_eth_name:     "{{vm_eth_name     | default('ens32') }}"
     vm_password_old: "{{kickstart_password | default('Changeme!') }}"
-    vm_password_new: "{{vm_password_new | default('P@ssw0rd') }}"
+    vm_password_new: "{{vm_password | default('P@ssw0rd') }}"
     config_iso:      "{{vm_name}}-ks.iso"
 
 #Translate old version format to new version format
@@ -299,6 +299,21 @@
   delegate_to: localhost
   ignore_errors: yes
 
+- name: Set admin Passwd
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "root"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
+    wait_for_process: true
+  delegate_to: localhost
+  ignore_errors: yes
+
 - name: Check Hostname
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
@@ -415,7 +430,7 @@
     password: '{{ vcenter_password }}'
     validate_certs: no
     vm_username: "{{ vm_username | default('root') }}"
-    vm_password: '{{ vm_password }}'
+    vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"{{item}}\""
@@ -464,7 +479,7 @@
     password: '{{ vcenter_password }}'
     validate_certs: no
     vm_username: "{{ vm_username | default('root') }}"
-    vm_password: '{{ vm_password }}'
+    vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"{{item}}\""
@@ -491,7 +506,7 @@
     password: '{{ vcenter_password }}'
     validate_certs: no
     vm_username: "{{ vm_username | default('root') }}"
-    vm_password: '{{ vm_password }}'
+    vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"{{item}}\""
@@ -522,7 +537,7 @@
     password: '{{ vcenter_password }}'
     validate_certs: no
     vm_username: "{{ vm_username | default('root') }}"
-    vm_password: '{{ vm_password }}'
+    vm_password: '{{ vm_password_new }}'
     vm_id: "{{ vm_name }}"
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"{{item}}\""
