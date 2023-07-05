@@ -37,14 +37,14 @@ all:
             - "yum install -y docker-ce docker-ce-cli containerd.io"
             - "systemctl enable docker --now"
         centos8:
-          state: force
+          state: absent
           ip_address: 192.168.0.181
           distro: "centos"
           version: "8"
           install_xrdp: true
-          install_ansible: true
+          #install_ansible: true # broken in centos8, missing dependancy  
         alma8:
-          state: absent
+          state: force
           ip_address: 192.168.0.182
           distro: "alma"
           version: "8"
@@ -60,6 +60,10 @@ all:
               device_type: e1000
             - name: "{{ lab_lan1_portgroup }}"
               device_type: e1000
+          serial_ports: 
+            - type: 'pipe'
+              pipe_name: '\\.\pipe\{{lab_name}}_com1'
+              endpoint: 'client'
         rocky8:
           state: absent
           ip_address: 192.168.0.183

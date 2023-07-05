@@ -98,10 +98,34 @@ alma8.8_kickstart_password: Changeme!
 alma8.8_dnf_or_yum: "dnf"
 # alma8.7 defaults
 alma8.7_iso: "AlmaLinux-8.7-x86_64-dvd.iso"
-alma8.7_iso_url: "http://ftp.ucsb.edu/pub/mirrors/linux/almalinux/8.7/isos/x86_64/AlmaLinux-8.7-x86_64-dvd.iso"
+alma8.7_iso_url: "https://repo.almalinux.org/vault/8.7/isos/x86_64/AlmaLinux-8.7-x86_64-dvd.iso"
 alma8.7_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
 alma8.7_kickstart_password: Changeme!
 alma8.7_dnf_or_yum: "dnf"
+# alma8.6 defaults
+alma8.6_iso: "AlmaLinux-8.6-x86_64-dvd.iso"
+alma8.6_iso_url: "https://repo.almalinux.org/vault/8.6/isos/x86_64/AlmaLinux-8.6-x86_64-dvd.iso"
+alma8.6_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
+alma8.6_kickstart_password: Changeme!
+alma8.6_dnf_or_yum: "dnf"
+# alma8.5 defaults
+alma8.5_iso: "AlmaLinux-8.5-x86_64-dvd.iso"
+alma8.5_iso_url: "https://repo.almalinux.org/vault/8.5/isos/x86_64/AlmaLinux-8.5-x86_64-dvd.iso"
+alma8.5_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
+alma8.5_kickstart_password: Changeme!
+alma8.5_dnf_or_yum: "dnf"
+# alma8.4 defaults
+alma8.4_iso: "AlmaLinux-8.4-x86_64-dvd.iso"
+alma8.4_iso_url: "https://repo.almalinux.org/vault/8.4/isos/x86_64/AlmaLinux-8.4-x86_64-dvd.iso"
+alma8.4_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
+alma8.4_kickstart_password: Changeme!
+alma8.4_dnf_or_yum: "dnf"
+# alma8.3 defaults
+alma8.3_iso: "AlmaLinux-8.3-x86_64-dvd.iso"
+alma8.3_iso_url: "https://repo.almalinux.org/vault/8.3/isos/x86_64/AlmaLinux-8.3-x86_64-dvd.iso"
+alma8.3_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
+alma8.3_kickstart_password: Changeme!
+alma8.3_dnf_or_yum: "dnf"
 
 # rhel8
 rhel8_iso: "rhel-8.8-x86_64-dvd.iso"

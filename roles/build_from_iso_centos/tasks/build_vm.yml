@@ -215,6 +215,21 @@
   delegate_to: localhost
   register: deploy_vm
 
+# Create serial ports
+- name: Create serial ports 
+  community.vmware.vmware_guest_serial_port:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no 
+    name: '{{ vm_name }}'
+    backings: "{{serial_ports}}"
+  delegate_to: localhost
+  register: create_serial_ports
+  when: 
+    - serial_ports is defined
+    - serial_ports is not false
+
 - name: Set boot order
   community.vmware.vmware_guest_boot_manager:
     hostname: '{{ vcenter_address }}'
