@@ -8,13 +8,33 @@ centos7_kickstart_file: "{{role_path}}/files/CentOS7/ks.cfg"
 centos7_kickstart_password: Changeme!
 centos7_dnf_or_yum: "yum"
 
-# centos8
-centos8_iso: "CentOS-8.3.2011-x86_64-dvd1.iso"
-centos8_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso"
+# centos8 - default version=8
+centos8_iso: "CentOS-8.5.2111-x86_64-dvd1.iso"
+centos8_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.5.2111/isos/x86_64/CentOS-8.5.2111-x86_64-dvd1.iso"
 centos8_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
 centos8_kickstart_password: Changeme!
 centos8_dnf_or_yum: "dnf"
+# centos 8.5
+centos8.5_iso: "CentOS-8.5.2111-x86_64-dvd1.iso"
+centos8.5_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.5.2111/isos/x86_64/CentOS-8.5.2111-x86_64-dvd1.iso"
+centos8.5_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
+centos8.5_kickstart_password: Changeme!
+centos8.5_dnf_or_yum: "dnf"
+# centos 8.4
+centos8.4_iso: "CentOS-8.4.2105-x86_64-dvd1.iso"
+centos8.4_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.4.2105/isos/x86_64/CentOS-8.4.2105-x86_64-dvd1.iso"
+centos8.4_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
+centos8.4_kickstart_password: Changeme!
+centos8.4_dnf_or_yum: "dnf"
+# centos 8.3
+centos8.3_iso: "CentOS-8.3.2011-x86_64-dvd1.iso"
+centos8.3_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso"
+centos8.3_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
+centos8.3_kickstart_password: Changeme!
+centos8.3_dnf_or_yum: "dnf"
 #Older builds linger in old mirrors
+# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.5.2111/isos/x86_64/CentOS-8.5.2111-x86_64-dvd1.iso
+# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.4.2105/isos/x86_64/CentOS-8.4.2105-x86_64-dvd1.iso
 # https://mirror.chpc.utah.edu/pub/vault.centos.org/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso
 # https://mirror.chpc.utah.edu/pub/vault.centos.org/8.2.2004/isos/x86_64/CentOS-8.2.2004-x86_64-dvd1.iso
 # https://mirror.chpc.utah.edu/pub/vault.centos.org/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-dvd1.iso

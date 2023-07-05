@@ -1,7 +1,7 @@
 ---
 - name: remove if absent
   include_tasks: absent.yml
-  when: state == "absent" or force
+  when: state == "absent" or state == "force"
 
 - name: Build CentOS VM - ansible
   include_tasks: build_vm.yml

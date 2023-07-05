@@ -21,9 +21,9 @@ all:
         vm_num_cpus: 2
         vm_disk_gb: 40
         install_xrdp: true
-        state: absent
       hosts:
         centos7:
+          state: absent
           ip_address: 192.168.0.171
           distro: "centos"
           version: "7"
@@ -37,12 +37,14 @@ all:
             - "yum install -y docker-ce docker-ce-cli containerd.io"
             - "systemctl enable docker --now"
         centos8:
+          state: force
           ip_address: 192.168.0.181
           distro: "centos"
           version: "8"
           install_xrdp: true
           install_ansible: true
         alma8:
+          state: absent
           ip_address: 192.168.0.182
           distro: "alma"
           version: "8"
@@ -59,6 +61,7 @@ all:
             - name: "{{ lab_lan1_portgroup }}"
               device_type: e1000
         rocky8:
+          state: absent
           ip_address: 192.168.0.183
           distro: "rocky"
           version: "8.8"
@@ -73,12 +76,14 @@ all:
             - "dnf install -y docker-ce docker-ce-cli containerd.io"
             - "systemctl enable docker --now"
         rhel8:
+          state: absent
           ip_address: 192.168.0.184
           distro: "rhel"
           version: "8.8"
           install_xrdp: true
           install_ansible: true
         stream8:
+          state: absent
           ip_address: 192.168.0.185
           distro: "stream"
           version: "8"
