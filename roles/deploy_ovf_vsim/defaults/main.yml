@@ -1,5 +1,5 @@
 # Path to the Simulate ONTAP OVA File
-ovf_version: "9.9.1"
+ovf_version: "9.12.1"
 ovf_file:    "{{ role_path }}/files/vsim-netapp-DOT{{ ovf_version }}-cm_nodar.ova"
 
 # Default action is to create.  
@@ -7,6 +7,11 @@ state: "present"
 force: no
 console_muted: true
 #add_nodes_by_serial: ""
+
+# default delays
+node_setup_delay: 90      # seconds to wait after vmtools responds before starting node setup
+cluster_setup_delay: 150  # seconds to wait between node setup and cluster setup
+add_nodes_delay: 60       # seconds to wait between cluster setup and adding nodes
 
 # vSphere Information
 # vcenter_address: "vcenter.demo.lab"

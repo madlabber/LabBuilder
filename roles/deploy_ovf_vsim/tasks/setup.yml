@@ -71,8 +71,8 @@
       - "{{ ontap_cluster_name | default(vm_name) }}"
       - "" # This is here to force the enter key to be pressed
 
-  - name: Wait 120 seconds for cluster setup
-    wait_for: timeout=120
+  - name: 'Wait for {{ cluster_setup_delay|default(120) }} seconds before cluster setup'
+    wait_for: 'timeout="{{ cluster_setup_delay|default(120) }}'
     delegate_to: localhost
 
   - name: Complete cluster setup
@@ -96,8 +96,8 @@
       - "" # this is here to force the enter key after the preceding command
 
   #add_nodes_by_serial 
-  - name: Wait 60 seconds for command completion
-    wait_for: timeout=60
+  - name: 'Wait for {{ add_nodes_delay|default(60) }} seconds before adding nodes'
+    wait_for: 'timeout="{{ add_nodes_delay|default(60) }}'
     delegate_to: localhost
     when: 
       - add_nodes_by_serial|default("") != "" 
