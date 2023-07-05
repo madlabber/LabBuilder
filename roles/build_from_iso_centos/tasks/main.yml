@@ -5,4 +5,4 @@
 
 - name: Build CentOS VM - ansible
   include_tasks: build_vm.yml
-  when: state|default('present') == "present"
+  when: state|default('present') == "present" or state == "force"
