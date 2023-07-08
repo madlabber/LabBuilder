@@ -42,7 +42,16 @@ centos8.3_dnf_or_yum: "dnf"
 # https://mirror.chpc.utah.edu/pub/vault.centos.org/8.2.2004/isos/x86_64/CentOS-8.2.2004-x86_64-dvd1.iso
 # https://mirror.chpc.utah.edu/pub/vault.centos.org/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-dvd1.iso
 # https://mirror.chpc.utah.edu/pub/vault.centos.org/8.0.1905/isos/x86_64/CentOS-8-x86_64-1905-dvd1.iso
-
+rocky9_iso: "Rocky-9.2-x86_64-dvd.iso"
+rocky9_iso_url: "https://download.rockylinux.org/pub/rocky/9/isos/x86_64/Rocky-9.2-x86_64-dvd.iso"
+rocky9_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
+rocky9_kickstart_password: Changeme!
+rocky9_dnf_or_yum: "dnf"
+rocky9.2_iso: "Rocky-9.2-x86_64-dvd.iso"
+rocky9.2_iso_url: "https://download.rockylinux.org/pub/rocky/9/isos/x86_64/Rocky-9.2-x86_64-dvd.iso"
+rocky9.2_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
+rocky9.2_kickstart_password: Changeme!
+rocky9.2_dnf_or_yum: "dnf"
 # rocky8 defaults
 rocky8_iso: "Rocky-8.8-x86_64-dvd1.iso"
 rocky8_iso_url: "https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.8-x86_64-dvd1.iso"

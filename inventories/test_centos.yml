@@ -94,10 +94,19 @@ all:
         #   install_xrdp: true
         #   install_ansible: true
         #   nested_virtualization: true
-        stream9:
+        # stream9:
+        #   state: present
+        #   ip_address: 192.168.0.186
+        #   distro: "stream"
+        #   version: "9"
+        #   vm_memory_mb: 4096
+        #   install_xrdp: true
+        #   install_ansible: true
+        #   nested_virtualization: true
+        rocky9:
           state: present
-          ip_address: 192.168.0.185
-          distro: "stream"
+          ip_address: 192.168.0.187
+          distro: "rocky"
           version: "9"
           vm_memory_mb: 4096
           install_xrdp: true
