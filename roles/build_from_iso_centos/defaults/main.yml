@@ -2,7 +2,7 @@
 distro: "centos"
 #default state:
 state: present
- 
+
 
 # centos7
 centos7_iso: "CentOS-7-x86_64-DVD-2009.iso"
@@ -150,3 +150,8 @@ stream8_iso_url: "http://linux.mirrors.es.net/centos/8-stream/isos/x86_64/CentOS
 stream8_kickstart_file: "{{role_path}}/files/stream8/ks.cfg"
 stream8_kickstart_password: Changeme!
 stream8_dnf_or_yum: "dnf"
+stream9_iso: "CentOS-Stream-9-latest-x86_64-dvd1.iso"
+stream9_iso_url: "http://mirror.siena.edu/centos-stream/9-stream/BaseOS/x86_64/iso/CentOS-Stream-9-latest-x86_64-dvd1.iso"
+stream9_kickstart_file: "{{role_path}}/files/stream9/ks.cfg"
+stream9_kickstart_password: Changeme!
+stream9_dnf_or_yum: "dnf"
