@@ -10,7 +10,7 @@ console_muted: true
 
 # default delays
 node_setup_delay: 90      # seconds to wait after vmtools responds before starting node setup
-cluster_setup_delay: 150  # seconds to wait between node setup and cluster setup
+cluster_setup_delay: 120  # seconds to wait between node setup and cluster setup
 add_nodes_delay: 60       # seconds to wait between cluster setup and adding nodes
 
 # vSphere Information
