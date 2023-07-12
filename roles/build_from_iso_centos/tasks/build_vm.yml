@@ -12,6 +12,8 @@
     vm_password_old: "{{kickstart_password | default('Changeme!') }}"
     vm_password_new: "{{vm_password | default('P@ssw0rd') }}"
     config_iso:      "{{vm_name}}-ks.iso"
+    dnf_or_yum:      "dnf"
+
 
 #Translate old version format to new version format
 - name: set centos7 facts
@@ -45,9 +47,14 @@
   when: version|lower == "rhel8"
 # end of version translation
 
+- name: set dnf or yum
+  set_fact:
+    dnf_or_yum: "yum"
+  when: version|float < 8
+
 - name: distro and version vars lookup
   set_fact:
-    dnf_or_yum: "{{ lookup('vars', distro + version + '_dnf_or_yum') }}"
+    #dnf_or_yum: "{{ lookup('vars', distro + version + '_dnf_or_yum') }}"
     install_iso: "{{ lookup('vars', distro + version + '_iso') }}"
     install_iso_url: "{{ lookup('vars', distro + version + '_iso_url') }}"
     kickstart_file:  "{{ lookup('vars', distro + version + '_kickstart_file') }}"
@@ -209,24 +216,24 @@
       memory_mb: '{{ vm_memory_mb | default(2048) }}'
       num_cpus: '{{ vm_num_cpus | default(2) }}'
       nested_virt: '{{ nested_virtualization|default(false) }}'
-      scsi: lsilogicsas
+      scsi: paravirtual
     networks: '{{ networks|default(default_networks) }}'
     wait_for_ip_address: no
   delegate_to: localhost
   register: deploy_vm
 
 # Create serial ports
-- name: Create serial ports 
+- name: Create serial ports
   community.vmware.vmware_guest_serial_port:
     hostname: "{{ vcenter_address }}"
     username: "{{ vcenter_username }}"
     password: "{{ vcenter_password }}"
-    validate_certs: no 
+    validate_certs: no
     name: '{{ vm_name }}'
     backings: "{{serial_ports}}"
   delegate_to: localhost
   register: create_serial_ports
-  when: 
+  when:
     - serial_ports is defined
     - serial_ports is not false
 

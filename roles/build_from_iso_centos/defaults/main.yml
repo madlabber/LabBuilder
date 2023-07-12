@@ -11,7 +11,7 @@ centos7_kickstart_file: "{{role_path}}/files/CentOS7/ks.cfg"
 centos7_kickstart_password: Changeme!
 centos7_dnf_or_yum: "yum"
 
-# centos8 - default version=8
+# centos8 - default when version=8
 centos8_iso: "CentOS-8.5.2111-x86_64-dvd1.iso"
 centos8_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.5.2111/isos/x86_64/CentOS-8.5.2111-x86_64-dvd1.iso"
 centos8_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
@@ -35,24 +35,46 @@ centos8.3_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.3.2011/i
 centos8.3_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
 centos8.3_kickstart_password: Changeme!
 centos8.3_dnf_or_yum: "dnf"
-#Older builds linger in old mirrors
-# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.5.2111/isos/x86_64/CentOS-8.5.2111-x86_64-dvd1.iso
-# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.4.2105/isos/x86_64/CentOS-8.4.2105-x86_64-dvd1.iso
-# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso
-# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.2.2004/isos/x86_64/CentOS-8.2.2004-x86_64-dvd1.iso
-# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-dvd1.iso
-# https://mirror.chpc.utah.edu/pub/vault.centos.org/8.0.1905/isos/x86_64/CentOS-8-x86_64-1905-dvd1.iso
+# centos 8.2
+centos8.2_iso: "CentOS-8.2.2004-x86_64-dvd1.iso"
+centos8.2_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.2.2004/isos/x86_64/CentOS-8.2.2004-x86_64-dvd1.iso"
+centos8.2_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
+centos8.2_kickstart_password: Changeme!
+centos8.2_dnf_or_yum: "dnf"
+# centos 8.1
+centos8.1_iso: "CentOS-8.1.1911-x86_64-dvd1.iso"
+centos8.1_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-dvd1.iso"
+centos8.1_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
+centos8.1_kickstart_password: Changeme!
+centos8.1_dnf_or_yum: "dnf"
+# centos 8.0
+centos8.0_iso: "CentOS-8-x86_64-1905-dvd1.iso"
+centos8.0_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.0.1905/isos/x86_64/CentOS-8-x86_64-1905-dvd1.iso"
+centos8.0_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
+centos8.0_kickstart_password: Changeme!
+centos8.0_dnf_or_yum: "dnf"
+
+# Rocky linux
+# rocky 9 default when version=9
 rocky9_iso: "Rocky-9.2-x86_64-dvd.iso"
 rocky9_iso_url: "https://download.rockylinux.org/pub/rocky/9/isos/x86_64/Rocky-9.2-x86_64-dvd.iso"
 rocky9_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
 rocky9_kickstart_password: Changeme!
 rocky9_dnf_or_yum: "dnf"
+# rocky 9.2
 rocky9.2_iso: "Rocky-9.2-x86_64-dvd.iso"
 rocky9.2_iso_url: "https://download.rockylinux.org/pub/rocky/9/isos/x86_64/Rocky-9.2-x86_64-dvd.iso"
 rocky9.2_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
 rocky9.2_kickstart_password: Changeme!
 rocky9.2_dnf_or_yum: "dnf"
-# rocky8 defaults
+# rocky 9.1
+rocky9.1_iso: "Rocky-9.1-20221214.1-x86_64-dvd.iso"
+rocky9.1_iso_url: "https://dl.rockylinux.org/vault/rocky/9.1/isos/x86_64/Rocky-9.1-20221214.1-x86_64-dvd.iso"
+rocky9.1_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
+rocky9.1_kickstart_password: Changeme!
+rocky9.1_dnf_or_yum: "dnf"
+
+# rocky8 default when version=8
 rocky8_iso: "Rocky-8.8-x86_64-dvd1.iso"
 rocky8_iso_url: "https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.8-x86_64-dvd1.iso"
 rocky8_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
@@ -139,6 +161,8 @@ alma8.3_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
 alma8.3_kickstart_password: Changeme!
 alma8.3_dnf_or_yum: "dnf"
 
+# Red Hat Enterprise Linux
+# note: rhel URLs rarely if ever work.  When they don't, pre-stage the ISO in the datastore
 # rhel8
 rhel8_iso: "rhel-8.8-x86_64-dvd.iso"
 rhel8_iso_url: "https://developers.redhat.com/download-manager/file/rhel-8.8-x86_64-dvd.iso"
@@ -151,14 +175,18 @@ rhel8.8_iso_url: "https://developers.redhat.com/download-manager/file/rhel-8.8-x
 rhel8.8_kickstart_file: "{{role_path}}/files/RHEL8/ks.cfg"
 rhel8.8_kickstart_password: Changeme!
 rhel8.8_dnf_or_yum: "dnf"
-# note: rhel URLs rarely if ever work.  When they don't, pre-stage the ISO in the datastore
+# rhel9
+# RHEL9 requires a code change to build_vm.yml to accomodate paywalled EL9 repositories
+# maybe someday
 
-# stream  - because why not
+# (up)stream  - because why not
+# stream8
 stream8_iso: "CentOS-Stream-8-x86_64-latest-dvd1.iso"
 stream8_iso_url: "http://linux.mirrors.es.net/centos/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-latest-dvd1.iso"
 stream8_kickstart_file: "{{role_path}}/files/stream8/ks.cfg"
 stream8_kickstart_password: Changeme!
 stream8_dnf_or_yum: "dnf"
+# stream9
 stream9_iso: "CentOS-Stream-9-latest-x86_64-dvd1.iso"
 stream9_iso_url: "http://mirror.siena.edu/centos-stream/9-stream/BaseOS/x86_64/iso/CentOS-Stream-9-latest-x86_64-dvd1.iso"
 stream9_kickstart_file: "{{role_path}}/files/stream9/ks.cfg"

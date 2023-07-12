@@ -22,11 +22,11 @@ all:
         vm_disk_gb: 40
         install_xrdp: true
       hosts:
-        # centos7:
-        #   state: absent
-        #   ip_address: 192.168.0.171
-        #   distro: "centos"
-        #   version: "7"
+        centos7:
+          state: present
+          ip_address: 192.168.0.171
+          distro: "centos"
+          version: "7"
         #   install_xrdp: true
         #   install_ansible: true
         #   extra_commands:
@@ -103,12 +103,12 @@ all:
         #   install_xrdp: true
         #   install_ansible: true
         #   nested_virtualization: true
-        rocky9:
-          state: present
-          ip_address: 192.168.0.187
-          distro: "rocky"
-          version: "9"
-          vm_memory_mb: 4096
-          install_xrdp: true
-          install_ansible: true
-          nested_virtualization: true
+        # rocky9:
+        #   state: present
+        #   ip_address: 192.168.0.187
+        #   distro: "rocky"
+        #   version: "9"
+        #   vm_memory_mb: 4096
+        #   install_xrdp: true
+        #   install_ansible: true
+        #   nested_virtualization: true
