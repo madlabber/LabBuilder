@@ -32,7 +32,7 @@ all:
         vm_num_cpus: 2
         vm_disk_gb: 40
         install_xrdp: true
-        distro: "centos"
+        distro: "rocky"
         version: "8"
       hosts:
         jumphost:

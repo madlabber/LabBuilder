@@ -1,25 +1,23 @@
 all:
   hosts:
   vars:
-    lab_name: lab_ncie_san_v9111
+    lab_name: lab_a2n_isilon
     lab_prefix: "{{ lab_name }}_"
-    lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
-    lab_vm_datastore: "{{lab_name}}"
+    lab_vm_datastore: "{{ lab_name }}"
     lab_wan_portgroup: "VM Network"
-    lab_lan1_portgroup: "{{lab_prefix}}net1"
-    lab_lan2_portgroup: "{{lab_prefix}}net2"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
+    lab_lan2_portgroup: "{{ lab_name }}_net2"
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
-    lab_lan1_dns_ip: "192.168.0.11"
+    lab_lan1_dns_ip: "192.168.0.1"
     lab_domain_name:   "lab.local"
     lab_domain_controller: "dc01"
   children:
     pfsense:
       hosts:
         gateway:
-          #ip_address: 192.168.0.1
           vm_network_wan: "{{lab_wan_portgroup}}"
           vm_network_lan: "{{lab_lan1_portgroup}}"
           config_xml_file: "files/pfsense/config.xml"
@@ -45,22 +43,18 @@ all:
           vm_disk_gb: 40
     centos:
       hosts:
-        # ansible:
-        #   ip_address: 192.168.0.15
-        #   version: "7"
-        linux1:
+        linux:
           ip_address: 192.168.0.14
-          distro: "rocky"
-          version: "8"
-          install_xrdp: true
-      # vars:
+      vars:
+        distro: "rocky"
+        version: "8"
     vsims:
+      vars:
       hosts:
-        # Cluster1 will be a 4-node with 2 HA pairs
-        cluster1-01:
-          partner:      "cluster1-02"
-          cluster_name: "cluster1"
-          ovf_version:  "9.11.1"
+        ontap9-01:
+          partner:      "ontap9-02"
+          cluster_name: "ontap9"
+          ovf_version:  "9.12.1"
           cluster_mgmt_ip: 192.168.0.90
           ip_address:      192.168.0.91
           partner_ip:      192.168.0.92
@@ -71,28 +65,15 @@ all:
           shelf1_disk_count: 12
           fake_ssd_disk_size: 8192
           adp_enabled: "true"
-        cluster1-03:
-          partner:      "cluster1-04"
-          ovf_version:  "9.11.1"
-          ip_address:      192.168.0.93
-          partner_ip:      192.168.0.94
-          disk_model: "vscsi"
-          shelf0_disk_size: 8192
-          shelf0_disk_count: 12
-          shelf1_disk_size: 8192
-          shelf1_disk_count: 12
-          fake_ssd_disk_size: 8192
-          adp_enabled: "true"
-        # Cluster2 will be a single node cluster
-        cluster2-01:
-          cluster_name: "cluster2"
-          ovf_version:  "9.11.1"
-          cluster_mgmt_ip: 192.168.0.80
-          ip_address:      192.168.0.81
-          disk_model: "vscsi"
-          shelf0_disk_size: 8192
-          shelf0_disk_count: 12
-          shelf1_disk_size: 8192
-          shelf1_disk_count: 12
-          fake_ssd_disk_size: 8192
-          adp_enabled: "true"
+    ovf: # onefs simulator
+      vars:
+        ovf_file: files/isilon/9.1.0.0/9.1.0.0.ova
+        ovf_networks:
+          'nat': '{{ lab_lan1_portgroup }}'
+          'hostonly': '{{ lab_lan1_portgroup }}'
+          'bridged': '{{ lab_lan1_portgroup }}'
+        ovf_properties:
+      hosts:
+        isilon-01:
+        isilon-02:
+        isilon-03:

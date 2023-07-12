@@ -36,3 +36,16 @@ all:
     #         # Install Putty
     #         - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
     #         - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+    ovf:
+      vars:
+        ovf_file: files/isilon/9.1.0.0/9.1.0.0.ova
+        ovf_networks:
+          'nat': '{{ lab_lan1_portgroup }}'
+          'hostonly': '{{ lab_lan1_portgroup }}'
+          'bridged': '{{ lab_lan1_portgroup }}'
+        ovf_properties:
+      hosts:
+        onefs-1:
+        onefs-2:
+        onefs-3:
+

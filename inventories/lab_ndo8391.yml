@@ -1,7 +1,7 @@
 all:
   hosts:
   vars:
-    lab_name: lab_ncie_san_v9111
+    lab_name: lab_ndo8391
     lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
@@ -45,22 +45,19 @@ all:
           vm_disk_gb: 40
     centos:
       hosts:
-        # ansible:
-        #   ip_address: 192.168.0.15
-        #   version: "7"
         linux1:
           ip_address: 192.168.0.14
           distro: "rocky"
           version: "8"
           install_xrdp: true
-      # vars:
+      vars:
     vsims:
       hosts:
         # Cluster1 will be a 4-node with 2 HA pairs
         cluster1-01:
           partner:      "cluster1-02"
           cluster_name: "cluster1"
-          ovf_version:  "9.11.1"
+          ovf_version:  "8.3.2"
           cluster_mgmt_ip: 192.168.0.90
           ip_address:      192.168.0.91
           partner_ip:      192.168.0.92
@@ -73,7 +70,7 @@ all:
           adp_enabled: "true"
         cluster1-03:
           partner:      "cluster1-04"
-          ovf_version:  "9.11.1"
+          ovf_version:  "9.1"
           ip_address:      192.168.0.93
           partner_ip:      192.168.0.94
           disk_model: "vscsi"
@@ -83,16 +80,4 @@ all:
           shelf1_disk_count: 12
           fake_ssd_disk_size: 8192
           adp_enabled: "true"
-        # Cluster2 will be a single node cluster
-        cluster2-01:
-          cluster_name: "cluster2"
-          ovf_version:  "9.11.1"
-          cluster_mgmt_ip: 192.168.0.80
-          ip_address:      192.168.0.81
-          disk_model: "vscsi"
-          shelf0_disk_size: 8192
-          shelf0_disk_count: 12
-          shelf1_disk_size: 8192
-          shelf1_disk_count: 12
-          fake_ssd_disk_size: 8192
-          adp_enabled: "true"
+
