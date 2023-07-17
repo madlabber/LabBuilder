@@ -35,9 +35,9 @@ all:
     vcenter:
       hosts:
         vcsa:
-          ip_address: 192.168.0.50        
-          vm_fqdn: "vcsa.lab.local" 
-          ovf_file: "files/VMware/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"          
+          ip_address: 192.168.0.50
+          vm_fqdn: "vcsa.lab.local"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
     nestedesx:
       hosts:
         esx01:
@@ -56,6 +56,5 @@ all:
           vm_disk2_size_gb: 40
           create_local_vmfs: 'False'
           enable_ssh: 'True'
-
-
-
+          ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi7.0_Appliance_Template_v1.ova"
+          ovf_file: "files/Nested_ESXi7.0_Appliance_Template_v1.ova"
