@@ -101,11 +101,25 @@
   vars_files:
     - vars/main.yml
   tasks:
+    - set_fact:
+        ovf_file: 'files/Nested_ESXi{{esx_version}}_Appliance_Template_v2.ova'
+      when:
+        - esx_version|string|default("") != ""
+        - ovf_file|string|default("") == ""
+    - set_fact:
+        ovf_url: 'https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi{{esx_version}}_Appliance_Template_v2.ova'
+      when:
+        - esx_version|string|default("") != ""
+        - ovf_url|string|default("") == ""
+    - debug:
+        msg:
+          - "ovf_file: {{ovf_file}}"
+          - "ovf_url : {{ovf_url}}"
     - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
       vars:
         ovf_version: "{{esx_version}}" #7.0u1, 7.0, 6.7u3, 6.7u2, 6.7u1, 6.7 ... 6.0?
-        ovf_file: "files/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
-        ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi{{ovf_version}}_Appliance_Template_v1.ova"
+        #ovf_file: "{{ ovf_file }}"
+        #ovf_url: "{{ ovf_url }}"
         vm_name:      "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_network:   "{{ lab_lan1_portgroup }}"
         vm_datastore: "{{ lab_vm_datastore }}"
