@@ -1,0 +1,72 @@
+---
+- name: "Prepare new lab pod"
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    vars/main.yml
+  tasks:
+  - debug:
+      msg:
+      - "lab name:           {{ lab_name|default('') }}"
+      - "lab_vm_datastore:   {{ lab_vm_datastore|default('') }}"
+      - "lab_lan1_portgroup: {{ lab_lan1_portgroup|default('') }}"
+      - "lab_lan2_portgroup: {{ lab_lan2_portgroup|default('') }}"
+
+  - name: Create Lab Volume
+    na_ontap_volume:
+      state: present
+      name: "{{ lab_vm_datastore }}"
+      aggregate_name: "{{ ontap_aggregate }}"
+      size: "{{ ontap_vol_size_gb }}"
+      size_unit: gb
+      space_guarantee: none
+      volume_security_style: unix
+      junction_path: "/{{ ontap_vol_labs }}/{{ lab_vm_datastore }}"
+      vserver: "{{ ontap_svm_name }}"
+      hostname: "{{ ontap_address }}"
+      username: admin
+      password: "{{ ontap_password }}"
+      https: true
+      validate_certs: false
+
+  - name: Mount NFS labs datastore to ESXi
+    vmware_host_datastore:
+      hostname: '{{ item }}'
+      username: '{{ esxi_username }}'
+      password: '{{ esxi_password }}'
+      esxi_hostname: '{{ esxi_hostname }}'
+      validate_certs: no
+      datastore_name: "{{ lab_vm_datastore }}"
+      datastore_type: 'nfs'
+      nfs_server: '{{ ontap_svm_address }}'
+      nfs_path: "/{{ ontap_vol_labs }}/{{ lab_vm_datastore }}"
+      nfs_ro: no
+      state: present
+    delegate_to: localhost
+    with_items: "{{cluster_hosts}}"
+
+  - name: Add Management Network VM Portgroup to all hosts in a cluster
+    community.vmware.vmware_portgroup:
+      hostname: "{{ vcenter_address }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: no
+      cluster_name: "{{ vcenter_cluster }}"
+      switch: "{{ esxi_vswitch }}"
+      portgroup: "{{ lab_lan1_portgroup }}"
+      vlan_id: "{{ vlan_id|default(991) }}"
+    delegate_to: localhost
+    when: lab_lan1_portgroup|default('') != ""
+
+  - name: Add Management Network VM Portgroup to all hosts in a cluster
+    community.vmware.vmware_portgroup:
+      hostname: "{{ vcenter_address }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: no
+      cluster_name: "{{ vcenter_cluster }}"
+      switch: "{{ esxi_vswitch }}"
+      portgroup: "{{ lab_lan2_portgroup }}"
+      vlan_id: "{{ vlan_id|default(992) }}"
+    delegate_to: localhost
+    when: lab_lan2_portgroup|default('') != ""

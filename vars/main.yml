@@ -1,15 +1,19 @@
-# If there is no vcenter, use the esxi host crendentials 
+# If there is no vcenter, use the esxi host crendentials
 # to complete the vcenter variables
-vcenter_address: labvc01.schlab.pri 
+vcenter_address: labvc01.schlab.pri
 vcenter_username: administrator@vsphere.local
 vcenter_password: P@ssw0rd
 
 # # If there is no vcenter, use 'ha-datacenter'
-vcenter_datacenter: Datacenter 
+vcenter_datacenter: Datacenter
 
 # Default cluster for new VM provisioning
 # if there is no cluster set it to ""
 vcenter_cluster: "Resource Cluster"
+cluster_hosts:
+  - 192.168.123.47
+  - 192.168.123.49
+  
 
 # Credentials for a host with access to the datastore
 # Used when ISOs are missing from the ISO datastore
@@ -37,5 +41,15 @@ esxi_vswitch: "vSwitch1"
 # vcenter_address: 192.168.123.49
 # vcenter_username: root
 # vcenter_password: P@ssw0rd
-# vcenter_datacenter: 'ha-datacenter' 
+# vcenter_datacenter: 'ha-datacenter'
 # vcenter_cluster: ""
+
+# ONTAP vars required to build lab pods
+ontap_address: "192.168.123.10"
+ontap_password: "P@ssw0rd"
+ontap_svm_name: "svm33"
+ontap_svm_address: "192.168.123.33"
+ontap_svm_lif: "svm1_lif1"
+ontap_vol_labs: "Labs"
+ontap_vol_size_gb: 500
+ontap_aggregate: "ots10_01_SSD_1"
