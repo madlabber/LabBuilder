@@ -32,7 +32,7 @@ all:
             # Install Putty
             - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
             - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
-            # Install WinSCP
+            # Install WinSCP <- this install fails: website is broken by spam redirects
             - "Invoke-WebRequest -Uri https://winscp.net/download/WinSCP-5.19.5-Setup.exe -OutFile C:\\Windows\\temp\\WinSCP-Setup.exe"
             - "C:\\Windows\\temp\\WinSCP-Setup.exe /SILENT /ALLUSERS"
           serial_ports: 
