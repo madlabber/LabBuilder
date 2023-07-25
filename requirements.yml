@@ -1,0 +1,6 @@
+---
+# Collections:
+collections:
+- netapp.ontap
+- community.general
+- community.vmware
