@@ -25,5 +25,5 @@ all:
             - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
             - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
             # Install Putty
-            - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+            - "Invoke-WebRequest -Uri https://the.earth.li/~sgtatham/putty/latest/w64/putty-64bit-0.78-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
             - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
