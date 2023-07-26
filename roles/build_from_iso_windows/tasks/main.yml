@@ -18,6 +18,12 @@
 
 - name: set defaults Server2019eval
   set_fact:
+    install_iso: "{{ Server2022eval_install_iso }}"
+    install_iso_url: "{{ Server2022eval_install_iso_url }}"
+  when: version == "Server2022eval"
+
+- name: set defaults Server2019eval
+  set_fact:
     version: "Server2019eval"
     install_iso: "{{ Server2019eval_install_iso }}"
     install_iso_url: "{{ Server2019eval_install_iso_url }}"

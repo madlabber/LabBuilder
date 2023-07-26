@@ -44,6 +44,12 @@ all:
           vm_memory_mb: 2048
           vm_num_cpus: 2
           vm_disk_gb: 40
+        server2022:
+          ip_address: 192.168.0.22
+          version: "Server2022eval"
+          vm_memory_mb: 2048
+          vm_num_cpus: 2
+          vm_disk_gb: 40
     ovf:
       vars:
         ovf_file: files/isilon/9.1.0.0/9.1.0.0.ova

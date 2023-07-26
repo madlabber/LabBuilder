@@ -13,7 +13,9 @@ config_iso: "{{ vm_name }}-{{ version }}.iso"
 
 # This is the location of the autounattend.xml file
 unattend_file: "{{ role_path }}/files/{{ version }}/autounattend.xml"
-
+#version: "Server2022eval"
+Server2022eval_install_iso: "SERVER_EVAL_x64FRE_en-us.iso"
+Server2022eval_install_iso_url: "https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso"
 #version: "Server2019eval"
 Server2019eval_install_iso: "17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
 Server2019eval_install_iso_url: "https://software-download.microsoft.com/download/pr/{{Server2019eval_install_iso}}"
