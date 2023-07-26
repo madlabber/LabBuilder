@@ -14,11 +14,24 @@ config_iso: "{{ vm_name }}-{{ version }}.iso"
 # This is the location of the autounattend.xml file
 unattend_file: "{{ role_path }}/files/{{ version }}/autounattend.xml"
 
+#version: "Server2019eval"
+Server2019eval_install_iso: "17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
+Server2019eval_install_iso_url: "https://software-download.microsoft.com/download/pr/{{Server2019eval_install_iso}}"
+#version: Server2016eval
+Server2016eval_install_iso: "Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
+Server2016eval_install_iso_url: "http://software-download.microsoft.com/download/pr/{{Server2016eval_install_iso}}"
+#version: Server2012R2eval
+Server2012R2eval_install_iso: "9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
+Server2012R2eval_install_iso_url: "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/{{Server2012R2eval_install_iso}}"
+#version:
+Windows7eval_install_iso: "7600.16385.090713-1255_x64fre_enterprise_en-us_EVAL_Eval_Enterprise-GRMCENXEVAL_EN_DVD.iso"
+Windows7eval_install_iso_url: "http://care.dlservice.microsoft.com/dl/download/evalx/win7/x64/EN/{{Windows7eval_install_iso}}"
+
 # This is the default VM name
 #vm_name: WindowsVM
 
 # if emtpty windows generates a random hostname as configured in the autounattend.xml file
-#vm_hostname: "" 
+#vm_hostname: ""
 
 # The guest_id value must be valid per the VMware documentation
 #vm_guest_id: windows9Server64Guest

@@ -9,37 +9,37 @@
     vm_disk_gb:      "{{ vm_disk_gb      | default(40) }}"
     vm_address:      "{{ vm_address      | default('') }}"
     vm_netmask_cidr: "{{ vm_netmask_cidr | default('') }}"
-    vm_gateway:      "{{ vm_gateway      | default('') }}"    
-    vm_dns_server:   "{{ vm_dns_server   | default('') }}" 
-    vm_domain:       "{{ vm_domain       | default('') }}" 
+    vm_gateway:      "{{ vm_gateway      | default('') }}"
+    vm_dns_server:   "{{ vm_dns_server   | default('') }}"
+    vm_domain:       "{{ vm_domain       | default('') }}"
     vm_username:     "{{ vm_username     | default('.\\Administrator') }}" # local administrator account name
     vm_password_old: "{{ vm_password_old | default('Changeme!') }}"
-    vm_password_new: "{{ vm_password_new | default('P@ssw0rd') }}"    
+    vm_password_new: "{{ vm_password_new | default('P@ssw0rd') }}"
 
 - name: set defaults Server2019eval
   set_fact:
     version: "Server2019eval"
-    install_iso: "17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
-    install_iso_url: "https://software-download.microsoft.com/download/pr/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
+    install_iso: "{{ Server2019eval_install_iso }}"
+    install_iso_url: "{{ Server2019eval_install_iso_url }}"
   when: version|default(Server2019eval) == "Server2019eval"
 
 - name: set defaults Server2016eval
   set_fact:
-    install_iso: "Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
-    install_iso_url: "http://software-download.microsoft.com/download/pr/Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
+    install_iso: "{{ Server2016eval_install_iso }}"
+    install_iso_url: "{{ Server2016eval_install_iso_url }}"
   when: version == "Server2016eval"
 
 - name: set defaults Server2012R2eval
   set_fact:
-    install_iso: "9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
-    install_iso_url: "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
+    install_iso: "{{ Server2012R2eval_install_iso }}"
+    install_iso_url: "{{ Server2012R2eval_install_iso_url }}"
   when: version == "Server2012R2eval"
 
 - name: set defaults Windows7eval
   set_fact:
     vm_guest_id: "windows7_64Guest"
-    install_iso: "7600.16385.090713-1255_x64fre_enterprise_en-us_EVAL_Eval_Enterprise-GRMCENXEVAL_EN_DVD.iso"
-    install_iso_url: "http://care.dlservice.microsoft.com/dl/download/evalx/win7/x64/EN/7600.16385.090713-1255_x64fre_enterprise_en-us_EVAL_Eval_Enterprise-GRMCENXEVAL_EN_DVD.iso"
+    install_iso: "{{ Windows7eval_install_iso }}"
+    install_iso_url: "{{ Windows7eval_install_iso_url }}"
   when: version == "Windows7eval"
 
 - name: Create kickstart ISO
@@ -56,8 +56,8 @@
   community.vmware.vsphere_copy:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     src: "{{ role_path }}/files/{{config_iso}}"
     datacenter: "{{ vcenter_datacenter }}"
     datastore: "{{ vm_datastore }}"
@@ -69,7 +69,7 @@
   community.vmware.vsphere_file:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
+    password: '{{ vcenter_password }}'
     validate_certs: no
     datacenter: "{{vcenter_datacenter}}"
     datastore: "{{ iso_datastore }}"
@@ -77,7 +77,7 @@
     state: file
   register: install_iso_exists
   delegate_to: localhost
-  ignore_errors: true 
+  ignore_errors: true
 
 - name: delete kickstart ISO
   ansible.builtin.file:
@@ -98,8 +98,8 @@
   community.vmware.vmware_host_service_manager:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     esxi_hostname: '{{ esxi_hostname }}'
     service_name: TSM-SSH
     state: present
@@ -111,8 +111,8 @@
   community.vmware.vmware_host_service_manager:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     esxi_hostname: '{{ esxi_hostname }}'
     service_name: TSM
     state: present
@@ -130,8 +130,8 @@
   community.vmware.vmware_host_service_manager:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     esxi_hostname: '{{ esxi_hostname }}'
     service_name: TSM-SSH
     state: absent
@@ -142,23 +142,23 @@
   community.vmware.vmware_host_service_manager:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     esxi_hostname: '{{ esxi_hostname }}'
     service_name: TSM
     state: absent
   delegate_to: localhost
   when: tsm_service.changed
 
-- debug: msg="vm_network - {{ vm_network }}" 
+- debug: msg="vm_network - {{ vm_network }}"
 - name: Create VM
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}' 
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     datacenter: "{{vcenter_datacenter}}"
-    cluster: '{{vcenter_cluster}}'    
+    cluster: '{{vcenter_cluster}}'
     folder: /
     name: '{{ vm_name }}'
     state: present
@@ -193,8 +193,8 @@
   community.vmware.vmware_guest_boot_manager:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ vm_name }}'
     boot_delay: 1000
     enter_bios_setup: False
@@ -218,7 +218,7 @@
 #       - type: 'pipe'
 #         pipe_name: '\\.\pipe\{{ vm_name }}_com2'
 #         endpoint: 'client'
-#   when: 
+#   when:
 #     - serial_ports|default(false)
 
 # Create serial ports
@@ -227,12 +227,12 @@
     hostname: "{{ vcenter_address }}"
     username: "{{ vcenter_username }}"
     password: "{{ vcenter_password }}"
-    validate_certs: no 
+    validate_certs: no
     name: '{{ vm_name }}'
     backings: "{{serial_ports}}"
   delegate_to: localhost
   register: create_serial_ports
-  when: 
+  when:
     - serial_ports is defined
     - serial_ports is not false
 
@@ -240,32 +240,32 @@
   community.vmware.vmware_guest_powerstate:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ vm_name }}'
     state: powered-on
   delegate_to: localhost
   register: powerstate
 
-- name: Wait for VMware tools to become available 
+- name: Wait for VMware tools to become available
   community.vmware.vmware_guest_tools_wait:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}' 
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ vm_name }}'
   delegate_to: localhost
   retries: 10
   delay: 60
-  register: result           
-  until: result is succeeded 
+  register: result
+  until: result is succeeded
 
 - name: Set password via vmware_vm_shell
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "{{vm_username}}"
 #    vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
@@ -281,8 +281,8 @@
   community.vmware.vmware_guest_info:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     datacenter: "{{vcenter_datacenter}}"
     name: '{{ vm_name }}'
   delegate_to: localhost
@@ -291,14 +291,14 @@
 - set_fact:
     _ipv4: "{{ vmfacts['instance']['ipv4'] | default('')}}"
 
-#- debug: msg="IP Address - {{ vmfacts['instance'] }}"  
+#- debug: msg="IP Address - {{ vmfacts['instance'] }}"
 
 - name: Set static IP address
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "{{vm_username}}"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
@@ -307,12 +307,12 @@
     wait_for_process: true
   delegate_to: localhost
   retries: 6
-  delay: 10 
-  register: result           
-  until: result is succeeded      
+  delay: 10
+  register: result
+  until: result is succeeded
   loop:
     - "-command \"(new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ vm_address }} -prefixlength {{vm_netmask_cidr}} -defaultgateway {{ vm_gateway }})\""
-  when: 
+  when:
     - vm_address != ""
     - vm_address != "{{_ipv4}}"
 
@@ -320,8 +320,8 @@
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "{{vm_username}}"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
@@ -330,20 +330,20 @@
     wait_for_process: true
   delegate_to: localhost
   retries: 6
-  delay: 10 
-  register: result           
-  until: result is succeeded      
+  delay: 10
+  register: result
+  until: result is succeeded
   loop:
     - "-command \"(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }})\""
-  when: 
+  when:
     - vm_dns_server != ""
 
 - name: Enable RDP
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "{{vm_username}}"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
@@ -352,9 +352,9 @@
     wait_for_process: true
   delegate_to: localhost
   retries: 6
-  delay: 10 
-  register: result           
-  until: result is succeeded      
+  delay: 10
+  register: result
+  until: result is succeeded
   loop:
     - "-command \"(set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name fDenyTSConnections -Value 0)\""
     - "-command \"(Enable-NetFirewallRule -DisplayGroup 'Remote Desktop')\""
@@ -363,8 +363,8 @@
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "{{vm_username}}"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
@@ -372,7 +372,7 @@
     vm_shell_args: " -command \"({{item}})\""
     wait_for_process: true
   delegate_to: localhost
-  register: checkhostname           
+  register: checkhostname
   ignore_errors: true
   loop:
     - "$result=$(if($env:COMPUTERNAME -ne '{{vm_hostname}}'){throw})"
@@ -381,8 +381,8 @@
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     vm_username: "{{ vm_username }}"
     vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
@@ -391,12 +391,12 @@
     wait_for_process: true
   delegate_to: localhost
   retries: 6
-  delay: 10 
-  register: result           
-  until: result is succeeded      
+  delay: 10
+  register: result
+  until: result is succeeded
   loop:
     - "-command \"(Rename-Computer -NewName {{ vm_hostname }})\""
-  when: 
+  when:
     - vm_hostname != ""
     - checkhostname is failed
 
@@ -404,13 +404,13 @@
   community.vmware.vmware_guest_powerstate:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ vm_name }}'
     state: reboot-guest
   delegate_to: localhost
   register: deploy
-  when: 
+  when:
     - vm_hostname != ""
     - checkhostname is failed
 
@@ -422,15 +422,15 @@
   community.vmware.vmware_guest_tools_wait:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
-    validate_certs: no 
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ vm_name }}'
   delegate_to: localhost
   retries: 3
   delay: 15
-  register: result           
-  until: result is succeeded 
-  when: 
+  register: result
+  until: result is succeeded
+  when:
     - vm_hostname != ""
     - checkhostname is failed
 
@@ -469,10 +469,10 @@
 #   community.vmware.vmware_guest_info:
 #     hostname: '{{ vcenter_address }}'
 #     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'   
-#     validate_certs: no 
+#     password: '{{ vcenter_password }}'
+#     validate_certs: no
 #     datacenter: "{{vcenter_datacenter}}"
 #     name: '{{ vm_name }}'
 #   delegate_to: localhost
 #   register: vmfacts
-# - debug: msg="IP Address - {{ vmfacts['instance']['ipv4'] }}"  
+# - debug: msg="IP Address - {{ vmfacts['instance']['ipv4'] }}"
