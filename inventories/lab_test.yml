@@ -36,6 +36,14 @@ all:
             # Install Putty
             - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
             - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+    winservers:
+      hosts:
+        win1:
+          ip_address: 192.168.0.12
+          version: "Server2019eval"
+          vm_memory_mb: 2048
+          vm_num_cpus: 2
+          vm_disk_gb: 40
     ovf:
       vars:
         ovf_file: files/isilon/9.1.0.0/9.1.0.0.ova
