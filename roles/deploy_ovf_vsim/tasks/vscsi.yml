@@ -4,14 +4,14 @@
     esxi_login: &esxi_login
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
 
 - name: parse vars
   include_tasks: parse_vars.yml
 
 # Now we can deploy the VM
-- name: 'Deploy ovf file: {{ovf_file}}' 
+- name: 'Deploy ovf file: {{ovf_file}}'
   community.vmware.vmware_deploy_ovf:
     <<: *esxi_login
     datacenter: '{{ vcenter_datacenter }}'
@@ -26,8 +26,8 @@
   delegate_to: localhost
   retries: 10
   delay: 60
-  register: result           
-  until: result is succeeded 
+  register: result
+  until: result is succeeded
 
 - name: Adjust VM Sizing
   community.vmware.vmware_guest:
@@ -58,8 +58,8 @@
       - type: 'pipe'
         pipe_name: '\\.\pipe\{{ vm_name}}_com2'
         endpoint: 'client'
-  when: 
-    - serial_ports|default(false)
+  when:
+    - serial_ports|default(false) is false
 
 # Create serial ports
 - name: Create multiple serial ports with Backing type - network, pipe, device and file
@@ -67,12 +67,12 @@
     hostname: "{{ vcenter_address }}"
     username: "{{ vcenter_username }}"
     password: "{{ vcenter_password }}"
-    validate_certs: no 
+    validate_certs: no
     name: '{{ vm_name }}'
     backings: "{{serial_ports}}"
   delegate_to: localhost
   register: create_serial_ports
-  when: 
+  when:
     - serial_ports is defined
     - serial_ports is not false
 
@@ -84,9 +84,9 @@
     disk:
       - { size_mb: '{{shelf0_size}}', scsi_controller: 0, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning|lower}}", state: present, datastore: '{{vm_datastore}}'  }
   delegate_to: localhost
-  when: 
-    - shelf0_disk_size|default("") != ""   
-    - item.disk <= shelf0_disk_count|default(shelf0_qty)|int 
+  when:
+    - shelf0_disk_size|default("") != ""
+    - item.disk <= shelf0_disk_count|default(shelf0_qty)|int
   loop:
       - { disk:  1, unit_number: 0 }
       - { disk:  2, unit_number: 1 }
@@ -112,9 +112,9 @@
     disk:
       - { size_mb: '{{shelf1_size}}', scsi_controller: 1, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning|lower}}", state: present, datastore: '{{vm_datastore}}'  }
   delegate_to: localhost
-  when: 
-    - shelf1_disk_size|default("") != ""   
-    - item.disk <= shelf1_disk_count|default(shelf1_qty)|int 
+  when:
+    - shelf1_disk_size|default("") != ""
+    - item.disk <= shelf1_disk_count|default(shelf1_qty)|int
   loop:
       - { disk:  1, unit_number: 0 }
       - { disk:  2, unit_number: 1 }
@@ -140,9 +140,9 @@
     disk:
       - { size_mb: '{{shelf2_size}}', scsi_controller: 2, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning|lower}}", state: present, datastore: '{{vm_datastore}}'  }
   delegate_to: localhost
-  when: 
-    - shelf2_disk_size|default("") != ""   
-    - item.disk <= shelf2_disk_count|default(shelf2_qty)|int 
+  when:
+    - shelf2_disk_size|default("") != ""
+    - item.disk <= shelf2_disk_count|default(shelf2_qty)|int
   loop:
       - { disk:  1, unit_number: 0 }
       - { disk:  2, unit_number: 1 }
@@ -168,9 +168,9 @@
     disk:
       - { size_mb: '{{shelf3_size}}', scsi_controller: 3, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning|lower}}", state: present, datastore: '{{vm_datastore}}'  }
   delegate_to: localhost
-  when: 
-    - shelf3_disk_size|default("") != ""   
-    - item.disk <= shelf3_disk_count|default(shelf3_qty)|int 
+  when:
+    - shelf3_disk_size|default("") != ""
+    - item.disk <= shelf3_disk_count|default(shelf3_qty)|int
   loop:
       - { disk:  1, unit_number: 0 }
       - { disk:  2, unit_number: 1 }
@@ -221,7 +221,7 @@
   register: sendkeys_result
   retries: 3
   until: sendkeys_result is succeeded
-  loop: 
+  loop:
     # Set Serial Number and Sysid
     - "setenv SYS_SERIAL_NUM {{sys_serial_number}}"
     - "setenv bootarg.nvram.sysid {{nvram_sysid}}"
@@ -233,12 +233,12 @@
     - "setenv bootarg.vm.sim.vdevinit false"
     - "setenv bootarg.sim.vdevinit false"
     - "setenv bootarg.srm.disk.simnames false"
-    - "setenv bootarg.srm.disk.simulated false"      
+    - "setenv bootarg.srm.disk.simulated false"
     # Enable virtual disks
     - "setenv bootarg.srm.disk.config.pci true"
     - "setenv bootarg.srm.virtual.adapter true"
-    - "setenv bootarg.vm.data_diskmodel vscsi"  
-    # Set default raid type and checksum type    
+    - "setenv bootarg.vm.data_diskmodel vscsi"
+    # Set default raid type and checksum type
     - "setenv bootarg.vm.raidtype RAID-DP"
     - "setenv bootarg.vm.checksum_type block"
     # ADP Settings
@@ -261,7 +261,7 @@
   register: sendkeys_result
   retries: 3
   until: sendkeys_result is succeeded
-  loop: 
+  loop:
     - "setenv wafl-idedupe-allow-lowend? true"
     - "setenv allow-ssd-partitions? true"
     - "setenv fake-ssd {{ ((((fake_ssd_disk_size)-1/9)*8/9)|int)-6}}"
@@ -297,7 +297,7 @@
   register: sendkeys_result
   retries: 3
   until: sendkeys_result is succeeded
-  loop: 
+  loop:
     - "boot_ontap"
     - "" # this is here to force the enter key after the preceding command
 
@@ -308,11 +308,8 @@
   delegate_to: localhost
   retries: 3
   delay: 15
-  register: result           
-  until: result is succeeded 
+  register: result
+  until: result is succeeded
 
 - name: run setup
   include_tasks: setup.yml
-
-
-

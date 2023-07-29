@@ -11,8 +11,8 @@
     esxi_login: &esxi_login
       hostname: '{{ vcenter_address }}'
       username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no 
+      password: '{{ vcenter_password }}'
+      validate_certs: no
 
 - name: parse vars
   include_tasks: parse_vars.yml
@@ -37,7 +37,7 @@
   when: vm_num_nics|int <= 4
 
 # Now we can deploy the VM
-- name: '{{item}}: Deploy ovf file: {{ovf_file}}' 
+- name: '{{item}}: Deploy ovf file: {{ovf_file}}'
   community.vmware.vmware_deploy_ovf:
     <<: *esxi_login
     datacenter: '{{ vcenter_datacenter }}'
@@ -52,8 +52,8 @@
   delegate_to: localhost
   retries: 10
   delay: 60
-  register: result           
-  until: result is succeeded 
+  register: result
+  until: result is succeeded
   loop:
     - "{{node1_name}}"
     - "{{node2_name}}"
@@ -80,7 +80,7 @@
 # bug closed as a wont_fix by ansible
 - name: '{{node_name}}: add nics'
   include_tasks: add_nics.yml
-  vars: 
+  vars:
     vm_name: "{{ node_name }}"
   when: vm_num_nics|int > 4
   loop:
@@ -152,8 +152,8 @@
       - type: 'pipe'
         pipe_name: '\\.\pipe\{{ node1_name }}_com2'
         endpoint: 'client'
-  when: 
-    - serial_ports|default(false)
+  when:
+    - serial_ports|default(false) is false
 
 # Create serial ports
 - name: Create multiple serial ports with Backing type - network, pipe, device and file
@@ -161,12 +161,12 @@
     hostname: "{{ vcenter_address }}"
     username: "{{ vcenter_username }}"
     password: "{{ vcenter_password }}"
-    validate_certs: no 
+    validate_certs: no
     name: '{{ node1_name }}'
     backings: "{{serial_ports}}"
   delegate_to: localhost
   register: create_serial_ports
-  when: 
+  when:
     - serial_ports is defined
     - serial_ports is not false
 
@@ -178,7 +178,7 @@
       - type: 'pipe'
         pipe_name: '\\.\pipe\{{ node2_name}}_com2'
         endpoint: 'client'
-  when: 
+  when:
     - partner_serial_ports|default(false)
 
 # Create serial ports
@@ -187,12 +187,12 @@
     hostname: "{{ vcenter_address }}"
     username: "{{ vcenter_username }}"
     password: "{{ vcenter_password }}"
-    validate_certs: no 
+    validate_certs: no
     name: '{{ node2_name }}'
     backings: "{{partner_serial_ports}}"
   delegate_to: localhost
   register: create_serial_ports
-  when: 
+  when:
     - partner_serial_ports is defined
     - partner_serial_ports is not false
 
@@ -203,9 +203,9 @@
     node1_scsi_controller: 0
     node2_scsi_controller: 1
     lun_number: "{{item.unit_number}}"
-  when: 
-    - shelf0_disk_size|default("") != ""   
-    - item.disk <= shelf0_disk_count|default(shelf0_qty)|int 
+  when:
+    - shelf0_disk_size|default("") != ""
+    - item.disk <= shelf0_disk_count|default(shelf0_qty)|int
   loop:
       - { disk:  1, unit_number: 0 }
       - { disk:  2, unit_number: 1 }
@@ -230,9 +230,9 @@
     node1_scsi_controller: 1
     node2_scsi_controller: 0
     lun_number: "{{item.unit_number}}"
-  when: 
-    - shelf1_disk_size|default("") != ""   
-    - item.disk <= shelf1_disk_count|default(shelf1_qty)|int 
+  when:
+    - shelf1_disk_size|default("") != ""
+    - item.disk <= shelf1_disk_count|default(shelf1_qty)|int
   loop:
       - { disk:  1, unit_number: 0 }
       - { disk:  2, unit_number: 1 }
@@ -257,9 +257,9 @@
     node1_scsi_controller: 2
     node2_scsi_controller: 3
     lun_number: "{{item.unit_number}}"
-  when: 
-    - shelf2_disk_size|default("") != ""   
-    - item.disk <= shelf2_disk_count|default(shelf2_qty)|int 
+  when:
+    - shelf2_disk_size|default("") != ""
+    - item.disk <= shelf2_disk_count|default(shelf2_qty)|int
   loop:
       - { disk:  1, unit_number: 0 }
       - { disk:  2, unit_number: 1 }
@@ -284,9 +284,9 @@
     node1_scsi_controller: 3
     node2_scsi_controller: 2
     lun_number: "{{item.unit_number}}"
-  when: 
-    - shelf3_disk_size|default("") != ""   
-    - item.disk <= shelf3_disk_count|default(shelf3_qty)|int 
+  when:
+    - shelf3_disk_size|default("") != ""
+    - item.disk <= shelf3_disk_count|default(shelf3_qty)|int
   loop:
       - { disk:  1, unit_number: 0 }
       - { disk:  2, unit_number: 1 }
@@ -337,7 +337,7 @@
   register: sendkeys_result
   retries: 3
   until: sendkeys_result is succeeded
-  loop: 
+  loop:
     # Set Serial Number and Sysid
     - "setenv SYS_SERIAL_NUM {{node2_serial}}"
     - "setenv SYS_SERIAL_NUM {{node2_serial}}"
@@ -350,12 +350,12 @@
     - "setenv bootarg.vm.sim.vdevinit false"
     - "setenv bootarg.sim.vdevinit false"
     - "setenv bootarg.srm.disk.simnames false"
-    - "setenv bootarg.srm.disk.simulated false"      
+    - "setenv bootarg.srm.disk.simulated false"
     # Enable virtual disks
     - "setenv bootarg.srm.disk.config.pci true"
     - "setenv bootarg.srm.virtual.adapter true"
-    - "setenv bootarg.vm.data_diskmodel vscsi"  
-    # Set default raid type and checksum type    
+    - "setenv bootarg.vm.data_diskmodel vscsi"
+    # Set default raid type and checksum type
     - "setenv bootarg.vm.raidtype RAID-DP"
     - "setenv bootarg.vm.checksum_type block"
     # ADP Settings
@@ -381,7 +381,7 @@
   register: sendkeys_result
   retries: 3
   until: sendkeys_result is succeeded
-  loop: 
+  loop:
     - "setenv wafl-idedupe-allow-lowend? true"
     - "setenv allow-ssd-partitions? true"
     - "setenv fake-ssd {{ ((((fake_ssd_disk_size)-1/9)*8/9)|int)-6}}"
@@ -440,7 +440,7 @@
   register: sendkeys_result
   retries: 3
   until: sendkeys_result is succeeded
-  loop: 
+  loop:
     # Set Serial Number and Sysid
     - "setenv SYS_SERIAL_NUM {{node1_serial}}"
     - "setenv SYS_SERIAL_NUM {{node1_serial}}"
@@ -453,12 +453,12 @@
     - "setenv bootarg.vm.sim.vdevinit false"
     - "setenv bootarg.sim.vdevinit false"
     - "setenv bootarg.srm.disk.simnames false"
-    - "setenv bootarg.srm.disk.simulated false"      
+    - "setenv bootarg.srm.disk.simulated false"
     # Enable virtual disks
     - "setenv bootarg.srm.disk.config.pci true"
     - "setenv bootarg.srm.virtual.adapter true"
-    - "setenv bootarg.vm.data_diskmodel vscsi"  
-    # Set default raid type and checksum type    
+    - "setenv bootarg.vm.data_diskmodel vscsi"
+    # Set default raid type and checksum type
     - "setenv bootarg.vm.raidtype RAID-DP"
     - "setenv bootarg.vm.checksum_type block"
     # ADP Settings
@@ -484,7 +484,7 @@
   register: sendkeys_result
   retries: 3
   until: sendkeys_result is succeeded
-  loop: 
+  loop:
     - "setenv wafl-idedupe-allow-lowend? true"
     - "setenv allow-ssd-partitions? true"
     - "setenv fake-ssd {{ ((((fake_ssd_disk_size)-1/9)*8/9)|int)-6}}"
@@ -501,7 +501,7 @@
   register: sendkeys_result
   retries: 3
   until: sendkeys_result is succeeded
-  loop: 
+  loop:
     - "boot_ontap"
     - "" # this is here to force the enter key after the preceding command
 
@@ -515,7 +515,7 @@
   register: sendkeys_result
   retries: 3
   until: sendkeys_result is succeeded
-  loop: 
+  loop:
     - "boot_ontap"
     - "" # this is here to force the enter key after the preceding command
 
@@ -526,11 +526,8 @@
   delegate_to: localhost
   retries: 3
   delay: 15
-  register: result           
-  until: result is succeeded 
+  register: result
+  until: result is succeeded
 
 - name: run setup
   include_tasks: setup.yml
-
-
-

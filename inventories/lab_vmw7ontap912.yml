@@ -1,0 +1,124 @@
+all:
+  hosts:
+  vars:
+    lab_name: lab_vmw7ontap912
+    lab_prefix: "{{ lab_name }}_"
+    lab_password: P@ssw0rd
+    lab_vm_datastore: "{{ lab_name }}"
+    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.1"
+    lab_domain_name:   "lab.local"
+    lab_domain_controller: "dc01"
+  children:
+    pfsense:
+      hosts:
+        gateway:
+          vm_network_wan: "{{lab_wan_portgroup}}"
+          vm_network_lan: "{{lab_lan1_portgroup}}"
+          config_xml_file: "files/pfsense/config.xml"
+    dc:
+      hosts:
+        dc01:
+          version: "Server2022eval"
+          ip_address: 192.168.0.11
+          extra_commands:
+            # Install Chrome
+            - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
+            - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+            # Install Putty
+            - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+            - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+          serial_ports:
+            - type: 'pipe'
+              pipe_name: '\\.\pipe\{{lab_prefix}}com1'
+              endpoint: 'server'
+            - type: 'pipe'
+              pipe_name: '\\.\pipe\{{lab_prefix}}com2'
+              endpoint: 'server'
+    vcenter:
+      hosts:
+        vcsa:
+          ip_address: 192.168.0.50
+          vm_fqdn: "vcsa.lab.local"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.1.00200-21860503_OVF10.ova"
+    nestedesx:
+      hosts:
+        esx01:
+          ip_address: 192.168.0.51
+        esx02:
+          ip_address: 192.168.0.52
+        # esx03:
+        #   ip_address: 192.168.0.53
+        # esx04:
+        #   ip_address: 192.168.0.54
+      vars:
+          esx_version: "7.0u3"
+          vm_memory_mb: 10240
+          vm_num_cpus: 2
+          vm_disk1_size_gb: 4
+          vm_disk2_size_gb: 40
+          create_local_vmfs: 'False'
+          enable_ssh: 'True'
+          ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi7.0u3_Appliance_Template_v1.ova"
+          ovf_file: "files/Nested_ESXi7.0u3_Appliance_Template_v1.ova"
+    vsims:
+      hosts:
+        ontap-01:
+          partner:      "ontap-02"
+          cluster_name: "ontap"
+          ovf_version:  "9.12.1"
+          cluster_mgmt_ip: 192.168.0.90
+          ip_address:      192.168.0.91
+          partner_ip:      192.168.0.92
+          disk_model: "vscsi"
+          shelf0_disk_size: 12288
+          shelf0_disk_count: 12
+          shelf1_disk_size: 12288
+          shelf1_disk_count: 12
+          fake_ssd_disk_size: 12288
+          adpv2_enabled: "true"
+          serial_ports:
+            - type: 'pipe'
+              pipe_name: '\\.\pipe\{{lab_prefix}}com1'
+              endpoint: 'client'
+          partner_serial_ports:
+            - type: 'pipe'
+              pipe_name: '\\.\pipe\{{lab_prefix}}com2'
+              endpoint: 'client'
+    aiqum:
+      hosts:
+        aiqum:
+          ip_address: 192.168.0.28
+          ovf_file: files/ActiveIQUnifiedManager-9.13.ova
+    ovf:
+      vars:
+      hosts:
+        # ONTAP Tools for VMware
+        otv:
+          ip_address: 192.168.0.29
+          ovf_file: files/netapp-ontap-tools-for-vmware-vsphere-9.12-9342.ova
+          ovf_networks:
+            'nat': '{{ lab_lan1_portgroup }}'
+          ovf_properties:
+            vplatform.vpserver.passwd: "{{ lab_password }}" # ovf:qualifiers="MinLen(8),MaxLen(30)"
+            vplatform.vappliance.ntp.servers: "" #ovf:value="" A comma seperated list of NTP servers
+            vplatform.configure.vcf: false # vCenter server and user details are ignored when VCF is enabled.
+            vplatform.vcenter.register.ipAddress: 192.168.0.50 #vCenter Server Address
+            vplatform.vcenter.register.port: "443" #Specify the HTTPS port of an existing vCenter to register to.
+            vplatform.vcenter.register.username: administrator@vsphere.local #pecify the username of an existing vCenter to register to
+            vplatform.vcenter.register.passwd: "{{ lab_password }}" #Specify the password of an existing vCenter to register to.
+            vplatform.hostName: "otv" #Specify the hostname for the appliance. (Leave blank if DHCP is desired)
+            vplatform.ipAddress: 192.168.0.29 #Specify the IP address for the appliance. (Leave blank if DHCP is desired)
+            vplatform.prefixlength: "" #Specify the prefix length for IPv6. (Leave blank if DHCP is desired)
+            vplatform.netMask: "{{ lab_lan1_netmask }}" #Specify the subnet to use on the deployed network. (Leave blank if DHCP is desired)
+            vplatform.gateway: "{{ lab_lan1_gateway }}" #Specify the gateway on the deployed network. (Leave blank if DHCP is desired)
+            vplatform.primaryDNS: 192.168.0.11 #Specify the primary DNS server&apos;s IP address. (Leave blank if DHCP is desired)
+            vplatform.secondaryDNS: "{{ lab_lan1_dns_ip }}" #Specify the secondary DNS server&apos;s IP address. (optional - Leave blank if DHCP is desired)
+            vplatform.searchDomains: "{{ lab_domain_name }}" #Specify the comma separated list of search domain names to use when resolving host names.(Leave blank if DHCP is desired)
+            vplatform.maint.passwd: "{{ lab_password }}" #Password to assign to maint user account.
+            vplatform.derby.passwd: "{{ lab_password }}" #Password to assign to Derby DB.For security reasons, it is recommended to use a password that is of eight to thirty characters and contains a minimum of one upper, one lower, one digit, and one special character.
+            vplatform.vmname: "Vendor_Provider_Appliance"
