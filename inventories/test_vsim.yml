@@ -21,8 +21,8 @@ all:
         demo1-01:  
           partner:      "demo1-02"
           cluster_name: "demo1"          
-          ovf_version:  "9.11.1"   
-          cluster_mgmt_ip: 192.168.0.90                  
+          ovf_version:  "9.12.1"   
+          # cluster_mgmt_ip: 192.168.0.90                  
           ip_address:      192.168.0.91
           partner_ip:      192.168.0.92
           disk_model: "vscsi"
@@ -32,6 +32,24 @@ all:
           shelf1_disk_count: 12
           fake_ssd_disk_size: 12288
           adp_enabled: "true"
+          sys_serial_number: "4082368-50-7"
+          partner_serial: "4034389-06-2"
+        demo1-03:  
+          partner:      "demo1-04"
+          cluster_name: "demo1"          
+          ovf_version:  "9.12.1"                  
+          ip_address:      192.168.0.93
+          partner_ip:      192.168.0.94
+          disk_model: "vscsi"
+          shelf0_disk_size: 12288
+          shelf0_disk_count: 12
+          shelf1_disk_size: 12288
+          shelf1_disk_count: 12
+          fake_ssd_disk_size: 12288
+          adp_enabled: "true"
+          sys_serial_number: "408236-85-08"
+          partner_serial: "408236-85-09"
+
         #   bootargs:
         #     - "testarg=true"
         #     - "testarg2=true"
