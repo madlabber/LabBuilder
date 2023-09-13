@@ -37,6 +37,7 @@
   when: vm_num_nics|int <= 4
 
 # Now we can deploy the VM
+# use this version if the target is a cluster
 - name: '{{item}}: Deploy ovf file: {{ovf_file}}'
   community.vmware.vmware_deploy_ovf:
     <<: *esxi_login
@@ -57,6 +58,30 @@
   loop:
     - "{{node1_name}}"
     - "{{node2_name}}"
+  when: vcenter_cluster|default("") != ""
+
+# use this version if the target is a host that is not in a cluster
+- name: '{{item}}: Deploy ovf file: {{ovf_file}}'
+  community.vmware.vmware_deploy_ovf:
+    <<: *esxi_login
+    datacenter: '{{ vcenter_datacenter }}'
+    esxi_hostname: '{{esxi_hostname}}'
+    datastore: "{{ vm_datastore }}"
+    name: "{{ item }}"
+    ovf:  "{{ ovf_file }}"
+    disk_provisioning: "{{vm_disk_provisioning}}"
+    power_on: no
+    networks: "{u'hostonly':u'{{ cluster_network }}',u'nat':u'{{ data_network }}'}"
+    wait_for_ip_address: false
+  delegate_to: localhost
+  retries: 10
+  delay: 60
+  register: result
+  until: result is succeeded
+  loop:
+    - "{{node1_name}}"
+    - "{{node2_name}}"
+  when: vcenter_cluster|default("") == ""
 
 - name: '{{item}}: Adjust VM Sizing'
   community.vmware.vmware_guest:
