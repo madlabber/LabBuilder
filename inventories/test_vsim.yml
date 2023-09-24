@@ -18,8 +18,8 @@ all:
   children:
     vsims:
       hosts:
-        demo1-01:  
-          partner:      "demo1-02"
+        demo2-01:  
+          partner:      "demo2-02"
           #cluster_name: "demo1"          
           ovf_version:  "9.12.1"   
           # cluster_mgmt_ip: 192.168.0.90                  
