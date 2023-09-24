@@ -180,6 +180,24 @@
   when:
     - serial_ports|default(false) is false
 
+# Remove the VHA disk on IDE1:1
+- name: remove vha disk on IDE1:1
+  community.vmware.vmware_guest_disk:
+    <<: *esxi_login
+    datacenter: '{{ vcenter_datacenter }}'
+    name: '{{ item }}'
+    disk:
+      - state: absent
+        controller_type: ide
+        controller_number: 1
+        unit_number: 1
+        destroy: true
+  delegate_to: localhost
+  register: disk_facts
+  loop:
+    - "{{node1_name}}"
+    - "{{node2_name}}"
+
 # Create serial ports
 - name: Create multiple serial ports with Backing type - network, pipe, device and file
   community.vmware.vmware_guest_serial_port:
