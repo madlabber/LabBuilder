@@ -13,3 +13,7 @@ files/VSC/netapp-unified-virtual-appliance-for-vsc-vp-sra-9.7.1P1-6743-20201214_
 files/StorageGRID-Webscale-11.5.0/vsphere/*
 files/isilon/8.1.2.0/*
 files/isilon/9.1.0.0/*
+files/ONTAPSELECT_9141RC1.raw.tgz
+files/9141RC1_q_image.tgz
+files/ONTAPSELECT_9141RC1_UPGRADE.tgz
+files/SELECTDEPLOY_9141RC1.tar.gz
