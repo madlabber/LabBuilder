@@ -102,15 +102,15 @@
     - vars/main.yml
   tasks:
     - set_fact:
-        ovf_file: 'files/Nested_ESXi{{esx_version}}_Appliance_Template_v2.ova'
+        ovf_file: 'files/Nested_ESXi{{esx_version}}_Appliance_Template_v1.ova'
       when:
-        - esx_version|string|default("") != ""
-        - ovf_file|string|default("") == ""
+        - esx_version|default("")|string != ""
+        - ovf_file|default("")|string == ""
     - set_fact:
-        ovf_url: 'https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi{{esx_version}}_Appliance_Template_v2.ova'
+        ovf_url: 'https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi{{esx_version}}_Appliance_Template_v1.ova'
       when:
-        - esx_version|string|default("") != ""
-        - ovf_url|string|default("") == ""
+        - esx_version|default("")|string != ""
+        - ovf_url|default("")|string == ""
     - debug:
         msg:
           - "ovf_file: {{ovf_file}}"
