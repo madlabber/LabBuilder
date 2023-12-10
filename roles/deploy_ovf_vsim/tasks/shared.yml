@@ -101,6 +101,25 @@
     - "{{node1_name}}"
     - "{{node2_name}}"
 
+# Remove the VHA disk on IDE1:1
+- name: remove vha disk on IDE1:1
+  community.vmware.vmware_guest_disk:
+    <<: *esxi_login
+    datacenter: '{{ vcenter_datacenter }}'
+    name: '{{ item }}'
+    disk:
+      - state: absent
+        controller_type: ide
+        controller_number: 1
+        unit_number: 1
+        destroy: true
+  ignore_errors: yes
+  delegate_to: localhost
+  register: disk_facts
+  loop:
+    - "{{node1_name}}"
+    - "{{node2_name}}"
+
 # This wierdness is because with_sequence evaluates and fails even when this task is not executed
 # bug closed as a wont_fix by ansible
 - name: '{{node_name}}: add nics'
@@ -179,24 +198,6 @@
         endpoint: 'client'
   when:
     - serial_ports|default(false) is false
-
-# Remove the VHA disk on IDE1:1
-- name: remove vha disk on IDE1:1
-  community.vmware.vmware_guest_disk:
-    <<: *esxi_login
-    datacenter: '{{ vcenter_datacenter }}'
-    name: '{{ item }}'
-    disk:
-      - state: absent
-        controller_type: ide
-        controller_number: 1
-        unit_number: 1
-        destroy: true
-  delegate_to: localhost
-  register: disk_facts
-  loop:
-    - "{{node1_name}}"
-    - "{{node2_name}}"
 
 # Create serial ports
 - name: Create multiple serial ports with Backing type - network, pipe, device and file
