@@ -12,6 +12,7 @@ vcenter_datacenter: Datacenter
 vcenter_cluster: "Resource Cluster"
 cluster_hosts:
   - 192.168.123.47
+  - 192.168.123.48
   - 192.168.123.49
 #vcenter_cluster: "Management Cluster"
 
