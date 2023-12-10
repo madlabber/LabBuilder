@@ -13,7 +13,7 @@ vcenter_cluster: "Resource Cluster"
 cluster_hosts:
   - 192.168.123.47
   - 192.168.123.49
-  
+#vcenter_cluster: "Management Cluster"
 
 # Credentials for a host with access to the datastore
 # Used when ISOs are missing from the ISO datastore
