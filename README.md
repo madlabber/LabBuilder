@@ -26,3 +26,6 @@ python libraries
 - pywinrm
 - netapp-lib
 
+ESXi host(s)
+vCenter Server
+

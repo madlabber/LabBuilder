@@ -63,6 +63,9 @@ all:
         esx47:
           ip_address: 192.168.123.47
           cluster: "Resource Cluster"
+        esx48:
+          ip_address: 192.168.123.48
+          cluster: "Resource Cluster"
         esx49:
           ip_address: 192.168.123.49
           cluster: "Resource Cluster"
@@ -79,7 +82,7 @@ all:
           ip_address: 192.168.123.54
           cluster: "Mgmt Cluster"
       vars:
-          esx_version: "8.0"
+          esx_version: "8.0u2"
           enable_ssh: 'True'
     ovf:
       vars:
