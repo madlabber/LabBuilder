@@ -1,0 +1,23 @@
+---
+- name: "Install Requirements"
+  hosts: localhost
+  gather_facts: false
+  tasks:
+
+  - name: install python modules
+    ansible.builtin.pip:
+      name: "{{item}}"
+    with_items:
+      - pycdlib
+      - pywinrm
+      - pyvmomi
+      - netapp-lib
+
+  - name: install community.general
+    ansible.builtin.command: ansible-galaxy collection install community.general
+
+  - name: install remaining collections
+    community.general.ansible_galaxy_install:
+      type: both
+      requirements_file: requirements.yml
+
