@@ -52,9 +52,9 @@ all:
       hosts:
         ots-01:  
           ontap_version: "9.14.1RC1"           
-          ontap_node_mgmt_ip:    192.168.0.90
+          ontap_node_mgmt_ip:    192.168.0.91
           ontap_cluster_name:    "demo"
-          ontap_cluster_mgmt_ip: 192.168.0.91
+          ontap_cluster_mgmt_ip: 192.168.0.90
           vm_data_disk_gb:       1024
 
 
