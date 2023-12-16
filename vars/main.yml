@@ -45,7 +45,11 @@ esxi_vswitch: "vSwitch1"
 # vcenter_datacenter: 'ha-datacenter'
 # vcenter_cluster: ""
 
-# ONTAP vars required to build lab pods
+# VLAN Pool for building lab pod portgroups
+vlan_start: 1000
+vlan_count: 1000
+
+# ONTAP vars required to build lab pod datastores
 ontap_address: "192.168.123.10"
 ontap_password: "P@ssw0rd"
 ontap_svm_name: "svm33"

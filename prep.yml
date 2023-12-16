@@ -12,6 +12,52 @@
       - "lab_lan1_portgroup: {{ lab_lan1_portgroup|default('') }}"
       - "lab_lan2_portgroup: {{ lab_lan2_portgroup|default('') }}"
 
+  - name: Get Portgroup info
+    community.vmware.vmware_portgroup_info:
+      hostname: "{{ vcenter_address }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: no
+      cluster_name: "{{ vcenter_cluster }}"
+    delegate_to: localhost
+    register: portgroupinfo
+
+  - name: get used vlans
+    set_fact:
+      all_vlans:  "{{ lookup('sequence', 'start='+ vlan_start|string +' count='+ vlan_count|string, wantlist=true)|map('int') }}"
+      used_vlans: "{{ portgroupinfo.hosts_portgroup_info[portgroupinfo.hosts_portgroup_info|first] |
+               selectattr('vswitch', 'eq', esxi_vswitch) |
+               map(attribute='vlan_id') }}"
+  - name: get unused vlans
+    set_fact:
+      unused_vlans: "{{ all_vlans | difference(used_vlans) | sort }}"
+
+  - name: VM Portgroup to all hosts in a cluster
+    community.vmware.vmware_portgroup:
+      hostname: "{{ vcenter_address }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: no
+      cluster_name: "{{ vcenter_cluster }}"
+      switch: "{{ esxi_vswitch }}"
+      portgroup: "{{ lab_lan1_portgroup }}"
+      vlan_id: "{{ unused_vlans[0] }}"
+    delegate_to: localhost
+    when: lab_lan1_portgroup|default('') != ""
+
+  - name: VM Portgroup to all hosts in a cluster
+    community.vmware.vmware_portgroup:
+      hostname: "{{ vcenter_address }}"
+      username: "{{ vcenter_username }}"
+      password: "{{ vcenter_password }}"
+      validate_certs: no
+      cluster_name: "{{ vcenter_cluster }}"
+      switch: "{{ esxi_vswitch }}"
+      portgroup: "{{ lab_lan2_portgroup }}"
+      vlan_id: "{{ unused_vlans[1] }}"
+    delegate_to: localhost
+    when: lab_lan2_portgroup|default('') != ""
+
   - name: Create Lab Volume
     na_ontap_volume:
       state: present
@@ -28,6 +74,8 @@
       password: "{{ ontap_password }}"
       https: true
       validate_certs: false
+    when: 
+      - ontap_address|default('') != ""
 
   - name: Mount NFS labs datastore to ESXi
     vmware_host_datastore:
@@ -44,29 +92,10 @@
       state: present
     delegate_to: localhost
     with_items: "{{cluster_hosts}}"
+    when: 
+      - ontap_address|default('') != ""
 
-  - name: Add Management Network VM Portgroup to all hosts in a cluster
-    community.vmware.vmware_portgroup:
-      hostname: "{{ vcenter_address }}"
-      username: "{{ vcenter_username }}"
-      password: "{{ vcenter_password }}"
-      validate_certs: no
-      cluster_name: "{{ vcenter_cluster }}"
-      switch: "{{ esxi_vswitch }}"
-      portgroup: "{{ lab_lan1_portgroup }}"
-      vlan_id: "{{ vlan_id|default(991) }}"
-    delegate_to: localhost
-    when: lab_lan1_portgroup|default('') != ""
 
-  - name: Add Management Network VM Portgroup to all hosts in a cluster
-    community.vmware.vmware_portgroup:
-      hostname: "{{ vcenter_address }}"
-      username: "{{ vcenter_username }}"
-      password: "{{ vcenter_password }}"
-      validate_certs: no
-      cluster_name: "{{ vcenter_cluster }}"
-      switch: "{{ esxi_vswitch }}"
-      portgroup: "{{ lab_lan2_portgroup }}"
-      vlan_id: "{{ vlan_id|default(992) }}"
-    delegate_to: localhost
-    when: lab_lan2_portgroup|default('') != ""
+
+
+

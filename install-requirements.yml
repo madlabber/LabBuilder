@@ -12,6 +12,7 @@
       - pywinrm
       - pyvmomi
       - netapp-lib
+      - jmespath
 
   - name: install community.general
     ansible.builtin.command: ansible-galaxy collection install community.general
