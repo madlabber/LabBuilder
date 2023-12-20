@@ -247,11 +247,11 @@ Notes: Enter your comments here...
 <FirstLogonCommands>
         <SynchronousCommand wcm:action="add">
         <Order>1</Order>
-         <CommandLine>powerShell "(new-object System.Net.WebClient).DownloadFile('http://packages.vmware.com/tools/esx/6.5u2/windows/x86/VMware-tools-10.2.1-8267844-i386.exe','C:\Windows\temp\VMware-tools-10.2.1-8267844-i386.exe')"</CommandLine>
+         <CommandLine>powershell -File E:\ConfigureRemotingForAnsible.ps1</CommandLine>
         </SynchronousCommand>
         <SynchronousCommand wcm:action="add">
         <Order>2</Order>
-        <CommandLine>C:\Windows\temp\VMware-tools-10.2.1-8267844-i386.exe /S /v"/qn REBOOT=R"</CommandLine>
+        <CommandLine>E:\vmware_tools.exe /S /v"/qn REBOOT=R"</CommandLine>
         </SynchronousCommand>
     <SynchronousCommand wcm:action="add">
         <RequiresUserInput>false</RequiresUserInput>

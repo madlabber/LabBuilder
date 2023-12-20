@@ -42,7 +42,7 @@ Modified to enable WinRM for Ansible
 	<InstallFrom>
     <MetaData wcm:action="add">
     <Key>/IMAGE/NAME</Key>
-    <Value>Windows Server 2016 SERVERSTANDARD</Value>
+    <Value>Windows 10 Enterprise Evaluation</Value>
     </MetaData>
 	</InstallFrom>
 </OSImage>
@@ -128,7 +128,7 @@ Modified to enable WinRM for Ansible
 <Username>Administrator</Username>
 	<LogonCount>1</LogonCount>
 </AutoLogon>
-<FirstLogonCommands>
+    <FirstLogonCommands>
     <SynchronousCommand wcm:action="add">
     <Order>1</Order>
     <CommandLine>powershell -ExecutionPolicy ByPass -File E:\ConfigureRemotingForAnsible.ps1</CommandLine>
@@ -137,7 +137,7 @@ Modified to enable WinRM for Ansible
     <Order>2</Order>
     <CommandLine>E:\VMware_tools.exe /S /v"/qn REBOOT=R"</CommandLine>
     </SynchronousCommand>
-</FirstLogonCommands>  
+    </FirstLogonCommands>  
 <OOBE>
 <HideEULAPage>true</HideEULAPage>
 <HideLocalAccountScreen>true</HideLocalAccountScreen>

@@ -1,76 +1,18 @@
 ---
-- name: set defaults
+# set defaults
+- name: set version defaults 
   set_fact:
-    vm_hostname:     "{{ vm_hostname     | default('') }}"
-    vm_name:         "{{ vm_name         | default('WindowsVM') }}"
-    vm_guest_id:     "{{ vm_guest_id     | default('windows9Server64Guest') }}"
-    vm_num_cpus:     "{{ vm_num_cpus     | default(2) }}"
-    vm_memory_mb:    "{{ vm_memory_mb    | default(2048) }}"
-    vm_disk_gb:      "{{ vm_disk_gb      | default(40) }}"
-    vm_address:      "{{ vm_address      | default('') }}"
-    vm_netmask_cidr: "{{ vm_netmask_cidr | default('') }}"
-    vm_gateway:      "{{ vm_gateway      | default('') }}"
-    vm_dns_server:   "{{ vm_dns_server   | default('') }}"
-    vm_domain:       "{{ vm_domain       | default('') }}"
-    vm_username:     "{{ vm_username     | default('.\\Administrator') }}" # local administrator account name
-    vm_password_old: "{{ vm_password_old | default('Changeme!') }}"
-    vm_password_new: "{{ vm_password_new | default('P@ssw0rd') }}"
+    vm_guest_id: '{{ versions[version].vm_guest_id }}'
+    install_iso: '{{ versions[version].install_iso }}'
+    install_iso_url: '{{ versions[version].install_iso_url }}'
+    vmware_tools_url: '{{ versions[version].vmware_tools_url }}'
+  when: version != ""
 
-- name: set defaults Server2019eval
-  set_fact:
-    install_iso: "{{ Server2022eval_install_iso }}"
-    install_iso_url: "{{ Server2022eval_install_iso_url }}"
-  when: version == "Server2022eval"
+# config ISO handler
+- name: create config iso
+  include_tasks: create_config_iso.yml
 
-- name: set defaults Server2019eval
-  set_fact:
-    version: "Server2019eval"
-    install_iso: "{{ Server2019eval_install_iso }}"
-    install_iso_url: "{{ Server2019eval_install_iso_url }}"
-  when: version|default(Server2019eval) == "Server2019eval"
-
-- name: set defaults Server2016eval
-  set_fact:
-    install_iso: "{{ Server2016eval_install_iso }}"
-    install_iso_url: "{{ Server2016eval_install_iso_url }}"
-  when: version == "Server2016eval"
-
-- name: set defaults Server2012R2eval
-  set_fact:
-    install_iso: "{{ Server2012R2eval_install_iso }}"
-    install_iso_url: "{{ Server2012R2eval_install_iso_url }}"
-  when: version == "Server2012R2eval"
-
-- name: set defaults Windows7eval
-  set_fact:
-    vm_guest_id: "windows7_64Guest"
-    install_iso: "{{ Windows7eval_install_iso }}"
-    install_iso_url: "{{ Windows7eval_install_iso_url }}"
-  when: version == "Windows7eval"
-
-- name: Create kickstart ISO
-  community.general.iso_create:
-    src_files:
-      - "{{unattend_file}}"
-    dest_iso: "{{ role_path }}/files/{{config_iso}}"
-    interchange_level: 3
-    joliet: 3
-    vol_ident: UNATTEND
-  delegate_to: localhost
-
-- name: Copy kickstart iso to datastore
-  community.vmware.vsphere_copy:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    src: "{{ role_path }}/files/{{config_iso}}"
-    datacenter: "{{ vcenter_datacenter }}"
-    datastore: "{{ vm_datastore }}"
-    path: "{{ config_iso }}"
-  delegate_to: localhost
-  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
-
+## Install ISO handler
 - name: Check if install ISO exists
   community.vmware.vsphere_file:
     hostname: '{{ vcenter_address }}'
@@ -85,78 +27,31 @@
   delegate_to: localhost
   ignore_errors: true
 
-- name: delete kickstart ISO
-  ansible.builtin.file:
-    path: "{{ role_path }}/files/{{config_iso}}"
-    state: absent
-  delegate_to: localhost
-
-- name: Add ESXi Host to Ansible Hosts for SSH
-  add_host:
-    name: '{{ esxi_address }}'
-    group: "esx"
-    ansible_user: '{{ esxi_username }}'
-    ansible_password: '{{ esxi_password }}'
-    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+# upload install iso
+- name: upload install iso
+  include_tasks: upload_install_iso.yml
   when: install_iso_exists.failed
 
-- name: Enable ESX SSH (TSM-SSH)
-  community.vmware.vmware_host_service_manager:
+# check again
+- name: Check if install ISO exists
+  community.vmware.vsphere_file:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'
     validate_certs: no
-    esxi_hostname: '{{ esxi_hostname }}'
-    service_name: TSM-SSH
-    state: present
-  register: tsm_ssh_service
+    datacenter: "{{vcenter_datacenter}}"
+    datastore: "{{ iso_datastore }}"
+    path: "{{ install_iso }}"
+    state: file
+  register: install_iso_exists2
   delegate_to: localhost
-  when: install_iso_exists.failed
+  ignore_errors: true
 
-- name: Enable ESX Shell (TSM)
-  community.vmware.vmware_host_service_manager:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    esxi_hostname: '{{ esxi_hostname }}'
-    service_name: TSM
-    state: present
-  register: tsm_service
-  delegate_to: localhost
-  when: install_iso_exists.failed
+# last resort, have esx download it
+- name: download via esx
+  include_tasks: download_via_esx.yml
+  when: install_iso_exists2.failed
 
-- name: Download the Windows Server ISO
-  shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ install_iso_url }}'
-  args:
-    creates: '/vmfs/volumes/{{ iso_datastore }}/{{ install_iso }}'
-  delegate_to: '{{ esxi_address }}'
-  when: install_iso_exists.failed
-- name: Disable ESX SSH (TSM-SSH)
-  community.vmware.vmware_host_service_manager:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    esxi_hostname: '{{ esxi_hostname }}'
-    service_name: TSM-SSH
-    state: absent
-  delegate_to: localhost
-  when: tsm_ssh_service.changed
-
-- name: Disable ESX Shell (TSM)
-  community.vmware.vmware_host_service_manager:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    esxi_hostname: '{{ esxi_hostname }}'
-    service_name: TSM
-    state: absent
-  delegate_to: localhost
-  when: tsm_service.changed
-
-- debug: msg="vm_network - {{ vm_network }}"
 - name: Create VM
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
@@ -194,6 +89,7 @@
     wait_for_ip_address: no
   delegate_to: localhost
   register: deploy_vm
+  ignore_errors: true
 
 - name: Set boot order
   community.vmware.vmware_guest_boot_manager:
@@ -273,7 +169,6 @@
     password: '{{ vcenter_password }}'
     validate_certs: no
     vm_username: "{{vm_username}}"
-#    vm_password: '{{ vm_password_new }}'
     vm_id: '{{ vm_name }}'
     vm_password: '{{ vm_password_old }}'
     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
@@ -283,89 +178,7 @@
   register: setpassword
   ignore_errors: yes
 
-- name: Find the VM's IP Address via VMware tools
-  community.vmware.vmware_guest_info:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    datacenter: "{{vcenter_datacenter}}"
-    name: '{{ vm_name }}'
-  delegate_to: localhost
-  register: vmfacts
-
-- set_fact:
-    _ipv4: "{{ vmfacts['instance']['ipv4'] | default('')}}"
-
-#- debug: msg="IP Address - {{ vmfacts['instance'] }}"
-
-- name: Set static IP address
-  community.vmware.vmware_vm_shell:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    vm_username: "{{vm_username}}"
-    vm_password: '{{ vm_password_new }}'
-    vm_id: '{{ vm_name }}'
-    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-    vm_shell_args: "{{item}}"
-    wait_for_process: true
-  delegate_to: localhost
-  retries: 6
-  delay: 10
-  register: result
-  until: result is succeeded
-  loop:
-    - "-command \"(new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ vm_address }} -prefixlength {{vm_netmask_cidr}} -defaultgateway {{ vm_gateway }})\""
-  when:
-    - vm_address != ""
-    - vm_address != "{{_ipv4}}"
-
-- name: Set DNS Server
-  community.vmware.vmware_vm_shell:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    vm_username: "{{vm_username}}"
-    vm_password: '{{ vm_password_new }}'
-    vm_id: '{{ vm_name }}'
-    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-    vm_shell_args: "{{item}}"
-    wait_for_process: true
-  delegate_to: localhost
-  retries: 6
-  delay: 10
-  register: result
-  until: result is succeeded
-  loop:
-    - "-command \"(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }})\""
-  when:
-    - vm_dns_server != ""
-
-- name: Enable RDP
-  community.vmware.vmware_vm_shell:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    vm_username: "{{vm_username}}"
-    vm_password: '{{ vm_password_new }}'
-    vm_id: '{{ vm_name }}'
-    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-    vm_shell_args: "{{item}}"
-    wait_for_process: true
-  delegate_to: localhost
-  retries: 6
-  delay: 10
-  register: result
-  until: result is succeeded
-  loop:
-    - "-command \"(set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name fDenyTSConnections -Value 0)\""
-    - "-command \"(Enable-NetFirewallRule -DisplayGroup 'Remote Desktop')\""
-
-- name: check hostname
+- name: check PSVersion
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
@@ -378,76 +191,23 @@
     vm_shell_args: " -command \"({{item}})\""
     wait_for_process: true
   delegate_to: localhost
-  register: checkhostname
+  register: checkpsversion
   ignore_errors: true
   loop:
-    - "$result=$(if($env:COMPUTERNAME -ne '{{vm_hostname}}'){throw})"
+    - "$result=$(if($PSVersionTable.PSVersion.Major -lt 3){throw})"
 
-- name: Rename Computer
-  community.vmware.vmware_vm_shell:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    vm_username: "{{ vm_username }}"
-    vm_password: '{{ vm_password_new }}'
-    vm_id: '{{ vm_name }}'
-    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-    vm_shell_args: "{{item}}"
-    wait_for_process: true
-  delegate_to: localhost
-  retries: 6
-  delay: 10
-  register: result
-  until: result is succeeded
-  loop:
-    - "-command \"(Rename-Computer -NewName {{ vm_hostname }})\""
-  when:
-    - vm_hostname != ""
-    - checkhostname is failed
+- name: Configure Guest
+  include_tasks: configure_guest.yml
+  when: checkpsversion is succeeded
 
-- name: Reboot-Guest
-  community.vmware.vmware_guest_powerstate:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    name: '{{ vm_name }}'
-    state: reboot-guest
-  delegate_to: localhost
-  register: deploy
-  when:
-    - vm_hostname != ""
-    - checkhostname is failed
-
-- name: Wait for 30 seconds
-  wait_for: timeout=30
-  delegate_to: localhost
-  when: vm_hostname != ""
-- name: Wait for VMware tools to become available by name
-  community.vmware.vmware_guest_tools_wait:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    name: '{{ vm_name }}'
-  delegate_to: localhost
-  retries: 3
-  delay: 15
-  register: result
-  until: result is succeeded
-  when:
-    - vm_hostname != ""
-    - checkhostname is failed
+- name: Configure Old Guest
+  include_tasks: configure_old_guest.yml
+  when: checkpsversion is failed
 
 - name: dcpromo
   include_tasks: dcpromo.yml
   vars:
-    # vm_name: '{{ vm_name }}'
-    # vm_username: '{{ vm_username }}'
     vm_password: '{{ vm_password_new }}'
-    # vm_dns_server: "{{lab_lan1_dns_ip}}"
-    # vm_domain: "{{lab_domain_name}}"
   when: dcpromo|default(false)
 
 - name: Run extra commands in powershell
@@ -471,14 +231,3 @@
   loop: "{{extra_commands}}"
   when: extra_commands is defined
 
-# - name: Find the VM's IP Address via VMware tools
-#   community.vmware.vmware_guest_info:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     datacenter: "{{vcenter_datacenter}}"
-#     name: '{{ vm_name }}'
-#   delegate_to: localhost
-#   register: vmfacts
-# - debug: msg="IP Address - {{ vmfacts['instance']['ipv4'] }}"

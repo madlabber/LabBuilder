@@ -128,20 +128,16 @@ Modified to enable WinRM for Ansible
 <Username>Administrator</Username>
 	<LogonCount>1</LogonCount>
 </AutoLogon>
-    <FirstLogonCommands>
+<FirstLogonCommands>
     <SynchronousCommand wcm:action="add">
     <Order>1</Order>
-    <CommandLine>powershell -ExecutionPolicy ByPass Invoke-Expression (Invoke-WebRequest -Uri http://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1)</CommandLine>
+    <CommandLine>powershell -ExecutionPolicy ByPass -File E:\ConfigureRemotingForAnsible.ps1</CommandLine>
     </SynchronousCommand>              
     <SynchronousCommand wcm:action="add">
     <Order>2</Order>
-     <CommandLine>powerShell "Invoke-WebRequest -Uri http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe -OutFile C:\Windows\temp\VMware-tools-10.3.5-10430147-x86_64.exe"</CommandLine>
+    <CommandLine>E:\VMware_tools.exe /S /v"/qn REBOOT=R"</CommandLine>
     </SynchronousCommand>
-    <SynchronousCommand wcm:action="add">
-    <Order>3</Order>
-    <CommandLine>C:\Windows\temp\VMware-tools-10.3.5-10430147-x86_64.exe /S /v"/qn REBOOT=R"</CommandLine>
-    </SynchronousCommand>
-    </FirstLogonCommands>  
+</FirstLogonCommands>  
 <OOBE>
 <HideEULAPage>true</HideEULAPage>
 <HideLocalAccountScreen>true</HideLocalAccountScreen>

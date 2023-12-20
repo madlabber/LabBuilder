@@ -1,0 +1,76 @@
+all:
+  hosts:
+  vars:
+    lab_name: test
+    lab_prefix: "{{ lab_name }}_"
+    lab_netmask: 255.255.255.0
+    lab_password: P@ssw0rd
+    lab_vm_datastore: "datastore1"
+    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "VM Network"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.11"
+    lab_lan2_portgroup: "{{ lab_prefix }}net2"
+    lab_domain_name: "lab.local"
+    # lab_dc01_hostname: "dc01"
+    # lab_dc01_ip: "192.168.0.11"
+  children:
+    # pfsense:
+    #   hosts:
+    #     gateway:
+    #       #ip_address: 192.168.0.1
+    #       vm_network_wan: "{{lab_wan_portgroup}}"
+    #       vm_network_lan: "{{lab_lan1_portgroup}}"
+    #       config_xml_file: "files/pfsense/config.xml"
+    # dc:
+    #   hosts:
+    #     dc01:
+    #       version: "Server2019eval"
+    #       ip_address: 192.168.0.11
+    #       extra_commands:
+    #         # Install Chrome
+    #         - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
+    #         - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+    #         # Install Putty
+    #         - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+    #         - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+    winservers:
+      hosts:
+        server2019eval:
+          ip_address: 192.168.0.21
+          version: "Server2019eval"
+          vm_memory_mb: 2048
+          vm_num_cpus: 2
+          vm_disk_gb: 40
+        server2022eval:
+          ip_address: 192.168.0.22
+          version: "Server2022eval"
+          vm_memory_mb: 2048
+          vm_num_cpus: 2
+          vm_disk_gb: 40
+        server2016eval:
+          ip_address: 192.168.0.23
+          version: "Server2016eval"
+          vm_memory_mb: 2048
+          vm_num_cpus: 2
+          vm_disk_gb: 40
+        server2012R2eval:
+          ip_address: 192.168.0.24
+          version: "Server2012R2eval"
+          vm_memory_mb: 2048
+          vm_num_cpus: 2
+          vm_disk_gb: 40
+        windows7eval:
+          ip_address: 192.168.0.25
+          version: "Windows7eval"
+          vm_memory_mb: 2048
+          vm_num_cpus: 2
+          vm_disk_gb: 40
+        windows10eval:
+          ip_address: 192.168.0.26
+          version: "Windows10eval"
+          vm_memory_mb: 2048
+          vm_num_cpus: 2
+          vm_disk_gb: 40

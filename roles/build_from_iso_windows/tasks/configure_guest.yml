@@ -1,0 +1,162 @@
+---
+- name: Find the VM's IP Address via VMware tools
+  community.vmware.vmware_guest_info:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: "{{vcenter_datacenter}}"
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  register: vmfacts
+
+- set_fact:
+    _ipv4: "{{ vmfacts['instance']['ipv4'] | default('')}}"
+
+- name: Set static IP address
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{vm_username}}"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+    vm_shell_args: " -command \"({{item}})\""
+    wait_for_process: true
+  delegate_to: localhost
+  retries: 6
+  delay: 10
+  register: set_ip_result
+  until: set_ip_result is succeeded
+  loop:
+    - "new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ vm_address }} -prefixlength {{vm_netmask_cidr}} -defaultgateway {{ vm_gateway }}"
+  when:
+    - vm_address != ""
+    - vm_address != _ipv4
+  ignore_errors: true
+
+- name: Set DNS Server
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{vm_username}}"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+    vm_shell_args: " -command \"({{item}})\""
+    wait_for_process: true
+  delegate_to: localhost
+  retries: 3
+  delay: 10
+  register: set_dns_result
+  until: set_dns_result is succeeded
+  ignore_errors: true
+  loop:
+    - "Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }}"
+  when:
+    - vm_dns_server != ""
+
+- name: Enable RDP
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{vm_username}}"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+    vm_shell_args: " -command \"({{item}})\""
+    wait_for_process: true
+  delegate_to: localhost
+  retries: 3
+  delay: 10
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop:
+    - "set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name fDenyTSConnections -Value 0"
+    - "Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'"
+
+- name: trancate and uppercase hostname
+  set_fact:
+    vm_hostname: '{{ vm_hostname|upper|truncate( 15, true, "", 0) }}'
+  when:     
+    - vm_hostname != ""
+
+- name: check hostname
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{vm_username}}"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+    vm_shell_args: " -command \"({{item}})\""
+    wait_for_process: true
+  delegate_to: localhost
+  register: checkhostname
+  ignore_errors: true
+  loop:
+    - "$result=$(if($env:COMPUTERNAME -ne '{{vm_hostname}}'){throw})"
+  
+
+- name: Rename Computer
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{ vm_username }}"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+    vm_shell_args: " -command \"({{item}})\""
+    wait_for_process: true
+    timeout: 60
+  delegate_to: localhost
+  retries: 2
+  delay: 10
+  register: rename_result
+  until: rename_result is succeeded
+  ignore_errors: true
+  loop:
+    - "Rename-Computer -NewName {{ vm_hostname }}"
+  when:
+    - vm_hostname != ""
+    - checkhostname is failed
+
+- name: Rename Computer with WMIC
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{ vm_username }}"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+    vm_shell_args: " -command \"({{item}})\""
+    wait_for_process: true
+  delegate_to: localhost
+  register: rename_result
+  loop:
+    - "WMIC ComputerSystem where Name=\\\"%computername%\\\" call Rename Name=\\\"{{ vm_hostname }}\\\""
+  when:
+    - vm_hostname != ""
+    - checkhostname is failed
+    - rename_result is failed
+
+- name: reboot guest
+  include_tasks: reboot_guest.yml
+  when:
+    - vm_hostname != ""
+    - checkhostname is failed
+
+

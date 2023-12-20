@@ -1,58 +1,62 @@
-# version
-version: "Server2019eval"
-
-# This is the ISO folname for the intall ISO
-# install_iso: "17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
-
-# This is the URL to download the ISO from the
-# install_iso_url: "https://software-download.microsoft.com/download/pr/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
+# default version
+version: "Server2022eval"
 
 # This is the filename of the ISO containing autounattend.xml
 # This ISO will be auto-generated and uploaded to the vm_datastore
 config_iso: "{{ vm_name }}-{{ version }}.iso"
 
-# This is the location of the autounattend.xml file
+# URL for the winrm enablement script
+winrm_script_url: "https://raw.githubusercontent.com/ansible/ansible-documentation/devel/examples/scripts/ConfigureRemotingForAnsible.ps1"
+
+# This is the location of the autounattend.xml files
 unattend_file: "{{ role_path }}/files/{{ version }}/autounattend.xml"
-#version: "Server2022eval"
-Server2022eval_install_iso: "SERVER_EVAL_x64FRE_en-us.iso"
-Server2022eval_install_iso_url: "https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso"
-#version: "Server2019eval"
-Server2019eval_install_iso: "17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
-Server2019eval_install_iso_url: "https://software-download.microsoft.com/download/pr/{{Server2019eval_install_iso}}"
-#version: Server2016eval
-Server2016eval_install_iso: "Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
-Server2016eval_install_iso_url: "http://software-download.microsoft.com/download/pr/{{Server2016eval_install_iso}}"
-#version: Server2012R2eval
-Server2012R2eval_install_iso: "9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
-Server2012R2eval_install_iso_url: "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/{{Server2012R2eval_install_iso}}"
-#version:
-Windows7eval_install_iso: "7600.16385.090713-1255_x64fre_enterprise_en-us_EVAL_Eval_Enterprise-GRMCENXEVAL_EN_DVD.iso"
-Windows7eval_install_iso_url: "http://care.dlservice.microsoft.com/dl/download/evalx/win7/x64/EN/{{Windows7eval_install_iso}}"
 
-# This is the default VM name
-#vm_name: WindowsVM
+versions:
+  Windows7eval:
+    vm_guest_id: "windows7_64Guest"
+    install_iso: "7600.16385.090713-1255_x64fre_enterprise_en-us_EVAL_Eval_Enterprise-GRMCENXEVAL_EN_DVD.iso"
+    install_iso_url: "http://care.dlservice.microsoft.com/dl/download/evalx/win7/x64/EN/7600.16385.090713-1255_x64fre_enterprise_en-us_EVAL_Eval_Enterprise-GRMCENXEVAL_EN_DVD.iso"
+    vmware_tools_url: "http://packages.vmware.com/tools/esx/6.5u2/windows/x64/VMware-tools-10.2.1-8267844-x86_64.exe"
+  Windows10eval:
+    vm_guest_id: "windows9_64Guest"
+    install_iso: "14393.0.160715-1616.RS1_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+    install_iso_url: "http://care.dlservice.microsoft.com/dl/download/2/5/4/254230E8-AEA5-43C5-94F6-88CE222A5846/14393.0.160715-1616.RS1_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
+    vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
+  Server2012R2eval:
+    vm_guest_id: "windows8Server64Guest"
+    install_iso: "9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
+    install_iso_url: "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
+    vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
+  Server2016eval:
+    vm_guest_id: "windows9Server64Guest"
+    install_iso: "Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
+    install_iso_url: "http://software-download.microsoft.com/download/pr/Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
+    vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
+  Server2019eval:
+    vm_guest_id: "windows9Server64Guest"
+    install_iso: "17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
+    install_iso_url: "https://software-download.microsoft.com/download/pr/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
+    vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
+  Server2022eval:
+    vm_guest_id: "windows9Server64Guest"   
+    install_iso: "SERVER_EVAL_x64FRE_en-us.iso"
+    install_iso_url: "https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso"
+    vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
 
-# if emtpty windows generates a random hostname as configured in the autounattend.xml file
-#vm_hostname: ""
+# VM Defaults
+vm_hostname:
+vm_name:      "WindowsVM"
+vm_guest_id:  "windows9Server64Guest"
+vm_num_cpus:  2
+vm_memory_mb: 2048
+vm_disk_gb:   40
+vm_address:
+vm_netmask:
+vm_netmask_cidr: 
+vm_gateway:  
+vm_dns_server: 
+vm_domain: 
+vm_username:     ".\\Administrator" # local administrator account name
+vm_password_old: "Changeme!" # password set by autounattend.xml
+vm_password_new: "P@ssw0rd"
 
-# The guest_id value must be valid per the VMware documentation
-#vm_guest_id: windows9Server64Guest
-
-# These values are the default VM sizing parameters
-# vm_num_cpus: 2
-# vm_memory_mb: 2048
-# vm_disk_gb: 40
-
-# The 'old' password must match the one set by autounattend.xml
-# vm_username: ".\\Administrator" # local administrator account name
-# vm_password_old: Changeme!
-
-# # The new password will be applied after first boot
-# vm_password_new: P@ssw0rd
-
-# IP and DNS configuration will be applied if provided
-# vm_address: ""
-# vm_netmask_cidr: ""
-# vm_gateway: ""
-# vm_dns_server: ""
-# vm_domain: ""
