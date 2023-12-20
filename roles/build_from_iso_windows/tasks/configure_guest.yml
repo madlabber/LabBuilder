@@ -132,27 +132,6 @@
     - vm_hostname != ""
     - checkhostname is failed
 
-- name: Rename Computer with WMIC
-  community.vmware.vmware_vm_shell:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    vm_username: "{{ vm_username }}"
-    vm_password: '{{ vm_password_new }}'
-    vm_id: '{{ vm_name }}'
-    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-    vm_shell_args: " -command \"({{item}})\""
-    wait_for_process: true
-  delegate_to: localhost
-  register: rename_result
-  loop:
-    - "WMIC ComputerSystem where Name=\\\"%computername%\\\" call Rename Name=\\\"{{ vm_hostname }}\\\""
-  when:
-    - vm_hostname != ""
-    - checkhostname is failed
-    - rename_result is failed
-
 - name: reboot guest
   include_tasks: reboot_guest.yml
   when:
