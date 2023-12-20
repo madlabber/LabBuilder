@@ -34,3 +34,5 @@ roles/build_from_iso_windows/files/Server2019eval/ConfigureRemotingForAnsible.ps
 roles/build_from_iso_windows/files/Server2019eval/VMware_tools.exe
 roles/build_from_iso_windows/files/Server2022eval/ConfigureRemotingForAnsible.ps1
 roles/build_from_iso_windows/files/Server2022eval/VMware_tools.exe
+roles/build_from_iso_windows/files/Server2008R2eval/ConfigureRemotingForAnsible.ps1
+roles/build_from_iso_windows/files/Server2008R2eval/VMware_tools.exe

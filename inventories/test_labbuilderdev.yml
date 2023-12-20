@@ -74,3 +74,6 @@ all:
           vm_memory_mb: 2048
           vm_num_cpus: 2
           vm_disk_gb: 40
+        server2008R2eval:
+          ip_address: 192.168.0.27
+          version: "Server2008R2eval"

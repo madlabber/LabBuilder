@@ -22,6 +22,11 @@ versions:
     install_iso: "14393.0.160715-1616.RS1_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
     install_iso_url: "http://care.dlservice.microsoft.com/dl/download/2/5/4/254230E8-AEA5-43C5-94F6-88CE222A5846/14393.0.160715-1616.RS1_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
     vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
+  Server2008R2eval:
+    vm_guest_id: "windows7Server64Guest"
+    install_iso: "WS2008R2.iso"
+    install_iso_url: "https://archive.org/download/windowsserver2008r2evaluationcopy/WS2008R2.iso"
+    vmware_tools_url: "http://packages.vmware.com/tools/esx/6.5u2/windows/x64/VMware-tools-10.2.1-8267844-x86_64.exe"
   Server2012R2eval:
     vm_guest_id: "windows8Server64Guest"
     install_iso: "9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
