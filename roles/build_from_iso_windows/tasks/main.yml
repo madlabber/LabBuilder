@@ -52,6 +52,23 @@
   include_tasks: download_via_esx.yml
   when: install_iso_exists2.failed
 
+# default disk configuration
+- name: add disk 1
+  set_fact:
+    default_disks:
+      - size_gb: '{{ vm_disk_gb }}'
+        type: thin
+
+- name: add disk 2
+  set_fact:
+    default_disks:
+      - size_gb: '{{ vm_disk_gb }}'
+        type: thin
+      - size_gb: '{{ vm_disk2_gb }}'
+        type: thin
+  when: 
+    - vm_disk2_gb|int > 0
+
 - name: Create VM
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
@@ -75,10 +92,7 @@
           state: present
           type: iso
           iso_path: '[{{ vm_datastore }}] {{ config_iso }}'
-    disk:
-    - size_gb: '{{ vm_disk_gb|int }}'
-      type: thin
-      datastore: '{{ vm_datastore }}'
+    disk: '{{ disks|default(default_disks) }}'
     hardware:
       memory_mb: '{{ vm_memory_mb|int }}'
       num_cpus: '{{ vm_num_cpus|int }}'

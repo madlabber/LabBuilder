@@ -64,6 +64,7 @@ vm_guest_id:  "windows9Server64Guest"
 vm_num_cpus:  2
 vm_memory_mb: 2048
 vm_disk_gb:   40
+vm_disk2_gb: 
 vm_address:
 vm_netmask:
 vm_netmask_cidr: 
@@ -79,7 +80,7 @@ serial_ports: false
 # Valid values are false (no serial ports) 
 # or a serial_port definition per community.vmware.vmware_guest_serial_port
 # example:
-#serial_ports: 
+# serial_ports: 
 # - type: 'pipe'
 #   pipe_name: '\\.\pipe\vm1_com1'
 #   endpoint: 'client'
@@ -87,6 +88,17 @@ serial_ports: false
 #   pipe_name: '\\.\pipe\vm1_com2'
 #   endpoint: 'client'
 
+# Advanced disk configuration:
+# if more than two disks are required a custom disks definition
+# can be passed. 
+# Example:
+# disks:
+#   - size_gb: 40
+#     type: thin
+#   - size_gb: 20
+#     type: thin
+#   - size_gb: 80
+#     type: thin
 
 
 
