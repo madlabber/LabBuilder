@@ -48,6 +48,15 @@ versions:
     install_iso_url: "https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso"
     vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
 
+#Host Vars
+vcenter_address:
+vcenter_username:
+vcenter_password:
+vcenter_datacenter:
+vcenter_cluster:
+vm_datastore:
+iso_datastore:
+
 # VM Defaults
 vm_hostname:
 vm_name:      "WindowsVM"
@@ -62,6 +71,22 @@ vm_gateway:
 vm_dns_server: 
 vm_domain: 
 vm_username:     ".\\Administrator" # local administrator account name
-vm_password_old: "Changeme!" # password set by autounattend.xml
+vm_password_old: "Changeme!" # must match password set by autounattend.xml
 vm_password_new: "P@ssw0rd"
+nested_virtualization: false
+serial_ports: false
+# Serial port definition
+# Valid values are false (no serial ports) 
+# or a serial_port definition per community.vmware.vmware_guest_serial_port
+# example:
+#serial_ports: 
+# - type: 'pipe'
+#   pipe_name: '\\.\pipe\vm1_com1'
+#   endpoint: 'client'
+# - type: 'pipe'
+#   pipe_name: '\\.\pipe\vm1_com2'
+#   endpoint: 'client'
+
+
+
 

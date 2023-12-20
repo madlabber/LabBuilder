@@ -82,6 +82,7 @@
     hardware:
       memory_mb: '{{ vm_memory_mb|int }}'
       num_cpus: '{{ vm_num_cpus|int }}'
+      nested_virt: '{{ nested_virtualization|default(false) }}'
       scsi: lsilogicsas
     networks:
     - name: '{{ vm_network }}'
