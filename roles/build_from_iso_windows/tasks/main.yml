@@ -81,6 +81,7 @@
     name: '{{ vm_name }}'
     state: present
     guest_id: '{{vm_guest_id}}'
+    datastore: '{{ vm_datastore }}'
     cdrom:
         - controller_number: 0
           unit_number: 0
@@ -126,17 +127,6 @@
       - floppy
   delegate_to: localhost
   register: vm_boot_order
-
-# - set_fact:
-#     serial_ports:
-#       - type: 'pipe'
-#         pipe_name: '\\.\pipe\{{ vm_name }}_com1'
-#         endpoint: 'client'
-#       - type: 'pipe'
-#         pipe_name: '\\.\pipe\{{ vm_name }}_com2'
-#         endpoint: 'client'
-#   when:
-#     - serial_ports|default(false)
 
 # Create serial ports
 - name: Create multiple serial ports with Backing type - network, pipe, device and file
