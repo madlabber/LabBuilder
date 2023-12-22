@@ -14,7 +14,3 @@ autoinstall:
   ssh:
       install-server: yes
       allow-pw: yes
-
-  
-
-

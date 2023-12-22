@@ -16,6 +16,19 @@
     config_iso:      "{{ vm_name }}-seed.iso"
     dnf_or_yum:      "yum"
 
+- name: set version defaults 
+  set_fact:
+    install_iso:        '{{ versions[edition][version].install_iso }}'
+    install_iso_url:    '{{ versions[edition][version].install_iso }}'
+    cloudinit_userdata: '{{ versions[edition][version].cloudinit_userdata }}'
+    cloudinit_metadata: '{{ versions[edition][version].cloudinit_metadata }}'
+    cloudinit_password: '{{ versions[edition][version].cloudinit_password }}'
+  when: version != ""
+
+- debug:
+    msg:
+      - "{{ versions[edition][version] }}"
+
 - name: Create kickstart ISO
   community.general.iso_create:
     dest_iso: "{{ role_path }}/files/{{config_iso}}"    
@@ -44,7 +57,7 @@
   community.vmware.vsphere_file:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
+    password: '{{ vcenter_password }}'
     validate_certs: no
     datacenter: "{{vcenter_datacenter}}"
     datastore: "{{ iso_datastore }}"
@@ -52,101 +65,32 @@
     state: file
   register: install_iso_exists
   delegate_to: localhost
-  ignore_errors: true 
+  ignore_errors: true
 
-- name: Copy install iso to datastore
-  community.vmware.vsphere_copy:
-    hostname:   "{{ vcenter_address }}"
-    username:   "{{ vcenter_username }}"
-    password:   "{{ vcenter_password }}"
-    validate_certs: no 
-    src:        "{{ role_path }}/files/{{install_iso}}"
-    datacenter: "{{ vcenter_datacenter}}"
-    datastore:  "{{ iso_datastore }}"
-    path:       "{{ install_iso }}"
-  delegate_to: localhost
-  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
+# upload install iso
+- name: upload install iso
+  include_tasks: upload_install_iso.yml
   when: install_iso_exists.failed
 
+# check again
 - name: Check if install ISO exists
   community.vmware.vsphere_file:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
+    password: '{{ vcenter_password }}'
     validate_certs: no
     datacenter: "{{vcenter_datacenter}}"
     datastore: "{{ iso_datastore }}"
     path: "{{ install_iso }}"
     state: file
-  register: install_iso_exists
+  register: install_iso_exists2
   delegate_to: localhost
-  ignore_errors: true 
+  ignore_errors: true
 
-- name: If the ISO is not present have ESXi download it
-  block:
-  - name: Add ESXi to Ansible Hosts for SSH
-    add_host:
-      name: '{{ esxi_address }}'
-      group: "esx"
-      ansible_user: '{{ esxi_username }}'
-      ansible_password: '{{ esxi_password }}'
-      ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
-
-  - name: Enable ESX SSH (TSM-SSH)
-    community.vmware.vmware_host_service_manager:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no 
-      esxi_hostname: '{{ esxi_hostname }}'
-      service_name: TSM-SSH
-      state: present
-    register: tsm_ssh_service
-    delegate_to: localhost
-
-  - name: Enable ESX Shell (TSM)
-    community.vmware.vmware_host_service_manager:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'    
-      validate_certs: no 
-      esxi_hostname: '{{ esxi_hostname }}'
-      service_name: TSM
-      state: present
-    register: tsm_service
-    delegate_to: localhost
-
-  - name: Download the Centos ISO
-    shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ install_iso_url }} --no-check-certificate'
-    args:
-      creates: '/vmfs/volumes/{{ iso_datastore }}/{{ install_iso }}'
-    delegate_to: '{{ esxi_address }}'
-
-  - name: Disable ESX SSH (TSM-SSH)
-    community.vmware.vmware_host_service_manager:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'    
-      validate_certs: no 
-      esxi_hostname: '{{ esxi_hostname }}'
-      service_name: TSM-SSH
-      state: absent
-    delegate_to: localhost
-    when: tsm_ssh_service.changed
-
-  - name: Disable ESX Shell (TSM)
-    community.vmware.vmware_host_service_manager:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no 
-      esxi_hostname: '{{ esxi_hostname }}'
-      service_name: TSM
-      state: absent
-    delegate_to: localhost
-    when: tsm_service.changed
-  when: install_iso_exists.failed
-## End Block
+# last resort, have esx download it
+- name: download via esx
+  include_tasks: download_via_esx.yml
+  when: install_iso_exists2.failed
 
 - name: Create VM
   community.vmware.vmware_guest:
@@ -218,9 +162,25 @@
   delegate_to: localhost
   register: powerstate
 
-- name: Wait for 120 seconds for cloudinit
-  wait_for: timeout=120
+- name: Check for VMware tools at boot
+  community.vmware.vmware_guest_tools_wait:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    name: '{{ vm_name }}'
+  retries: 10
+  delay: 60
+  register: result           
+  until: result is succeeded
   delegate_to: localhost
+  register: check_tools_at_boot      
+
+- name: Wait for 60 seconds for boot
+  wait_for: timeout=60
+  delegate_to: localhost
+  when:
+    - powerstate.changed   
 
 - name: type yes
   community.vmware.vmware_guest_sendkey:
@@ -231,6 +191,8 @@
     name: "{{ vm_name }}"
     string_send: "yes"
   delegate_to: localhost
+  when:
+    - powerstate.changed 
 
 - name: press enter
   community.vmware.vmware_guest_sendkey:
@@ -241,6 +203,8 @@
     name: "{{ vm_name }}"
     keys_send: ENTER
   delegate_to: localhost
+  when:
+    - powerstate.changed 
 
 - name: Wait for VMware tools to become available 
   community.vmware.vmware_guest_tools_wait:
@@ -254,10 +218,15 @@
   delay: 60
   register: result           
   until: result is succeeded
+  when:
+    - powerstate.changed 
 
-- name: Wait for 10 minutes for cloudinit
-  wait_for: timeout=600
-  delegate_to: localhost
+- include_tasks: retry_logins.yml
+# VMware tools become available during autoinstall
+# 
+# - name: Wait for 10 minutes for cloudinit
+#   wait_for: timeout=600
+#   delegate_to: localhost
 
 - name: Set ubuntu Passwd
   community.vmware.vmware_vm_shell:
@@ -325,12 +294,16 @@
   until: result is succeeded
   loop:
     # - "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
-    - "apt install net-tools"
+    - "apt update"
+    - "apt install -y network-manager"
+    - "apt install -y net-tools"
     - "sed -i 's/managed=false/managed=true/' /etc/NetworkManager/NetworkManager.conf"
     - "sed -i '/renderer/d' /etc/netplan/00-installer-config.yaml"
     - "sed -i '3 i \\  renderer: NetworkManager' /etc/netplan/00-installer-config.yaml"    
     - "netplan apply"
-    - "service network-manager restart"
+    - "nmcli general reload"
+    - "nmcli connection reload"
+    # - "service network-manager restart"
     - "nmcli dev set {{vm_eth_name}} managed yes"
     - "nmcli connection add type ethernet ifname {{vm_eth_name}} con-name {{vm_eth_name}}"    
     - "hostnamectl set-hostname {{ vm_hostname }}.{{ vm_domain }}"
@@ -339,25 +312,33 @@
     - "nmcli connection up {{vm_eth_name}}"
     - "nmcli connection delete netplan-{{vm_eth_name}}"
 
-
-- name: Wait for VMware tools to become available by name
-  community.vmware.vmware_guest_tools_wait:
+# including this in the autoinstall is fraught with peril
+- name: Install ubuntu-desktop
+  community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'    
+    password: '{{ vcenter_password }}'   
     validate_certs: no 
-    name: '{{ vm_name }}'
-  delegate_to: localhost
+    vm_username: "{{ vm_username | default('root') }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"echo {{ vm_password }} | sudo -S {{item}}\""
+    wait_for_process: true
+  delegate_to: localhost  
   retries: 3
-  delay: 15
+  delay: 5
   register: result           
-  until: result is succeeded 
+  until: result is succeeded
+  ignore_errors: true 
+  loop:
+    - "apt update"
+    - "apt install -y ubuntu-desktop"
+  when: install_xrdp|default(false)
 
-- name: Wait for 30 seconds for VMware Tools refresh
-  wait_for: timeout=30
-  delegate_to: localhost
-  when: (checkhostname is failed) or (checkselinux is failed)
-###end: reboot guest
+- name: reboot guest
+  include_tasks: reboot_guest.yml
+  when: install_xrdp|default(false)  
 
 - name: Install xRDP
   community.vmware.vmware_vm_shell:
@@ -378,60 +359,61 @@
   until: result is succeeded
   ignore_errors: true 
   loop:
+    - "apt update"
     - "apt install -y xrdp"
     - "xrdp-keygen xrdp auto"
     - "systemctl enable xrdp --now"
     - "ufw allow 3389"
   when: install_xrdp|default(false)
 
-- name: Install Ansible and related components
-  community.vmware.vmware_vm_shell:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
-    validate_certs: no 
-    vm_username: "{{ vm_username | default('root') }}"
-    vm_password: '{{ vm_password }}'
-    vm_id: '{{ vm_name }}'
-    vm_shell: '/usr/bin/sh'
-    vm_shell_args: " -c \"{{item}}\""
-    wait_for_process: true
-  delegate_to: localhost  
-  retries: 3
-  delay: 5
-  register: result           
-  until: result is succeeded
-  ignore_errors: true 
-  loop:
-    - "echo {{ vm_password }} | sudo -S apt install -y ansible"
-    - "echo {{ vm_password }} | sudo -S apt install -y python3-pip"
-    - "echo {{ vm_password }} | sudo -S apt install -y python3-dev"
-    - "pip3 install --upgrade pip"
-    - "pip3 install netapp-lib"
-    - "pip3 install pyvmomi"
-    - "pip3 install pywinrm"
-    - "pip3 install pycdlib" 
-  when: install_ansible|default(false)
+# - name: Install Ansible and related components
+#   community.vmware.vmware_vm_shell:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}'   
+#     validate_certs: no 
+#     vm_username: "{{ vm_username | default('root') }}"
+#     vm_password: '{{ vm_password }}'
+#     vm_id: '{{ vm_name }}'
+#     vm_shell: '/usr/bin/sh'
+#     vm_shell_args: " -c \"{{item}}\""
+#     wait_for_process: true
+#   delegate_to: localhost  
+#   retries: 3
+#   delay: 5
+#   register: result           
+#   until: result is succeeded
+#   ignore_errors: true 
+#   loop:
+#     - "echo {{ vm_password }} | sudo -S apt install -y ansible"
+#     - "echo {{ vm_password }} | sudo -S apt install -y python3-pip"
+#     - "echo {{ vm_password }} | sudo -S apt install -y python3-dev"
+#     - "pip3 install --upgrade pip"
+#     - "pip3 install netapp-lib"
+#     - "pip3 install pyvmomi"
+#     - "pip3 install pywinrm"
+#     - "pip3 install pycdlib" 
+#   when: install_ansible|default(false)
 
-- name: Run extra shell command via vm_shell
-  community.vmware.vmware_vm_shell:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    vm_username: "{{ vm_username | default('root') }}"
-    vm_password: '{{ vm_password }}'
-    vm_id: "{{ vm_name }}"
-    vm_shell: '/usr/bin/sh'
-    vm_shell_args: " -c \"echo {{ vm_password }} | sudo -S {{item}}\""
-    wait_for_process: true
-    timeout: 3600
-  delegate_to: localhost
-  retries: 3
-  delay: 60
-  register: result
-  until: result is succeeded
-  ignore_errors: true
-  loop: "{{ extra_commands }}"
-  when:
-    - extra_commands is defined
+# - name: Run extra shell command via vm_shell
+#   community.vmware.vmware_vm_shell:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}'
+#     validate_certs: no
+#     vm_username: "{{ vm_username | default('root') }}"
+#     vm_password: '{{ vm_password }}'
+#     vm_id: "{{ vm_name }}"
+#     vm_shell: '/usr/bin/sh'
+#     vm_shell_args: " -c \"echo {{ vm_password }} | sudo -S {{item}}\""
+#     wait_for_process: true
+#     timeout: 3600
+#   delegate_to: localhost
+#   retries: 3
+#   delay: 60
+#   register: result
+#   until: result is succeeded
+#   ignore_errors: true
+#   loop: "{{ extra_commands }}"
+#   when:
+#     - extra_commands is defined

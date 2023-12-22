@@ -1,6 +1,28 @@
-install_iso:        "ubuntu-20.04.6-live-server-amd64.iso"
-install_iso_url:    "http://releases.ubuntu.com/20.04/ubuntu-20.04.6-live-server-amd64.iso"
-cloudinit_userdata: "{{role_path}}/files/20.04/user-data"
-cloudinit_metadata: "{{role_path}}/files/20.04/meta-data"
+# install_iso:        "ubuntu-20.04.6-live-server-amd64.iso"
+# install_iso_url:    "http://releases.ubuntu.com/20.04/ubuntu-20.04.6-live-server-amd64.iso"
+# cloudinit_userdata: "{{role_path}}/files/20.04/user-data"
+# cloudinit_metadata: "{{role_path}}/files/20.04/meta-data"
+# cloudinit_password: "Changeme!"
+
+install_iso:        "ubuntu-22.04.3-live-server-amd64.iso"
+install_iso_url:    "http://releases.ubuntu.com/22.04/ubuntu-22.04.3-live-server-amd64.iso"
+cloudinit_userdata: "{{role_path}}/files/22.04/user-data"
+cloudinit_metadata: "{{role_path}}/files/22.04/meta-data"
 cloudinit_password: "Changeme!"
 
+edition: "server"
+
+versions:
+  server:
+    "20.04":
+      install_iso:        "ubuntu-20.04.6-live-server-amd64.iso"
+      install_iso_url:    "http://releases.ubuntu.com/20.04/ubuntu-20.04.6-live-server-amd64.iso"
+      cloudinit_userdata: "{{role_path}}/files/20.04/user-data"
+      cloudinit_metadata: "{{role_path}}/files/20.04/meta-data"
+      cloudinit_password: "Changeme!"
+    "22.04":
+      install_iso:        "ubuntu-22.04.3-live-server-amd64.iso"
+      install_iso_url:    "http://releases.ubuntu.com/22.04/ubuntu-22.04.3-live-server-amd64.iso"
+      cloudinit_userdata: "{{role_path}}/files/22.04/user-data"
+      cloudinit_metadata: "{{role_path}}/files/22.04/meta-data"
+      cloudinit_password: "Changeme!"
