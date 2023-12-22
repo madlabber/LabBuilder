@@ -180,7 +180,8 @@ all:
         vm_memory_mb: 4096
         vm_num_cpus: 2
         vm_disk_gb: 40 
-        install_xrdp: false
+        install_xrdp: true
+        install_ansible: true
       hosts:
         ubuntu1:
           ip_address: 192.168.0.41

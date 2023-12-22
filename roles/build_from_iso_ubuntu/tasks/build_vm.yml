@@ -1,21 +1,4 @@
 ---
-- name: variable defaults
-  set_fact:
-    vm_address:      "{{vm_address      | default('') }}"
-    vm_netmask_cidr: "{{vm_netmask_cidr | default('') }}"
-    vm_gateway:      "{{vm_gateway      | default('') }}"
-    vm_dns_server:   "{{vm_dns_server   | default('') }}"
-    vm_domain:       "{{vm_domain       | default('') }}"
-    vm_hostname:     "{{vm_hostname     | default('centosvm') }}"
-    vm_name:         "{{vm_name         | default('centosvm') }}"
-    vm_eth_name:     "{{vm_eth_name     | default('ens32') }}"
-    vm_username:     "ubuntu"
-    # vm_password:     "P@ssw0rd2"
-    vm_password_old: "ubuntu" #"{{cloudinit_password | default('Changeme!') }}"
-    vm_password:     "{{ vm_password | default('P@ssw0rd') }}"
-    config_iso:      "{{ vm_name }}-seed.iso"
-    dnf_or_yum:      "yum"
-
 - name: set version defaults 
   set_fact:
     install_iso:        '{{ versions[edition][version].install_iso }}'
@@ -25,33 +8,8 @@
     cloudinit_password: '{{ versions[edition][version].cloudinit_password }}'
   when: version != ""
 
-- debug:
-    msg:
-      - "{{ versions[edition][version] }}"
-
-- name: Create kickstart ISO
-  community.general.iso_create:
-    dest_iso: "{{ role_path }}/files/{{config_iso}}"    
-    src_files:
-      - "{{ cloudinit_userdata }}"
-      - "{{ cloudinit_metadata }}"
-    interchange_level: 4
-    joliet: 3
-    vol_ident: cidata
-  delegate_to: localhost
-
-- name: Copy kickstart iso to datastore
-  community.vmware.vsphere_copy:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'  
-    validate_certs: no 
-    src: "{{ role_path }}/files/{{config_iso}}"
-    datacenter: "{{vcenter_datacenter}}"
-    datastore: "{{ vm_datastore }}"
-    path: "{{config_iso}}"
-  delegate_to: localhost
-  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
+- name: Create config ISO
+  include_tasks: create_config_iso.yml
 
 - name: Check if install ISO exists
   community.vmware.vsphere_file:
@@ -116,15 +74,16 @@
           type: iso
           iso_path: '[{{ vm_datastore }}] {{config_iso}}'
     disk:
-    - size_gb: '{{ vm_disk_gb | default(40) }}'
+    - size_gb: '{{ vm_disk_gb }}'
       type: thin
       datastore: '{{ vm_datastore }}'
     hardware:
-      memory_mb: '{{ vm_memory_mb | default(2048) }}'
-      num_cpus: '{{ vm_num_cpus | default(2) }}'
+      memory_mb: '{{ vm_memory_mb }}'
+      num_cpus: '{{ vm_num_cpus }}'
+      nested_virt: '{{ nested_virtualization }}'
       scsi: lsilogicsas
     networks:
-    - name: "{{ vm_network | default('VM Network') }}"
+    - name: "{{ vm_network }}"
       device_type: e1000
     wait_for_ip_address: no
   delegate_to: localhost
@@ -319,7 +278,7 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'   
     validate_certs: no 
-    vm_username: "{{ vm_username | default('root') }}"
+    vm_username: "{{ vm_username }}"
     vm_password: '{{ vm_password }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
@@ -336,84 +295,84 @@
     - "apt install -y ubuntu-desktop"
   when: install_xrdp|default(false)
 
-- name: reboot guest
-  include_tasks: reboot_guest.yml
-  when: install_xrdp|default(false)  
-
 - name: Install xRDP
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'   
     validate_certs: no 
-    vm_username: "{{ vm_username | default('root') }}"
+    vm_username: "{{ vm_username }}"
     vm_password: '{{ vm_password }}'
     vm_id: '{{ vm_name }}'
     vm_shell: '/usr/bin/sh'
     vm_shell_args: " -c \"echo {{ vm_password }} | sudo -S {{item}}\""
     wait_for_process: true
   delegate_to: localhost  
-  retries: 3
-  delay: 5
+  retries: 5
+  delay: 60
   register: result           
   until: result is succeeded
   ignore_errors: true 
   loop:
-    - "apt update"
     - "apt install -y xrdp"
     - "xrdp-keygen xrdp auto"
+    - "adduser xrdp ssl-cert"
     - "systemctl enable xrdp --now"
-    - "ufw allow 3389"
+    - "ufw allow 3389/tcp"
   when: install_xrdp|default(false)
 
-# - name: Install Ansible and related components
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'   
-#     validate_certs: no 
-#     vm_username: "{{ vm_username | default('root') }}"
-#     vm_password: '{{ vm_password }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: " -c \"{{item}}\""
-#     wait_for_process: true
-#   delegate_to: localhost  
-#   retries: 3
-#   delay: 5
-#   register: result           
-#   until: result is succeeded
-#   ignore_errors: true 
-#   loop:
-#     - "echo {{ vm_password }} | sudo -S apt install -y ansible"
-#     - "echo {{ vm_password }} | sudo -S apt install -y python3-pip"
-#     - "echo {{ vm_password }} | sudo -S apt install -y python3-dev"
-#     - "pip3 install --upgrade pip"
-#     - "pip3 install netapp-lib"
-#     - "pip3 install pyvmomi"
-#     - "pip3 install pywinrm"
-#     - "pip3 install pycdlib" 
-#   when: install_ansible|default(false)
+- name: reboot guest
+  include_tasks: reboot_guest.yml
+  when: install_xrdp|default(false)  
 
-# - name: Run extra shell command via vm_shell
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     vm_username: "{{ vm_username | default('root') }}"
-#     vm_password: '{{ vm_password }}'
-#     vm_id: "{{ vm_name }}"
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: " -c \"echo {{ vm_password }} | sudo -S {{item}}\""
-#     wait_for_process: true
-#     timeout: 3600
-#   delegate_to: localhost
-#   retries: 3
-#   delay: 60
-#   register: result
-#   until: result is succeeded
-#   ignore_errors: true
-#   loop: "{{ extra_commands }}"
-#   when:
-#     - extra_commands is defined
+- name: Install Ansible and related components
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "{{ vm_username }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"{{item}}\""
+    wait_for_process: true
+  delegate_to: localhost  
+  retries: 5
+  delay: 60
+  register: result           
+  until: result is succeeded
+  ignore_errors: true 
+  loop:
+    - "echo {{ vm_password }} | sudo -S apt install -y ansible"
+    - "echo {{ vm_password }} | sudo -S apt install -y python3-pip"
+    - "echo {{ vm_password }} | sudo -S apt install -y python3-dev"
+    - "pip3 install --upgrade pip"
+    - "pip3 install netapp-lib"
+    - "pip3 install pyvmomi"
+    - "pip3 install pywinrm"
+    - "pip3 install pycdlib" 
+  when: install_ansible|default(false)
+
+- name: Run extra shell command via vm_shell
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{ vm_username }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: "{{ vm_name }}"
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"echo {{ vm_password }} | sudo -S {{item}}\""
+    wait_for_process: true
+    timeout: 3600
+  delegate_to: localhost
+  retries: 3
+  delay: 60
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop: "{{ extra_commands }}"
+  when:
+    - extra_commands is defined

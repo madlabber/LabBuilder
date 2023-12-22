@@ -1,16 +1,6 @@
-# install_iso:        "ubuntu-20.04.6-live-server-amd64.iso"
-# install_iso_url:    "http://releases.ubuntu.com/20.04/ubuntu-20.04.6-live-server-amd64.iso"
-# cloudinit_userdata: "{{role_path}}/files/20.04/user-data"
-# cloudinit_metadata: "{{role_path}}/files/20.04/meta-data"
-# cloudinit_password: "Changeme!"
-
-install_iso:        "ubuntu-22.04.3-live-server-amd64.iso"
-install_iso_url:    "http://releases.ubuntu.com/22.04/ubuntu-22.04.3-live-server-amd64.iso"
-cloudinit_userdata: "{{role_path}}/files/22.04/user-data"
-cloudinit_metadata: "{{role_path}}/files/22.04/meta-data"
-cloudinit_password: "Changeme!"
 
 edition: "server"
+version: "22.04"
 
 versions:
   server:
@@ -26,3 +16,43 @@ versions:
       cloudinit_userdata: "{{role_path}}/files/22.04/user-data"
       cloudinit_metadata: "{{role_path}}/files/22.04/meta-data"
       cloudinit_password: "Changeme!"
+
+#File name of the config iso
+config_iso:      "{{ vm_name }}-seed.iso"
+
+#Host Vars
+vcenter_address:
+vcenter_username:
+vcenter_password:
+vcenter_datacenter:
+vcenter_cluster:
+vm_datastore:
+iso_datastore:
+# This host can be used to delegate iso downloads
+esxi_hostname:   
+esxi_username:
+esxi_password:
+
+# Virtual Machine Defaults
+vm_address: 
+vm_netmask_cidr: 
+vm_gateway: 
+vm_dns_server: 
+vm_domain: 
+vm_hostname: ubuntu
+vm_name:     ubuntu
+vm_eth_name: "ens32"
+vm_username:     "ubuntu"
+#The old password must match the one set by autoinstall
+vm_password_old: "ubuntu"
+# The new password will be set during guest configuration
+vm_password:     "ubuntu"
+nested_virtualization: false
+vm_network: "VM Network"
+vm_disk_gb: 40
+vm_num_cpus: 2
+
+
+
+
+
