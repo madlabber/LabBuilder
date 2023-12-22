@@ -52,10 +52,12 @@ versions:
 vcenter_address:
 vcenter_username:
 vcenter_password:
-vcenter_datacenter:
+vcenter_datacenter: ha-datacenter
 vcenter_cluster:
 vm_datastore:
 iso_datastore:
+# This host can be used to delegate iso downloads
+esxi_hostname:   
 
 # VM Defaults
 vm_hostname:
