@@ -1,26 +1,12 @@
 ---
-- name: variable defaults
-  set_fact:
-    vm_address:      "{{vm_address      | default('') }}"
-    vm_netmask_cidr: "{{vm_netmask_cidr | default('') }}"
-    vm_gateway:      "{{vm_gateway      | default('') }}"
-    vm_dns_server:   "{{vm_dns_server   | default('') }}"
-    vm_domain:       "{{vm_domain       | default('') }}"
-    vm_hostname:     "{{vm_hostname     | default('centosvm') }}"
-    vm_name:         "{{vm_name         | default('centosvm') }}"
-    vm_eth_name:     "{{vm_eth_name     | default('ens32') }}"
-    vm_username:     "ubuntu"
-    # vm_password:     "P@ssw0rd2"
-    vm_password_old: "ubuntu" #"{{cloudinit_password | default('Changeme!') }}"
-    vm_password:     "{{ vm_password | default('P@ssw0rd') }}"
-    config_iso:      "{{ vm_name }}-seed.iso"
-    dnf_or_yum:      "yum"
 
+
+## Install ISO handler
 - name: Check if install ISO exists
   community.vmware.vsphere_file:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
+    password: '{{ vcenter_password }}'
     validate_certs: no
     datacenter: "{{vcenter_datacenter}}"
     datastore: "{{ iso_datastore }}"
@@ -28,101 +14,32 @@
     state: file
   register: install_iso_exists
   delegate_to: localhost
-  ignore_errors: true 
+  ignore_errors: true
 
-- name: Copy install iso to datastore
-  community.vmware.vsphere_copy:
-    hostname:   "{{ vcenter_address }}"
-    username:   "{{ vcenter_username }}"
-    password:   "{{ vcenter_password }}"
-    validate_certs: no 
-    src:        "{{ role_path }}/files/{{install_iso}}"
-    datacenter: "{{ vcenter_datacenter}}"
-    datastore:  "{{ iso_datastore }}"
-    path:       "{{ install_iso }}"
-  delegate_to: localhost
-  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
+# upload install iso
+- name: upload install iso
+  include_tasks: upload_install_iso.yml
   when: install_iso_exists.failed
 
+# check again
 - name: Check if install ISO exists
   community.vmware.vsphere_file:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'   
+    password: '{{ vcenter_password }}'
     validate_certs: no
     datacenter: "{{vcenter_datacenter}}"
     datastore: "{{ iso_datastore }}"
     path: "{{ install_iso }}"
     state: file
-  register: install_iso_exists
+  register: install_iso_exists2
   delegate_to: localhost
-  ignore_errors: true 
+  ignore_errors: true
 
-- name: If the ISO is not present have ESXi download it
-  block:
-  - name: Add ESXi to Ansible Hosts for SSH
-    add_host:
-      name: '{{ esxi_address }}'
-      group: "esx"
-      ansible_user: '{{ esxi_username }}'
-      ansible_password: '{{ esxi_password }}'
-      ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
-
-  - name: Enable ESX SSH (TSM-SSH)
-    community.vmware.vmware_host_service_manager:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no 
-      esxi_hostname: '{{ esxi_hostname }}'
-      service_name: TSM-SSH
-      state: present
-    register: tsm_ssh_service
-    delegate_to: localhost
-
-  - name: Enable ESX Shell (TSM)
-    community.vmware.vmware_host_service_manager:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'    
-      validate_certs: no 
-      esxi_hostname: '{{ esxi_hostname }}'
-      service_name: TSM
-      state: present
-    register: tsm_service
-    delegate_to: localhost
-
-  - name: Download the Centos ISO
-    shell: 'wget -P /vmfs/volumes/{{ iso_datastore }} {{ install_iso_url }} --no-check-certificate'
-    args:
-      creates: '/vmfs/volumes/{{ iso_datastore }}/{{ install_iso }}'
-    delegate_to: '{{ esxi_address }}'
-
-  - name: Disable ESX SSH (TSM-SSH)
-    community.vmware.vmware_host_service_manager:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'    
-      validate_certs: no 
-      esxi_hostname: '{{ esxi_hostname }}'
-      service_name: TSM-SSH
-      state: absent
-    delegate_to: localhost
-    when: tsm_ssh_service.changed
-
-  - name: Disable ESX Shell (TSM)
-    community.vmware.vmware_host_service_manager:
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'   
-      validate_certs: no 
-      esxi_hostname: '{{ esxi_hostname }}'
-      service_name: TSM
-      state: absent
-    delegate_to: localhost
-    when: tsm_service.changed
-  when: install_iso_exists.failed
-## End Block
+# last resort, have esx download it
+- name: download via esx
+  include_tasks: download_via_esx.yml
+  when: install_iso_exists2.failed
 
 - name: Create VM
   community.vmware.vmware_guest:

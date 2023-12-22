@@ -189,3 +189,11 @@ all:
         ubuntu2: 
           ip_address: 192.168.0.42
           version: "22.04"
+    proxmox:
+      vars:
+        vm_memory_mb: 8192
+        vm_num_cpus: 2
+        vm_disk_gb: 40 
+      hosts:
+        pve01:
+          ip_address: 192.168.0.61
