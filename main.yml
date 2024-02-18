@@ -224,6 +224,27 @@
         vm_username: 'root'
         vm_password: '{{lab_password}}'
 
+- name: Build XCP-NG VMs
+  hosts: xcpng
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+  roles:
+    - role: build_from_iso_xcpng
+      vars:
+        vm_hostname: "{{inventory_hostname}}"
+        vm_address: "{{ip_address}}"
+        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
+        vm_network: "{{lab_lan1_portgroup}}"
+        vm_password_new: "{{lab_password}}"
+        vm_netmask: "{{lab_lan1_netmask}}"
+        vm_gateway: "{{lab_lan1_gateway}}"
+        vm_dns_server: "{{lab_lan1_dns_ip}}"
+        vm_domain: "{{lab_domain_name}}"
+        vm_datastore: "{{lab_vm_datastore}}"
+        vm_username: 'root'
+        vm_password: '{{lab_password}}'
+
 - name: Build ONTAP Simulator from OVA
   hosts: vsims
   strategy: free

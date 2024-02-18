@@ -1,0 +1,4 @@
+---
+- name: Build VM 
+  include_tasks: build_vm.yml
+  

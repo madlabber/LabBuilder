@@ -1,0 +1,12 @@
+install_iso: "xcp-ng-8.2.1-20231130.iso"
+install_iso_url: "https://mirrors.xcp-ng.org/isos/8.2/xcp-ng-8.2.1-20231130.iso"
+
+
+vm_address:      
+vm_netmask_cidr: 
+vm_gateway:      
+vm_dns_server:   
+vm_domain:       
+vm_hostname:     "xcphost"
+vm_name:         "xcphost"
+vm_password:     "P@ssw0rd"
