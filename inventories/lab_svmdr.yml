@@ -1,0 +1,64 @@
+all:
+  hosts:
+  vars:
+    lab_name: lab_svmdr
+    lab_prefix: "{{ lab_name }}_"
+    lab_password: P@ssw0rd
+    lab_vm_datastore: lab_svmdr
+    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "lab_svmdr_net1"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.1"
+    lab_domain_name:   "lab.local"
+    lab_domain_controller: "dc01"
+  children:
+    pfsense:
+      hosts:
+        gateway:
+          vm_network_wan: "{{lab_wan_portgroup}}"
+          vm_network_lan: "{{lab_lan1_portgroup}}"
+          config_xml_file: "files/pfsense/config.xml"
+    dc:
+      hosts:
+        dc01:
+          version: "Server2019eval"
+          ip_address: 192.168.0.11
+          extra_commands:
+            # Install Chrome
+            - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
+            - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+            # Install Putty
+            - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+            - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+    ontapselecteval:
+      hosts:
+        cluster1:  
+          ontap_version: "9.13.1"           
+          ontap_node_mgmt_ip:    192.168.0.111
+          ontap_cluster_name:    "cluster1"
+          ontap_cluster_mgmt_ip: 192.168.0.110
+          vm_data_disk_gb:       1024
+        cluster2:  
+          ontap_version: "9.13.1"           
+          ontap_node_mgmt_ip:    192.168.0.121
+          ontap_cluster_name:    "cluster2"
+          ontap_cluster_mgmt_ip: 192.168.0.120
+          vm_data_disk_gb:       1024
+        cluster3:  
+          ontap_version: "9.13.1"           
+          ontap_node_mgmt_ip:    192.168.0.131
+          ontap_cluster_name:    "cluster3"
+          ontap_cluster_mgmt_ip: 192.168.0.130
+          vm_data_disk_gb:       1024
+          
+    # centos:
+    #   hosts:
+    #     ansible:
+    #       ip_address: 192.168.0.43
+    #       version: "8"
+    #     centos1:
+    #       ip_address: 192.168.0.44
+    #       version: "7"
+    #   vars:
