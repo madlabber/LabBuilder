@@ -36,3 +36,4 @@ roles/build_from_iso_windows/files/Server2022eval/ConfigureRemotingForAnsible.ps
 roles/build_from_iso_windows/files/Server2022eval/VMware_tools.exe
 roles/build_from_iso_windows/files/Server2008R2eval/ConfigureRemotingForAnsible.ps1
 roles/build_from_iso_windows/files/Server2008R2eval/VMware_tools.exe
+files/DataONTAPv-9.11.1-serialconsole-kvm.raw.tar
