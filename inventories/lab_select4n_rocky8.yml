@@ -1,7 +1,7 @@
 all:
   hosts:
   vars:
-    lab_name: lab_select2n_rocky8
+    lab_name: lab_select4n_rocky8
     lab_prefix: "{{ lab_name }}_"
     lab_password: P@ssw0rd
     lab_vm_datastore: "{{ lab_name }}"
