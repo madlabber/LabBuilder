@@ -12,11 +12,12 @@
     ovf_ssh: "{{ovf_ssh | default('true') }}"
     ovf_createvmfs: "{{ovf_createvmfs |default('false') }}"
 
-- name: download OVF if necessary
-  get_url:
-    url: "{{ovf_url}}"
-    dest: "{{ovf_file}}"
-  delegate_to: localhost
+# badcomm broke ova downloads.  now requires interactive login on the fling site.
+# - name: download OVF if necessary
+#   get_url:
+#     url: "{{ovf_url}}"
+#     dest: "{{ovf_file}}"
+#   delegate_to: localhost
 
 - vmware_deploy_ovf:
     hostname: '{{ vcenter_address }}'
