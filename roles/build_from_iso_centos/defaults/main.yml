@@ -56,14 +56,26 @@ centos8.0_dnf_or_yum: "dnf"
 
 # Rocky linux
 # rocky 9 default when version=9
-rocky9_iso: "Rocky-9.2-x86_64-dvd.iso"
-rocky9_iso_url: "https://download.rockylinux.org/pub/rocky/9/isos/x86_64/Rocky-9.2-x86_64-dvd.iso"
+rocky9_iso: "Rocky-9.3-x86_64-dvd.iso"
+rocky9_iso_url: "https://dl.rockylinux.org/vault/rocky/9.3/isos/x86_64/Rocky-9.3-x86_64-dvd.iso"
 rocky9_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
 rocky9_kickstart_password: Changeme!
 rocky9_dnf_or_yum: "dnf"
+# rocky 9.4
+rocky9.4_iso: "Rocky-9.4-x86_64-dvd.iso"
+rocky9.4_iso_url: "https://dl.rockylinux.org/vault/rocky/9.4/isos/x86_64/Rocky-9.4-x86_64-dvd.iso"
+rocky9.4_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
+rocky9.4_kickstart_password: Changeme!
+rocky9.4_dnf_or_yum: "dnf"
+# rocky 9.3
+rocky9.3_iso: "Rocky-9.3-x86_64-dvd.iso"
+rocky9.3_iso_url: "https://dl.rockylinux.org/vault/rocky/9.3/isos/x86_64/Rocky-9.3-x86_64-dvd.iso"
+rocky9.3_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
+rocky9.3_kickstart_password: Changeme!
+rocky9.3_dnf_or_yum: "dnf"
 # rocky 9.2
 rocky9.2_iso: "Rocky-9.2-x86_64-dvd.iso"
-rocky9.2_iso_url: "https://download.rockylinux.org/pub/rocky/9/isos/x86_64/Rocky-9.2-x86_64-dvd.iso"
+rocky9.2_iso_url: "https://dl.rockylinux.org/vault/rocky/9.2/isos/x86_64/Rocky-9.2-x86_64-dvd.iso"
 rocky9.2_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
 rocky9.2_kickstart_password: Changeme!
 rocky9.2_dnf_or_yum: "dnf"

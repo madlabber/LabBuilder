@@ -150,7 +150,7 @@
     folder: /
     name: '{{ vm_name }}'
     state: present
-    guest_id: centos7_64Guest
+    guest_id: centos8_64Guest
     datastore: '{{ vm_datastore }}'
     cdrom:
         - controller_number: 0
@@ -173,6 +173,21 @@
     wait_for_ip_address: no
   delegate_to: localhost
   register: deploy_vm
+
+- name: set guest video memory
+  community.vmware.vmware_guest_video:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+    name: '{{ vm_name }}'
+    gather_video_facts: false
+    video_memory_mb: 16.0
+    display_number: 1
+    enable_3D: false
+    use_auto_detect: false 
+  delegate_to: localhost
+  register: set_vram
 
 # Create serial ports
 - name: Create serial ports

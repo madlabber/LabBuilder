@@ -1,6 +1,6 @@
 
 # Path to the vCenter OVA File
-ovf_file: "files/VMware/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
+ovf_file: "files/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
 
 # Default VM Namw
 vm_name: vcsa
