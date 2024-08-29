@@ -11,22 +11,22 @@ all:
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
-    lab_lan1_dns_ip: "192.168.0.11"
+    lab_lan1_dns_ip: "192.168.0.1"
     lab_domain_name: "lab.local"
     # lab_domain_controller: "dc01"
   children:
     centos:
       vars:
-        vm_memory_mb: 2048
+        vm_memory_mb: 4096
         vm_num_cpus: 2
         vm_disk_gb: 40
         install_xrdp: true
       hosts:
-        centos7:
-          state: present
-          ip_address: 192.168.0.171
-          distro: "centos"
-          version: "7"
+        # centos7:
+        #   state: present
+        #   ip_address: 192.168.0.171
+        #   distro: "centos"
+        #   version: "7"
         #   install_xrdp: true
         #   install_ansible: true
         #   extra_commands:
@@ -64,13 +64,14 @@ all:
         #     - type: 'pipe'
         #       pipe_name: '\\.\pipe\{{lab_name}}_com1'
         #       endpoint: 'client'
-        # rocky8:
-        #   state: absent
-        #   ip_address: 192.168.0.183
-        #   distro: "rocky"
-        #   version: "8.8"
-        #   install_xrdp: true
-        #   install_ansible: true
+        rocky8:
+          state: force
+          ip_address: 192.168.0.183
+          distro: "rocky"
+          version: "8.9"
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true
         #   extra_commands:
         #     # Install Docker-CE
         #     - "dnf install -y epel-release"
@@ -103,12 +104,39 @@ all:
         #   install_xrdp: true
         #   install_ansible: true
         #   nested_virtualization: true
-        # rocky9:
-        #   state: present
-        #   ip_address: 192.168.0.187
-        #   distro: "rocky"
-        #   version: "9"
-        #   vm_memory_mb: 4096
-        #   install_xrdp: true
-        #   install_ansible: true
-        #   nested_virtualization: true
+        rocky91:
+          state: present
+          ip_address: 192.168.0.187
+          distro: "rocky"
+          version: "9.1"
+          vm_memory_mb: 4096
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true
+        rocky92:
+          state: present
+          ip_address: 192.168.0.192
+          distro: "rocky"
+          version: "9.2"
+          vm_memory_mb: 4096
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true
+        rocky93:
+          state: present
+          ip_address: 192.168.0.193
+          distro: "rocky"
+          version: "9.3"
+          vm_memory_mb: 4096
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true
+        rocky94:
+          state: present
+          ip_address: 192.168.0.194
+          distro: "rocky"
+          version: "9.4"
+          vm_memory_mb: 4096
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true

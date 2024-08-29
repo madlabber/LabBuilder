@@ -182,8 +182,8 @@
     validate_certs: no
     name: '{{ vm_name }}'
     gather_video_facts: false
-    video_memory_mb: 16.0
-    display_number: 1
+    video_memory_mb: 32.0
+    display_number: 2
     enable_3D: false
     use_auto_detect: false 
   delegate_to: localhost
@@ -510,9 +510,10 @@
     - "{{dnf_or_yum}} install -y epel-release"
     - "{{dnf_or_yum}} install -y ansible"
     - "{{dnf_or_yum}} install -y python3-pip"
-    - "{{dnf_or_yum}} install -y python3-devel"
-    - "{{dnf_or_yum}} groupinstall -y 'development tools'"
+    #- "{{dnf_or_yum}} install -y python3-devel"
+    #- "{{dnf_or_yum}} groupinstall -y 'development tools'"
     - "pip3 install --upgrade pip"
+    # - "pip3 install ansible"
     - "pip3 install netapp-lib"
     - "pip3 install pyvmomi"
     - "pip3 install pywinrm"

@@ -87,11 +87,17 @@ rocky9.1_kickstart_password: Changeme!
 rocky9.1_dnf_or_yum: "dnf"
 
 # rocky8 default when version=8
-rocky8_iso: "Rocky-8.8-x86_64-dvd1.iso"
-rocky8_iso_url: "https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.8-x86_64-dvd1.iso"
+rocky8_iso: "Rocky-8.9-x86_64-dvd1.iso"
+rocky8_iso_url: "https://dl.rockylinux.org/vault/rocky/8.9/isos/x86_64/Rocky-8.9-x86_64-dvd1.iso"
 rocky8_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8_kickstart_password: Changeme!
 rocky8_dnf_or_yum: "dnf"
+# rocky 8.9
+rocky8.9_iso: "Rocky-8.9-x86_64-dvd1.iso"
+rocky8.9_iso_url: "https://dl.rockylinux.org/vault/rocky/8.9/isos/x86_64/Rocky-8.9-x86_64-dvd1.iso"
+rocky8.9_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
+rocky8.9_kickstart_password: Changeme!
+rocky8.9_dnf_or_yum: "dnf"
 # rocky 8.8
 rocky8.8_iso: "Rocky-8.8-x86_64-dvd1.iso"
 rocky8.8_iso_url: "https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.8-x86_64-dvd1.iso"
