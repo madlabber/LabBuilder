@@ -34,18 +34,18 @@ all:
             - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
     winservers:
       hosts:
-        scvmm:
-          ip_address: 192.168.0.60
-          version: "Server2022eval"
-          vm_memory_mb: 24576
-          vm_num_cpus: 4
-          vm_disk_gb: 200
-          nested_virtualization: true
+        # scvmm:
+        #   ip_address: 192.168.0.60
+        #   version: "Server2022eval"
+        #   vm_memory_mb: 24576
+        #   vm_num_cpus: 4
+        #   vm_disk_gb: 200
+        #   nested_virtualization: true
         hv1:
           ip_address: 192.168.0.61
           version: "Server2022eval"
           vm_memory_mb: 24576
-          vm_num_cpus: 4
+          vm_num_cpus: 6
           vm_disk_gb: 200
           nested_virtualization: true
     vcenter:
@@ -53,26 +53,46 @@ all:
         vcsa:
           ip_address: 192.168.0.50
           vm_fqdn: "vcsa.lab.local"
-          ova_location: "files/VMware"
-          vcenter_ova: "VMware-vCenter-Server-Appliance-7.0.2.00100-17920168_OVF10.ova"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-7.0.2.00100-17920168_OVF10.ova"
     nestedesx:
       hosts:
         esx01:
           ip_address: 192.168.0.51
       vars:
-          esx_version: "7.0u3"
+          esx_version: "7.0u2"
           vm_memory_mb: 24576
           vm_num_cpus: 6
           vm_disk1_size_gb: 40
           vm_disk2_size_gb: 200
           create_local_vmfs: 'False'
           enable_ssh: 'True'
-    # centos:
-    #   hosts:
-    #     ansible:
-    #       ip_address: 192.168.0.43
-    #       version: "8"
-    #   vars:
+    # Nested KVM
+    centos:
+      hosts:
+        kvm1:
+          ip_address: 192.168.0.41
+      vars:
+        vm_memory_mb: 24576
+        vm_num_cpus: 6
+        vm_disk_gb: 160
+        install_xrdp: true
+        install_ansible: false
+        distro: "rocky"
+        version: "9.2"
+        nested_virtualization: true
+        disks:
+          - size_gb: 160
+            type: thin
+          - size_gb: 3072
+            type: thin
+        networks:
+          - name: "{{ lab_lan1_portgroup }}"
+            device_type: e1000
+          - name: "{{ lab_lan1_portgroup }}"
+            device_type: e1000
+          - name: "{{ lab_lan1_portgroup }}"
+            device_type: e1000
+
     ontapselecteval:
       hosts:
         ots-01:  
