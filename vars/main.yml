@@ -24,7 +24,7 @@ esxi_password: P@ssw0rd
 
 # If there is a vcenter, this must match the host's name in vcenter inventory
 # if there is no vcenter, the name can be the IP address
-esxi_hostname: "192.168.123.48"
+esxi_hostname: "esx48.schlab.pri"
 
 # Default datastore for new VMs
 vm_datastore: "TestVMs"

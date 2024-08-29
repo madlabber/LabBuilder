@@ -81,7 +81,8 @@
   roles:
     - role: deploy_ovf_vcenter
       vars:
-        #ovf_file: "{{ova_location}}/{{vcenter_ova}}"
+        #ovf_file: "{{ vcenter_ova }}"
+        #ovf_file: "{{ ova_file }}"
         vm_name: "{{ lab_prefix | default('') }}{{inventory_hostname}}"
         vm_datastore: '{{ lab_vm_datastore }}'
         vm_hostname: '{{inventory_hostname}}'
