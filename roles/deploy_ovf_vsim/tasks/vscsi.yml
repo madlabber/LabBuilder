@@ -196,8 +196,8 @@
     wait_for_ip_address: false
   delegate_to: localhost
 
-- name: Wait for 10 seconds
-  wait_for: timeout=10
+- name: Wait for boot_delay
+  wait_for: timeout='{{ boot_delay }}'
   delegate_to: localhost
 
 - name: Press Space to interrupt autoboot

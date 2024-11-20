@@ -1,0 +1,83 @@
+all:
+  hosts:
+  vars:
+    lab_name: lab_test
+    lab_prefix: ""
+    lab_netmask: 255.255.255.0
+    lab_password: P@ssw0rd
+    lab_vm_datastore: "VMlocal"
+    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "VM Network"
+    lab_lan2_portgroup: "ClusterNetwork"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.123.1"
+    lab_lan1_dns_ip: "192.168.123.1"
+    lab_domain_name: "lab.local"
+    #lab_domain_controller: "dc01"
+  children:
+    vsims:
+      hosts:
+        demo-01:
+          boot_delay: 30
+          #partner:      "demo6-02"
+          cluster_name: "demo"
+          ovf_version:  "9.13.1"
+          cluster_mgmt_ip: 192.168.123.130
+          ip_address:      192.168.123.131
+          #partner_ip:      192.168.0.152
+          disk_model: "vscsi"
+          shelf0_disk_size: 8192
+          shelf0_disk_count: 12
+          shelf1_disk_size: 8192
+          shelf1_disk_count: 12
+          fake_ssd_disk_size: 8192
+          adp_enabled: "true"
+          sys_serial_number: "4082368-50-7"
+          #partner_serial: "4034389-06-2"
+          #vm_disk_provisioning: "thick"
+        # demo1-03:
+        #   partner:      "demo1-04"
+        #   cluster_name: "demo1"
+        #   ovf_version:  "9.12.1"
+        #   ip_address:      192.168.0.93
+        #   partner_ip:      192.168.0.94
+        #   disk_model: "vscsi"
+        #   shelf0_disk_size: 12288
+        #   shelf0_disk_count: 12
+        #   shelf1_disk_size: 12288
+        #   shelf1_disk_count: 12
+        #   fake_ssd_disk_size: 12288
+        #   adp_enabled: "true"
+        #   sys_serial_number: "408236-85-08"
+        #   partner_serial: "408236-85-09"
+
+        #   bootargs:
+        #     - "testarg=true"
+        #     - "testarg2=true"
+        # vha7-01:
+        #   ovf_version: "9.12.1"
+        #   ip_address:    192.168.0.141
+        #   cluster_name:    "demo2"
+        #   cluster_mgmt_ip: 192.168.0.140
+        #   serial_ports: true
+
+        # vha-01:
+        #   ovf_version: "9.9.1"
+        #   ip_address:    192.168.0.141
+        #   cluster_name:    "demo2"
+        #   cluster_mgmt_ip: 192.168.0.140
+        #   sys_serial_number: "408236-85-07"
+        #   add_nodes_by_serial: "408236-85-08,408236-85-09,408236-85-10"
+        # vha-02:
+        #   ovf_version: "9.9.1"
+        #   ip_address:    192.168.0.142
+        #   sys_serial_number: "408236-85-08"
+        # vha-03:
+        #   ovf_version: "9.9.1"
+        #   ip_address:    192.168.0.143
+        #   sys_serial_number: "408236-85-09"
+        # vha-04:
+        #   ovf_version: "9.9.1"
+        #   ip_address:    192.168.0.144
+        #   sys_serial_number: "408236-85-10"
