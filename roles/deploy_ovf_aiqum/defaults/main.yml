@@ -8,7 +8,7 @@
 # vcenter_cluster: "Cluster"
 
 ## ovf_file information
-ovf_version: "9.12"
+ovf_version: "9.16RC1"
 ovf_file: "{{role_path}}/files/ActiveIQUnifiedManager-{{ovf_version}}.ova"
 
 ## VM configuration
@@ -37,5 +37,5 @@ timer2: 300
 # AIQUM Configuration
 vm_username: "admin"
 vm_password: "ChangeMe2!"
-vm_timezone_geo:  "12" #12 = US
+vm_timezone_geo:  "11" #11 = US, was 12 in older versions
 vm_timezone_region: "10" #10 = Pacific
