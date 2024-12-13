@@ -52,7 +52,7 @@ all:
       hosts:
         labaiqum:
           ip_address: 192.168.123.28
-          ovf_file: files/ActiveIQUnifiedManager-9.13.ova
+          ovf_file: files/ActiveIQUnifiedManager-9.16RC1.ova
     vcenter:
       hosts:
         labvc01:
@@ -60,27 +60,28 @@ all:
           ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.0.10000-20519528_OVF10.ova"
     esx:
       hosts:
-        esx47:
-          ip_address: 192.168.123.47
-          cluster: "Resource Cluster"
+        # esx47:
+        #   ip_address: 192.168.123.47
+        #   cluster: "Resource Cluster"
         esx48:
           ip_address: 192.168.123.48
-          cluster: "Resource Cluster"
-        esx49:
-          ip_address: 192.168.123.49
-          cluster: "Resource Cluster"
-        esx51:
-          ip_address: 192.168.123.51
-          cluster: "Mgmt Cluster"
-        esx52:
-          ip_address: 192.168.123.52
-          cluster: "Mgmt Cluster"
-        esx53:
-          ip_address: 192.168.123.53
-          cluster: "Mgmt Cluster"
-        esx54:
-          ip_address: 192.168.123.54
-          cluster: "Mgmt Cluster"
+          cluster: "Cluster"
+          # cluster: "Resource Cluster"
+        # esx49:
+        #   ip_address: 192.168.123.49
+        #   cluster: "Resource Cluster"
+        # esx51:
+        #   ip_address: 192.168.123.51
+        #   cluster: "Mgmt Cluster"
+        # esx52:
+        #   ip_address: 192.168.123.52
+        #   cluster: "Mgmt Cluster"
+        # esx53:
+        #   ip_address: 192.168.123.53
+        #   cluster: "Mgmt Cluster"
+        # esx54:
+        #   ip_address: 192.168.123.54
+        #   cluster: "Mgmt Cluster"
       vars:
           esx_version: "8.0u2"
           enable_ssh: 'True'
@@ -90,7 +91,7 @@ all:
         # ONTAP Tools for VMware
         labotv:
           ip_address: 192.168.123.23
-          ovf_file: files/netapp-ontap-tools-for-vmware-vsphere-9.12-9342.ova
+          ovf_file: files/netapp-ontap-tools-for-vmware-vsphere-9.13P1-9828.ova
           ovf_networks:
             'nat': '{{ lab_lan1_portgroup }}'
           ovf_properties:

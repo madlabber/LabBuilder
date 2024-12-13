@@ -93,6 +93,19 @@ all:
           - name: "{{ lab_lan1_portgroup }}"
             device_type: e1000
 
+    proxmox:
+      vars:
+        vm_memory_mb: 16384
+        vm_num_cpus: 2
+        vm_disk_gb: 250 
+      hosts:
+        pve01:
+          ip_address: 192.168.0.71
+        # pve02:
+        #   ip_address: 192.168.0.52
+        # pve03:
+        #   ip_address: 192.168.0.53
+
     ontapselecteval:
       hosts:
         ots-01:  

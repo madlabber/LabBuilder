@@ -84,3 +84,17 @@ all:
           # bootargs:
           # - "testarg=true"
           # - "testarg2=true"
+    centos:
+      vars:
+      hosts:
+        crc:
+          state: present
+          ip_address: 192.168.126.94
+          distro: "rocky"
+          version: "9.4"
+          vm_memory_mb: 12288
+          vm_num_cpus: 4
+          vm_disk_gb: 80
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true
