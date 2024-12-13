@@ -74,3 +74,6 @@ ontap_cluster_mgmt_ip:  ""
 ontap_dns_domain:       "" 
 ontap_dns_server:       ""
 ontap_location:         ""
+
+#Timers 
+boot_delay: 10
