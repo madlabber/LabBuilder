@@ -1,15 +1,7 @@
-# 2.4.5
-#install_iso: "pfSense-CE-2.4.5-RELEASE-p1-amd64.iso"
-#install_iso_url: "https://atxfiles.pfsense.org/mirror/downloads/pfSense-CE-2.4.5-RELEASE-p1-amd64.iso.gz"
+#2.7.0
+#install_iso: "pfSense-CE-2.7.0-RELEASE-amd64.iso"
+#install_iso_url: "https://atxfiles.netgate.com/mirror/downloads/pfSense-CE-2.7.0-RELEASE-amd64.iso.gz"
 
-#2.5.0
-# install_iso: "pfSense-CE-2.5.0-RELEASE-amd64.iso"
-# install_iso_url: "https://nyifiles.netgate.com/mirror/downloads/pfSense-CE-2.5.0-RELEASE-amd64.iso.gz"
-
-#2.5.1
-install_iso: "pfSense-CE-2.5.1-RELEASE-amd64.iso"
-install_iso_url: "http://atxfiles.netgate.com/mirror/downloads/pfSense-CE-2.5.1-RELEASE-amd64.iso.gz"
-
-# #2.5.2
-# install_iso: "pfSense-CE-2.5.2-RELEASE-amd64.iso"
-# install_iso_url: "http://nyifiles.netgate.com/mirror/downloads/pfSense-CE-2.5.2-RELEASE-amd64.iso.gz"
+#2.7.1
+install_iso: "pfSense-CE-2.7.1-RELEASE-amd64.iso"
+install_iso_url: "https://atxfiles.netgate.com/mirror/downloads/pfSense-CE-2.7.1-RELEASE-amd64.iso.gz"

@@ -1,0 +1,25 @@
+---
+- name: download ISO if necessary
+  get_url:
+    url: "{{ install_iso_url }}"
+    dest: "{{ playbook_dir }}/files/"
+  delegate_to: localhost
+
+- name: Extract the pfSense ISO
+  shell: 'gunzip {{ playbook_dir }}/files/{{install_iso}}.gz'
+  args:
+    creates: '{{ playbook_dir }}/files/{{install_iso}}'
+  delegate_to: localhost
+
+- name: Copy install iso to datastore
+  community.vmware.vsphere_copy:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    src: "{{ playbook_dir }}/files/{{install_iso}}"
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ iso_datastore }}"
+    path: "{{ install_iso }}"
+  delegate_to: localhost
+  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
