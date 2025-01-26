@@ -5,9 +5,9 @@ all:
     lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
-    lab_vm_datastore: lab_template
-    lab_wan_portgroup: "VM Network"
-    lab_lan1_portgroup: "lab_template_net1"
+    lab_vm_datastore: "{{ lab_name }}"
+    lab_wan_portgroup: "{{ vm_network }}"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"

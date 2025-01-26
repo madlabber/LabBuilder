@@ -1,7 +1,7 @@
 all:
   hosts:
   vars:
-    lab_name: lab_select2n_vmw80u3
+    lab_name: lab_vcpvvf_vmw80u3
     lab_prefix: "{{ lab_name }}_"
     lab_password: P@ssw0rd
     lab_vm_datastore: "{{ lab_name }}"
@@ -46,24 +46,15 @@ all:
           ip_address: 192.168.0.52
         esx03:
           ip_address: 192.168.0.53
+        esx04:
+          ip_address: 192.168.0.54
       vars:
           esx_version: "8.0u3"
           ovf_file: "files/Nested_ESXi8.0u3_Appliance_Template_v1.ova"
-          vm_memory_mb: 24576
-          vm_num_cpus: 6
+          vm_memory_mb: 32768
+          vm_num_cpus: 8
           vm_disk1_size_gb: 40
           vm_disk2_size_gb: 2600
           create_local_vmfs: 'False'
           enable_ssh: 'True'
-    centos:
-      hosts:
-        ansible:
-          ip_address: 192.168.0.12
-          distro: "alma"
-          version: "8"
-          install_xrdp: true
-          install_ansible: true
-          vm_memory_mb: 2048
-          vm_num_cpus: 2
-          vm_disk_gb: 80
-      vars:
+

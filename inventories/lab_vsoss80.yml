@@ -1,0 +1,273 @@
+# notes derived from lab guide
+# NTP is on 172.20.10.2
+# DNS is on 172.20.10.10
+# Credentials are Student01, VMware1!
+# hosts 1 and 2 appear to be 2x16
+# class uses samba ldap in place of AD
+# ESX Admins group is pre-configured
+# esxadmin@vclass.local, VMware1!
+# studentadmin@vclass.local
+# 6 VMs exist on sa-esxi-01
+# no VMs on sa-esxi-02
+# dc is dc.vclass.local
+# 172.20.10.2  vpodrouter (NTP Server/gateway)
+# 172.20.10.10 dc
+# 172.20.10.15 Freenas iSCSI discovery ip
+# 172.20.10.50 sa-vcsa-01
+# 172.20.10.51 sa-esx-01 vmk0 (Management Network)
+# 172.20.10.52 sa-esx-02 vmk0 (Management Network)
+# 172.20.10.53 sa-esx-02 vmk0 (Management Network)
+# 172.20.10.61 sa-esx-01 vmk1 (IP Storage 1)
+# 172.20.10.62 sa-esx-02 vmk1 (IP Storage 1)
+# 172.20.10.71 sa-esx-01 vmk2 (IP Storage 2)
+# 172.20.10.72 sa-esx-02 vmk2 (IP Storage 2)
+# 
+# linux guest are on 172.20.11.x (Production Network)
+# 172.20.11.2 gateway
+# 172.20.11.100-? DHCP range
+
+# VM List in class lab
+# console
+# SA-ESXI-01
+# SA-ESXI-02
+# SA-ESXI-03
+# SA-FREENAS-01
+# SA-VCSA-01
+# VPODROUTER (LDAP Server)
+#
+# This variant ads an additional VM to run the DC on 172.20.10.10
+# configure to support LPADS and export the cert
+# create users
+# - esxadmin
+# - cladmin
+# - studentadmin
+# create group
+# - ESX Admins
+# add esxadmin to ESX Admin's group
+
+# esxi-01 has 2 datastores initially.  total 250gb, used 46gb (pre-loaded linux-01 - linux-06)
+# VMs include:
+# 4x Ubuntu 20.04 VMs, MBR partition table, autologon as localadmin, cpubusy.pl and a symlink to gnome-system-monitor on desktop
+# Linux-02  (1x1,16gb vmdk)
+# Linux-04  (1x1,16gb vmdk)
+# Linux-06  (1x1,16gb vmdk)
+# Linux-Template  (1x1,16gb vmdk)
+#
+# 2x photon 3.0 VMs, root pw VMware1!
+# Photon-Base  (1x1,5gb vmdk)
+# Photon-HW  (1x1,5gb vmdk)
+#
+# iSCSI LUNS
+# 0: 120GB (ICM-Datastore)
+# 1: not present
+# 2:  11GB (Not Consumed)
+# 3: not present
+# 4: not present
+# 5: 130GB (iSCSI Datastore)
+# 6:   7GB (Not Consumed)
+
+# Hosts have a local disk lun0 16gb.  boot?
+# ESXi-01 is pre-configured for iSCSI
+# ESXi-02 is configured for iSCSI in lab 9
+
+#config tasks:
+#lab 1
+## Create Student01/VMware1! on console
+## Configure NTP service on gateway
+##configure vmkernel networking on esxi-01
+##configure san storage
+##create iscsi datastore
+#pre-stage linux VMs
+#pre-stage other vms
+## create ESX Admins group
+## create esxadmin user
+
+#Errata:
+  # Lab 1 task 2
+  #X Install firefox on console
+  #X add bookmarks folder "vSphere Site-A"
+  #X add bookmark "Host Client (SA-ESXi-01)"
+  #X add bookmark "vSphere Client (SA-VCSA-01)"
+  
+  # LAB 2
+  #X Set Config.HostAgent.plugins.hostsvc.esxAdminsGroupAutoAdd to old default of True prior to AD join
+  #X Deconfigure NTP on both hosts
+  # Configure AD for LDAPS
+  # add ldaps certificate to desktop
+  # add studentadmin and cladmin users
+
+  #X configure linux-02 for auto logon
+
+  #X setup Production network, 172.20.11.0/24 gateway on .2
+  #X place NIC2 on production
+  #X place NIC3 on Production
+
+  # Remove iSCSI adapter from esx2
+  
+  #lab 11 in the original used the iscsi IP for nfs
+  # in this clone it uses .14, and has a 100gb vol instead an 8gb vol.
+
+# Pre-Lab Guide Configuration
+# Student Desktop:
+# - create student01 admin account
+# - log in as student01
+# - install firefox
+# - add bookmarks
+# - add putty sessions
+
+# sa-vcsa-01
+# - add licenses
+# - create cluster
+# sa-vcsa-01.vclass.local (4x14)
+# - SA-Datacenter
+#     - SA-Compute-01
+#         - sa-esxi-01.vclass.local (2x16)
+#         - sa-esxi-01.vclass.local
+#     - SA-Compute-02.  (With VSAN)
+#         - sa-esxi-04.vclass.local. (2vcpu, 16gb, 5nic, 10gb vsan disks?)
+#         - sa-esxi-05.vclass.local. (2vcpu, 16gb
+#         - sa-esxi-06.vclass.local. (2vcpu, 16gb
+#         - Linux-CPU-01
+#         - Linux-CPU-02
+#         - Linux-CPU-03
+#         - Linux-CPU-04
+#         - Linux-CPU-05
+#         - Linux01
+#         - Linux02
+#         - Photon-01
+#         - Photon-02
+#         - Photon-03
+
+# Console Is a linux desktop
+# - Student01 folder
+# - Class Materials and Licenses folder
+# - Firefox browser
+# - Remmina ssh client
+#     - SA-ESXi-01
+#     - SA-ESXi-02
+#     - SA-ESXi-04
+#     - SA-ESXi-05
+#     - SA-ESXi-06
+#     - SA-VCSA-01
+
+# OPSCALE-Datastore
+# Lun7 8.00gb
+# Lun8 12.00gb
+
+
+# sa-esxi-04.vclass.local. (2vcpu, 16gb, 5nic, 10gb vsan disks?)
+#  - 2x16
+#  - 5 NICs
+#  - VSAN: 5gb SSD cache, 10GB SSD capacity
+#  - iSCSI configured
+#  - vmnics:
+#    - 0: management
+#    - 1: 
+#    - 2: 
+#    - 3: vds-uplink1
+#    - 4: vds-student uplink1
+
+all:
+  hosts:
+  vars:
+    lab_name: lab_vsoss80
+    lab_prefix: "{{ lab_name }}_"
+    lab_password: VMware1!
+    lab_vm_datastore: "{{ lab_name }}"
+    lab_wan_portgroup: "{{ vm_network }}"
+    lab_lan1_portgroup: "{{ lab_prefix }}net1"
+    # lab_lan2_portgroup: "{{ lab_prefix }}net2"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "172.20.10.2"
+    lab_lan1_dns_ip: "172.20.10.2"
+    lab_domain_name:   "vclass.local"
+    lab_domain_controller: "dc"
+  children:
+    pfsense:
+      hosts:
+        gateway:
+          vm_network_wan: "{{lab_wan_portgroup}}"
+          vm_network_lan: "{{lab_lan1_portgroup}}"
+          # vm_network_opt1: "{{lab_lan2_portgroup}}"
+          config_xml_file: "files/pfsense/lab_vsicm80.xml"
+    dc:
+      hosts:
+        dc:
+          version: "Server2022eval"
+          ip_address: 172.20.10.10
+          extra_commands:
+            # Install Chrome
+            - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
+            - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+            # Install Putty
+            - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+            - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+    winservers:
+      hosts:
+        console:
+          ip_address: 172.20.10.11
+          version: "Server2022eval"
+          extra_commands:
+            # Install Chrome
+            - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
+            - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+            # Install Putty
+            - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+            - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+    vcenter:
+      hosts:
+        sa-vcsa-01:
+          ip_address: 172.20.10.50
+          vm_fqdn: "sa-vcsa-01.vclass.local"
+          #ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.2.00000-22385739_OVF10.ova"
+        sa-vcsa-02:
+          ip_address: 172.20.10.40
+          vm_fqdn: "sa-vcsa-02.vclass.local"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
+          #ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.2.00000-22385739_OVF10.ova"
+    nestedesx:
+      hosts:
+        sa-esxi-01:
+          ip_address: 172.20.10.51
+        sa-esxi-02:
+          ip_address: 172.20.10.52
+        sa-esxi-04:
+          ip_address: 172.20.10.54
+        sa-esxi-05:
+          ip_address: 172.20.10.55
+        sa-esxi-06:
+          ip_address: 172.20.10.56
+      vars:
+          esx_version: "8.0u3"
+          ovf_file: "files/Nested_ESXi8.0u3_Appliance_Template_v1.ova"
+          vm_memory_mb: 16384
+          vm_num_cpus: 2
+          vm_disk1_size_gb: 5
+          vm_disk2_size_gb: 10
+          create_local_vmfs: 'False'
+          enable_ssh: 'True'
+          network_adapters:
+            - name: '{{lab_lan1_portgroup}}'
+              device_type: vmxnet3
+            - name: '{{lab_lan1_portgroup}}'
+              device_type: vmxnet3
+            - name: '{{lab_lan1_portgroup}}'
+              device_type: vmxnet3
+            - name: '{{lab_lan1_portgroup}}'
+              device_type: vmxnet3
+            - name: '{{lab_lan1_portgroup}}'
+              device_type: vmxnet3
+            # - name: '{{lab_lan1_portgroup}}'
+            #   device_type: vmxnet3
+            # - name: '{{lab_lan1_portgroup}}'
+            #   device_type: vmxnet3
+    ontapselecteval:
+      hosts:
+        sa-ontap-01:  
+          ontap_version: "9.15.1"           
+          ontap_node_mgmt_ip:    172.20.10.81
+          ontap_cluster_name:    "sa-ontap"
+          ontap_cluster_mgmt_ip: 172.20.10.80
+          vm_data_disk_gb:       1024
