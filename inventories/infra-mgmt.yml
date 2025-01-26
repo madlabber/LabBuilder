@@ -57,7 +57,7 @@ all:
       hosts:
         labvc01:
           ip_address: 192.168.123.20
-          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.0.10000-20519528_OVF10.ova"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
     esx:
       hosts:
         # esx47:
