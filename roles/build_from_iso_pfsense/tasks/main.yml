@@ -35,7 +35,7 @@
   include_tasks: upload_install_iso.yml
   when: install_iso_exists.failed
 
-- name: Create VM
+- name: Create VM with 2 interfaces
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
@@ -69,6 +69,45 @@
     wait_for_ip_address: no
   delegate_to: localhost
   register: deploy_vm
+  when: vm_network_opt1 == ""
+
+- name: Create VM with 3 interfaces
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}' 
+    validate_certs: no 
+    datacenter: "{{vcenter_datacenter}}"
+    cluster: '{{vcenter_cluster}}'    
+    folder: /
+    name: '{{ _vm_name }}'
+    state: present
+    guest_id: centos7_64Guest
+    cdrom:
+        - controller_number: 0
+          unit_number: 0
+          state: present
+          type: iso
+          iso_path: '[{{ iso_datastore }}] {{ _install_iso }}'
+    disk:
+    - size_gb: '{{ _vm_disk_gb |int }}'
+      type: thin
+      datastore: '{{ vm_datastore }}'
+    hardware:
+      memory_mb: '{{ _vm_memory_mb |int}}'
+      num_cpus: '{{ _vm_num_cpus |int}}'
+      scsi: lsilogicsas
+    networks:
+    - name: '{{ _vm_network_wan }}'
+      device_type: e1000
+    - name: '{{ _vm_network_lan }}'
+      device_type: e1000
+    - name: '{{ vm_network_opt1 }}'
+      device_type: e1000
+    wait_for_ip_address: no
+  delegate_to: localhost
+  register: deploy_vm
+  when: vm_network_opt1 != ""
 
 - name: Set boot order
   community.vmware.vmware_guest_boot_manager:

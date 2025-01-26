@@ -5,3 +5,6 @@
 #2.7.1
 install_iso: "pfSense-CE-2.7.1-RELEASE-amd64.iso"
 install_iso_url: "https://atxfiles.netgate.com/mirror/downloads/pfSense-CE-2.7.1-RELEASE-amd64.iso.gz"
+
+# Empty value builds with only 2 interfaces
+vm_network_opt1: ""
