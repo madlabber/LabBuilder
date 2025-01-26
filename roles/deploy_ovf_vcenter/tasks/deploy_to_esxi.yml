@@ -1,0 +1,40 @@
+---
+# When the target is an ESXi server the user configurable setting is not enforced
+# And all vars must be set during deploy, and deploy must power on the VM
+# otherwise the vars will not persist
+- community.vmware.vmware_deploy_ovf:
+    hostname: '{{ esxi_address }}'
+    username: '{{ esxi_username }}'
+    password: '{{ esxi_password }}'
+    validate_certs: no      
+    datacenter: 'ha-datacenter'
+    datastore: '{{ vm_datastore }}'
+    name: '{{ vm_name }}' # shortname, not FQDN
+    ovf: '{{ ovf_file }}' 
+    disk_provisioning: thin
+    networks:
+        "Network 1": "{{vm_network}}"
+    power_on: yes
+    wait_for_ip_address: false
+    inject_ovf_env: true
+    properties:
+      DeploymentOption.value: '{{vm_deployment_size}}' # vCenter t-shirt size: tiny,small,medium,large, or infrastructure 
+      guestinfo.cis.appliance.net.addr.family: 'ipv4' # ipv4 or ipv6
+      guestinfo.cis.appliance.net.mode: '{{vm_net_mode}}' # static or dhcp
+      guestinfo.cis.appliance.net.addr: '{{ vm_address }}' 
+      guestinfo.cis.appliance.net.pnid: "{{ vm_fqdn|default(vm_address) }}" # FQDN of vcenter server
+      guestinfo.cis.appliance.net.prefix: '{{ vm_netmask_cidr }}' # netmask length, CIDR notation, i.e. '24'
+      guestinfo.cis.appliance.net.gateway: '{{ vm_gateway }}' 
+      guestinfo.cis.appliance.net.dns.servers: '{{ vm_dns_server }}' # Comma separated list of IP addresses of DNS servers.
+      guestinfo.cis.appliance.root.passwd: '{{ vm_password }}' 
+      guestinfo.cis.deployment.autoconfig: '{{vm_autoconfig|string}}' # Auto-configure after deployment
+      guestinfo.cis.vmdir.password: '{{ vm_password }}' # SSO Password for administrator@vsphere.local
+      guestinfo.cis.appliance.ssh.enabled: '{{vm_enable_ssh|string}}'
+      guestinfo.cis.upgrade.import.directory: "/storage/seat/cis-export-folder" #FIX for VCSA 8.0
+      domain: '{{ vm_domain }}'
+      searchpath: '{{ searchpath }}'
+  delegate_to: localhost
+
+
+
+
