@@ -1,2 +1,7 @@
 esxi_7.0_file: "Nested_ESXi7.0_Appliance_Template_v1.ova"
 esxi_7.0_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi7.0_Appliance_Template_v1.ova"
+
+# default to false to accept the default adapters from the OVA file
+network_adapters: false
+
+vm_memory_mb: 8192

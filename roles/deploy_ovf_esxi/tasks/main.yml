@@ -6,17 +6,8 @@
     vm_name: "{{vm_name | default('esxvm') }}"
     vm_network: "{{vm_network | default('VM Network') }}"
     vm_num_cpus: "{{vm_num_cpus | default(2) }}"
-    vm_memory_mb: "{{vm_memory_mb | default(8192) }}"
-    vm_disk1_size_gb: "{{vm_disk1_size_gb | default('4') }}"
-    vm_disk2_size_gb: "{{vm_disk2_size_gb | default('8') }}"
     ovf_ssh: "{{ovf_ssh | default('true') }}"
     ovf_createvmfs: "{{ovf_createvmfs |default('false') }}"
-
-- name: download OVF if necessary
-  get_url:
-    url: "{{ovf_url}}"
-    dest: "{{ovf_file}}"
-  delegate_to: localhost
 
 - vmware_deploy_ovf:
     hostname: '{{ vcenter_address }}'
@@ -53,7 +44,22 @@
   until: result is succeeded
   when: vcenter_address != esxi_address
 
-- name: Adjust VM Sizing
+- name: Adjust VM Sizing - cpu and mem
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    state: present
+    hardware:
+      memory_mb: '{{ vm_memory_mb|int }}'
+      num_cpus: '{{ vm_num_cpus|int }}'
+  delegate_to: localhost
+  when: 
+    - vcenter_address != esxi_address
+
+- name: Adjust VM Sizing - disk1
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
@@ -68,6 +74,24 @@
       unit_number: 1
       datastore: '{{ vm_datastore }}'
       type: thin
+    hardware:
+      memory_mb: '{{ vm_memory_mb|int }}'
+      num_cpus: '{{ vm_num_cpus|int }}'
+  delegate_to: localhost
+  when: 
+    - vcenter_address != esxi_address
+    - vm_disk1_size_gb is defined
+    - vm_disk1_size_gb|int > 0
+
+- name: Adjust VM Sizing - disk2
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    state: present
+    disk:
     - size_gb: "{{ vm_disk2_size_gb|int }}"
       controller_type: paravirtual
       controller_number: 0
@@ -78,7 +102,27 @@
       memory_mb: '{{ vm_memory_mb|int }}'
       num_cpus: '{{ vm_num_cpus|int }}'
   delegate_to: localhost
-  when: vcenter_address != esxi_address
+  when: 
+    - vcenter_address != esxi_address
+    - vm_disk2_size_gb is defined
+    - vm_disk2_size_gb|int > 0
+
+- name: Create Network Adapters
+  community.vmware.vmware_guest:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+    datacenter: '{{ vcenter_datacenter }}'
+    cluster: '{{ vcenter_cluster }}'
+    name: '{{ vm_name }}'
+    state: present
+    networks: '{{network_adapters}}'
+  delegate_to: localhost
+  register: create_network_adapters
+  when:
+    - network_adapters is defined
+    - network_adapters is not false
 
 - name: Power-On the virtual machine
   community.vmware.vmware_guest:
