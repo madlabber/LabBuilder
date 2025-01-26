@@ -3,10 +3,13 @@
   hosts: localhost
   gather_facts: false
   vars_files:
-    vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   tasks:
+  #- include_vars: "{{ mainvars }}"
   - debug:
       msg:
+      - "vcenter_address:    {{ vcenter_address }}"
       - "lab name:           {{ lab_name|default('') }}"
       - "lab_vm_datastore:   {{ lab_vm_datastore|default('') }}"
       - "lab_lan1_portgroup: {{ lab_lan1_portgroup|default('') }}"

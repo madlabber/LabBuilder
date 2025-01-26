@@ -13,7 +13,8 @@
   hosts: pfsense
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   roles:
     - role: build_from_iso_pfsense
       vars:
@@ -25,7 +26,8 @@
   hosts: dc
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   roles:
     - role: build_from_iso_windows
       vars:
@@ -47,7 +49,8 @@
   serial: 1
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   tasks:
   - name: Add DNS record via vm shell
     community.vmware.vmware_vm_shell:
@@ -77,12 +80,15 @@
   hosts: vcenter
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   roles:
     - role: deploy_ovf_vcenter
       vars:
         #ovf_file: "{{ vcenter_ova }}"
         #ovf_file: "{{ ova_file }}"
+        # vcenter_address: "{{ esxi_address }}"
+        # vcenter_username: root
         vm_name: "{{ lab_prefix | default('') }}{{inventory_hostname}}"
         vm_datastore: '{{ lab_vm_datastore }}'
         vm_hostname: '{{inventory_hostname}}'
@@ -95,12 +101,40 @@
         vm_dns_server: '{{lab_lan1_dns_ip}}'
         vm_gateway: '{{lab_lan1_gateway}}'
 
-# Build Nested ESX hosts defined in the inventory file
-- name: Build Nested ESXI from OVA
+# Build ESXi Server(s)
+- name: Build Nested ESXi from OVA
   hosts: nestedesx
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
+  roles:
+    - role: deploy_ovf_esxi
+      vars:
+        ovf_version: "{{esx_version}}" #7.0u1, 7.0, 6.7u3, 6.7u2, 6.7u1, 6.7 ... 6.0?
+        vm_name:      "{{lab_prefix | default('')}}{{inventory_hostname}}"
+        vm_network:   "{{ lab_lan1_portgroup }}"
+        vm_datastore: "{{ lab_vm_datastore }}"
+        ovf_hostname: "{{ inventory_hostname }}"
+        ovf_address:  "{{ ip_address }}"
+        ovf_netmask:  "{{ lab_lan1_netmask }}"
+        ovf_gateway:  "{{ lab_lan1_gateway }}"
+        ovf_vlan: ""
+        ovf_dns:      "{{ lab_lan1_dns_ip }}"
+        ovf_domain:   "{{lab_domain_name}}"
+        ovf_ntp:      "{{lab_lan1_gateway}}"
+        ovf_syslog: "" # IP of syslog server
+        ovf_password: "{{lab_password}}"
+        ovf_ssh:      "{{enable_ssh|string}}"
+        ovf_createvmfs: "{{create_local_vmfs|string}}"
+
+# Build Nested ESX hosts defined in the inventory file
+- name: Build Nested ESXI from OVA
+  hosts: oldnestedesx
+  gather_facts: false
+  vars_files:
+    - defaults/main.yml
+    - "{{ mainvars }}"
   tasks:
     - set_fact:
         ovf_file: 'files/Nested_ESXi{{esx_version}}_Appliance_Template_v1.ova'
@@ -143,7 +177,8 @@
   hosts: winservers
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   roles:
     - role: build_from_iso_windows
       vars:
@@ -163,7 +198,8 @@
   hosts: centos
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   tasks:
     - include_vars: vars/rhsm_secrets.yml
       ignore_errors: true
@@ -187,7 +223,8 @@
   hosts: ubuntu
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   roles:
     - role: build_from_iso_ubuntu
       vars:
@@ -208,7 +245,8 @@
   hosts: proxmox
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   roles:
     - role: build_from_iso_proxmox
       vars:
@@ -229,7 +267,8 @@
   hosts: xcpng
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   roles:
     - role: build_from_iso_xcpng
       vars:
@@ -251,7 +290,8 @@
   strategy: free
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   tasks:
     - set_fact:
         partner_name: "{{ lab_name }}_{{ partner }}"
@@ -279,7 +319,8 @@
   hosts: ontapselecteval
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   roles:
     - role: deploy_ovf_ontapselecteval
       vars:
@@ -307,13 +348,15 @@
         grid_network_mask:     "{{lab_lan1_netmask}}"
         grid_network_gateway:  "{{lab_lan1_gateway}}"
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
 
 - name: Build AIQUM from OVA
   hosts: aiqum
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   tasks:
   - include_role:
       name: deploy_ovf_aiqum
@@ -335,7 +378,8 @@
   hosts: ovf
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - defaults/main.yml
+    - "{{ mainvars }}"
   tasks:
   - vmware_deploy_ovf:
       hostname: '{{ vcenter_address }}'

@@ -32,3 +32,7 @@ python libraries
 ESXi host(s)
 vCenter Server
 
+# using alternate main vars
+The default vars related to the lab hosting infrastructure are read from vars/main.yml
+To load an alternate configuration, store an alternate set of vars in vars/<altconfig>.yml and load it at runtime with
+ - -e mainvars=<altconfig>.yml
