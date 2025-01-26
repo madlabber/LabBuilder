@@ -9,16 +9,14 @@ vcenter_datacenter: Datacenter
 
 # Default cluster for new VM provisioning
 # if there is no cluster set it to ""
-vcenter_cluster: "Resource Cluster"
+vcenter_cluster: "Cluster"
 cluster_hosts:
-  - 192.168.123.47
   - 192.168.123.48
-  - 192.168.123.49
 #vcenter_cluster: "Management Cluster"
 
 # Credentials for a host with access to the datastore
 # Used when ISOs are missing from the ISO datastore
-esxi_address: 192.168.123.47
+esxi_address: 192.168.123.48
 esxi_username: root
 esxi_password: P@ssw0rd
 
@@ -39,7 +37,7 @@ vm_network: "VM Network"
 esxi_vswitch: "vSwitch1"
 
 # uncomment to test ESX target mode
-# vcenter_address: 192.168.123.49
+# vcenter_address: 192.168.123.48
 # vcenter_username: root
 # vcenter_password: P@ssw0rd
 # vcenter_datacenter: 'ha-datacenter'
@@ -53,8 +51,8 @@ vlan_count: 1000
 ontap_address: "192.168.123.10"
 ontap_password: "P@ssw0rd"
 ontap_svm_name: "svm33"
-ontap_svm_address: "192.168.123.33"
-ontap_svm_lif: "svm1_lif1"
+ontap_svm_address: "192.168.122.33"
+ontap_svm_lif: "svm33_nfs_33"
 ontap_vol_labs: "Labs"
 ontap_vol_size_gb: 500
 ontap_aggregate: "ots10_01_SSD_1"
