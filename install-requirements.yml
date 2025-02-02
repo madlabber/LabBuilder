@@ -13,6 +13,7 @@
       - pyvmomi
       - netapp-lib
       - jmespath
+      - proxmoxer
 
   - name: install community.general
     ansible.builtin.command: ansible-galaxy collection install community.general
@@ -21,4 +22,15 @@
     community.general.ansible_galaxy_install:
       type: both
       requirements_file: requirements.yml
+
+  - name: Install mtools
+    ansible.builtin.package:
+      name: mtools
+      state: present
+    become: True
+    become_user: root
+    ignore_errors: True
+
+
+
 
