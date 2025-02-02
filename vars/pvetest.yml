@@ -1,39 +1,44 @@
 # If there is no vcenter, use the esxi host crendentials
 # to complete the vcenter variables
-vcenter_address: 192.168.123.20
-vcenter_username: administrator@vsphere.local
-vcenter_password: P@ssw0rd
+# vcenter_address: 192.168.123.20
+# vcenter_username: administrator@vsphere.local
+# vcenter_password: P@ssw0rd
 
 # # If there is no vcenter, use 'ha-datacenter'
-vcenter_datacenter: Datacenter
+# vcenter_datacenter: Datacenter
 
 # Default cluster for new VM provisioning
 # if there is no cluster set it to ""
-vcenter_cluster: "Cluster"
-cluster_hosts:
-  - 192.168.123.48
+# vcenter_cluster: "Cluster"
+# cluster_hosts:
+#   - 192.168.123.48
 
 # Credentials for a host with access to the datastore
 # Used when ISOs are missing from the ISO datastore
-esxi_address: 192.168.123.48
-esxi_username: root
-esxi_password: P@ssw0rd
+# esxi_address: 192.168.123.48
+# esxi_username: root
+# esxi_password: P@ssw0rd
 
 # If there is a vcenter, this must match the host's name in vcenter inventory
 # if there is no vcenter, the name can be the IP address
-esxi_hostname: "esx48.schlab.pri"
+# esxi_hostname: "192.168.123.48"
+pve_node: pve51
+pve_address: 192.168.123.51
+pve_username: root
+pve_password: P@ssw0rd
 
 # Default datastore for new VMs
-vm_datastore: "TestVMs"
+vm_datastore: "Local-LVM"
 
 # Default datastore for ISO files
-iso_datastore: "ISOs"
+iso_datastore: local
+iso_path: /var/lib/vz/template/iso
 
 # Default portgroup for new VMs
-vm_network: "VM Network"
+vm_network: "vmbr0"
 
 # Default vswitch for new portgroups
-esxi_vswitch: "vSwitch1"
+# esxi_vswitch: "vSwitch1"
 
 # uncomment to test ESX target mode
 # vcenter_address: 192.168.123.48
@@ -43,15 +48,15 @@ esxi_vswitch: "vSwitch1"
 # vcenter_cluster: ""
 
 # VLAN Pool for building lab pod portgroups
-vlan_start: 1000
-vlan_count: 1000
+# vlan_start: 1000
+# vlan_count: 1000
 
 # ONTAP vars required to build lab pod datastores
-ontap_address: "192.168.123.10"
-ontap_password: "P@ssw0rd"
-ontap_svm_name: "svm33"
-ontap_svm_address: "192.168.122.33"
-ontap_svm_lif: "svm33_nfs_33"
-ontap_vol_labs: "Labs"
-ontap_vol_size_gb: 500
-ontap_aggregate: "ots10_01_SSD_1"
+# ontap_address: "192.168.123.10"
+# ontap_password: "P@ssw0rd"
+# ontap_svm_name: "svm33"
+# ontap_svm_address: "192.168.122.33"
+# ontap_svm_lif: "svm33_nfs_33"
+# ontap_vol_labs: "Labs"
+# ontap_vol_size_gb: 500
+# ontap_aggregate: "ots10_01_SSD_1"
