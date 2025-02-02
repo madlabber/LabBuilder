@@ -1,0 +1,23 @@
+# Disk DescriptorFile
+version=1
+encoding="UTF-8"
+CID=a2454f9f
+parentCID=ffffffff
+createType="vmfs"
+
+# Extent description
+RW 65536 VMFS "pfsense_config-flat.vmdk"
+
+# The Disk Data Base 
+#DDB
+
+ddb.adapterType = "lsilogic"
+ddb.geometry.cylinders = "32"
+ddb.geometry.heads = "64"
+ddb.geometry.sectors = "32"
+ddb.longContentID = "fc9934d19ae4768055749992a2454f9f"
+ddb.thinProvisioned = "1"
+ddb.toolsInstallType = "0"
+ddb.toolsVersion = "2147483647"
+ddb.uuid = "60 00 C2 92 b5 0c 3c e5-34 36 d4 6d a4 36 97 c3"
+ddb.virtualHWVersion = "14"

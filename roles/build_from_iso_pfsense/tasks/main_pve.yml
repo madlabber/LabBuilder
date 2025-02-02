@@ -1,0 +1,251 @@
+- name: Add PVE Host to Dynamic Inventory
+  add_host:
+    hostname: temp_host
+    group: "temp_hosts"
+    ansible_host: '{{ pve_address }}'
+    ansible_user: '{{ pve_username }}'
+    ansible_password: '{{ pve_password }}'
+    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+
+- name: Check if ISO exists on host
+  stat:
+    path: "{{ iso_path }}/{{install_iso}}"
+  delegate_to: temp_host
+  register: install_iso_exists
+
+- name: build vm on esxi
+  include_tasks: main_esxi.yml
+  when: 
+  - install_iso_exists.failed
+
+- name: Create new VM with 2 NICs
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: present
+    name: '{{ vm_name|replace("_", "-") }}'
+    node: "{{ pve_node }}"
+    net:
+      net0: 'e1000,bridge={{vm_network_wan}}'
+      net1: 'e1000,bridge={{vm_network_lan}}'
+    virtio:
+      virtio0: '{{vm_datastore}}:{{ vm_disk_gb |int }}'
+    ide:
+      ide2: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
+    cores: 1
+    vcpus: 1
+    memory: '{{ vm_memory_mb |int}}'
+    agent: true
+  delegate_to: localhost
+  register: create_vm
+
+- name: Start VM
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: started
+    name: '{{ vm_name|replace("_", "-") }}'
+  delegate_to: localhost
+
+- name: 'Wait {{install_timer|default(90)}} seconds for boot'
+  wait_for: 
+    timeout: "{{install_timer|default(90)}}"
+  delegate_to: localhost
+
+- name: blind install
+  command:
+    cmd: "qm sendkey {{ create_vm.vmid }} {{item}}"
+  delegate_to: temp_host
+  # loop_control:
+  #   pause: 5
+  loop: 
+    - "ret" # enter # ACCEPT
+    - "ret" # enter # Install pfSense
+    - "ret" # enter # AutoFS-OK (ZFS)
+    - "ret" # enter # Proceed
+    - "ret" # enter # stripe - no redundancy
+    - "spc" # Select disk
+    - "ret" # Accept Disk
+    - "left" # YES
+    - "ret" # Proceed with install
+
+- name: 'Wait {{install_timer|default(90)}} seconds for install'
+  wait_for: 
+    timeout: "{{install_timer|default(90)}}"
+  delegate_to: localhost
+
+- name: Stop VM
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: stopped
+    force: true
+    name: '{{ vm_name|replace("_", "-") }}'
+  delegate_to: localhost
+
+- name: Start VM
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: started
+    name: '{{ vm_name|replace("_", "-") }}'
+  delegate_to: localhost
+
+- name: 'Wait {{boot_timer|default(90)}} seconds for boot'
+  wait_for: 
+    timeout: "{{boot_timer|default(90)}}"
+  delegate_to: localhost
+
+- name: install qemu-guest-agent
+  command:
+    cmd: "qm sendkey {{ create_vm.vmid }} {{item}}"
+  delegate_to: temp_host
+  loop: 
+    - 8 # enter # reboot
+    - ret
+    - p
+    - k
+    - g
+    - spc 
+    - i
+    - n
+    - s
+    - t
+    - a
+    - l
+    - l
+    - spc
+    - minus
+    - y
+    - spc 
+    - q
+    - e
+    - m
+    - u
+    - minus
+    - g
+    - u
+    - e
+    - s
+    - t
+    - minus
+    - a
+    - g
+    - e
+    - n
+    - t
+    - ret
+
+- name: install qemu-guest-agent
+  command:
+    cmd: 'qm sendkey {{ create_vm.vmid }} {{item}}'
+  delegate_to: temp_host
+  loop: 
+    - s
+    - e
+    - r
+    - v
+    - i
+    - c
+    - e 
+    - spc 
+    - q
+    - e
+    - m
+    - u
+    - minus
+    - g
+    - u
+    - e
+    - s
+    - t
+    - minus
+    - a
+    - g
+    - e
+    - n
+    - t
+    - spc
+    - o
+    - n
+    - e
+    - s
+    - t
+    - a
+    - r
+    - t
+    - ret
+
+- name: invoke install-qemu-guest-agent
+  command:
+    cmd: "qm guest exec {{ create_vm.vmid }} -- {{item}}"
+  delegate_to: temp_host
+  loop_control:
+    pause: 5
+  loop: 
+    - "/usr/local/bin/curl -LJO https://raw.githubusercontent.com/Weehooey/pfSense-scripts/main/install-qemu-guest-agent.sh"
+    - "chmod +x install-qemu-guest-agent.sh"
+    - "./install-qemu-guest-agent.sh"
+
+- name: Detach Install ISO
+  community.general.proxmox_disk:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    #vmid: "{{ create_vm.vmid }}"
+    name: '{{ vm_name|replace("_", "-") }}'
+    disk: ide2
+    media: cdrom
+    state: detached
+  delegate_to: localhost
+
+- name: Create config ISO
+  community.general.iso_create:
+    dest_iso: "{{ role_path }}/files/{{vm_name}}_config.iso"    
+    src_files:
+      - "{{ config_xml_file }}"
+    interchange_level: 4
+    joliet: 3
+    vol_ident: cidata
+  delegate_to: localhost
+
+- name: Copy install iso to datastore
+  copy:
+    src: "{{ role_path }}/files/{{vm_name}}_config.iso"
+    dest: "{{ iso_path }}/{{vm_name}}_config.iso"
+  delegate_to: temp_host
+
+- name: Attach config ISO
+  community.general.proxmox_disk:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    #vmid: "{{ create_vm.vmid }}"
+    name: '{{ vm_name|replace("_", "-") }}'
+    disk: ide2
+    media: cdrom
+    iso_image: "{{iso_datastore}}:iso/{{vm_name}}_config.iso"
+  delegate_to: localhost
+
+- name: invoke install-qemu-guest-agent
+  command:
+    cmd: "qm guest exec {{ create_vm.vmid }} -- {{item}}"
+  delegate_to: temp_host
+  loop_control:
+    pause: 5
+  loop: 
+    - "mount_cd9660 /dev/cd0 /media"
+    - "cp /media/config.xml /conf/config.xml"
+
+- name: Restart VM
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: restarted
+    name: '{{ vm_name|replace("_", "-") }}'
+  delegate_to: localhost

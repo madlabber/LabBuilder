@@ -1,0 +1,34 @@
+- name: Check if ISO exists on host
+  stat:
+    path: "{{ iso_path }}/{{install_iso}}"
+  delegate_to: temp_host
+  register: install_iso_exists
+
+- name: Check if ISO exists locally
+  stat:
+    path: '{{ playbook_dir }}/files/{{install_iso}}'
+  delegate_to: temp_host
+  register: local_install_iso_exists
+
+- name: download ISO, which may or may not be gzipped
+  get_url:
+    url: "{{ install_iso_url }}"
+    dest: "{{ playbook_dir }}/files/"
+  delegate_to: localhost
+  when: 
+  - install_iso_exists.failed
+  - local_install_iso_exists.failed
+
+- name: Extract the pfSense ISO from gzip
+  shell: 'gunzip {{ playbook_dir }}/files/{{install_iso}}.gz'
+  args:
+    creates: '{{ playbook_dir }}/files/{{install_iso}}'
+  delegate_to: localhost
+  when: install_iso_exists.failed
+
+- name: Copy install iso to datastore
+  copy:
+    src: "{{ playbook_dir }}/files/{{install_iso}}"
+    dest: "{{ iso_path }}/{{install_iso}}"
+  delegate_to: temp_host
+  when: install_iso_exists.failed

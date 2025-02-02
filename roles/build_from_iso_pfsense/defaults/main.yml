@@ -6,5 +6,17 @@
 install_iso: "pfSense-CE-2.7.1-RELEASE-amd64.iso"
 install_iso_url: "https://atxfiles.netgate.com/mirror/downloads/pfSense-CE-2.7.1-RELEASE-amd64.iso.gz"
 
-# Empty value builds with only 2 interfaces
+# How long to wait while pfSense installs from ISO
+install_timer: 45
+boot_timer: 90
+
+# defaults
+vm_name: "pfsense"
+vm_password_new: "P@ssw0rd"
+vm_network_wan: "VM Network"
+vm_network_lan: ""
 vm_network_opt1: ""
+vm_disk_gb: 10
+vm_memory_mb: 1024
+vm_num_cpus: 1
+config_xml_file: ""

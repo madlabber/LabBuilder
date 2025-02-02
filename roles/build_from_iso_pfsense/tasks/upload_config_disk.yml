@@ -1,0 +1,26 @@
+
+- name: Copy pfsense_config-flat.vmdk to datastore
+  community.vmware.vsphere_copy:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    src: "{{role_path}}/files/pfsense_config-flat.vmdk"
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ vm_datastore }}"
+    path: "{{ vm_name }}/pfsense_config-flat.vmdk"
+  delegate_to: localhost
+  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
+
+- name: Copy pfsense_config.vmdk to datastore
+  community.vmware.vsphere_copy:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    src: "{{role_path}}/files/pfsense_config.vmdk"
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ vm_datastore }}"
+    path: "{{ vm_name }}/pfsense_config.vmdk"
+  delegate_to: localhost
+  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced

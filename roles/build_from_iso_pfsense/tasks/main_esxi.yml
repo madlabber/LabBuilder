@@ -1,0 +1,13 @@
+- name: map login variables
+  set_fact:
+    vcenter_address: "{{ esxi_address }}"
+    vcenter_username: "{{ esxi_username }}"
+    vcenter_password: "{{ esxi_password }}"
+    vcenter_datacenter: "ha-datacenter"
+  delegate_to: localhost
+
+- name: upload install iso
+  include_tasks: upload_install_iso.yml
+
+- name: Build VM
+  include_tasks: build_vm.yml

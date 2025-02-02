@@ -1,0 +1,24 @@
+---
+
+- name: Create kickstart ISO
+  community.general.iso_create:
+    dest_iso: "{{ role_path }}/files/{{vm_name}}_config.iso"    
+    src_files:
+      - "{{ config_xml_file }}"
+    interchange_level: 4
+    joliet: 3
+    vol_ident: cidata
+  delegate_to: localhost
+
+- name: Copy kickstart iso to datastore
+  community.vmware.vsphere_copy:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'  
+    validate_certs: no 
+    src: "{{ role_path }}/files/{{config_iso}}"
+    datacenter: "{{vcenter_datacenter}}"
+    datastore: "{{ vm_datastore }}"
+    path: "{{config_iso}}"
+  delegate_to: localhost
+  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
