@@ -58,13 +58,16 @@
 # Photon-HW  (1x1,5gb vmdk)
 #
 # iSCSI LUNS
-# 0: 120GB (ICM-Datastore)
+# 0: 120GB (OPSCALE-Datastore)
 # 1: not present
 # 2:  11GB (Not Consumed)
 # 3: not present
 # 4: not present
 # 5: 130GB (iSCSI Datastore)
 # 6:   7GB (Not Consumed)
+# 7:   8GB
+# 8:  12GB
+
 
 # Hosts have a local disk lun0 16gb.  boot?
 # ESXi-01 is pre-configured for iSCSI
@@ -83,36 +86,28 @@
 ## create esxadmin user
 
 #Errata:
-  # Lab 1 task 2
+  # Lab 1 
   #X Install firefox on console
   #X add bookmarks folder "vSphere Site-A"
   #X add bookmark "Host Client (SA-ESXi-01)"
+  #X add bookmark "Host Client (SA-ESXi-02)"
+  #X add bookmark "Host Client (SA-ESXi-04)"
+  #X add bookmark "Host Client (SA-ESXi-05)"
+  #X add bookmark "Host Client (SA-ESXi-06)"
   #X add bookmark "vSphere Client (SA-VCSA-01)"
-  
-  # LAB 2
-  #X Set Config.HostAgent.plugins.hostsvc.esxAdminsGroupAutoAdd to old default of True prior to AD join
-  #X Deconfigure NTP on both hosts
-  # Configure AD for LDAPS
-  # add ldaps certificate to desktop
-  # add studentadmin and cladmin users
-
-  #X configure linux-02 for auto logon
-
-  #X setup Production network, 172.20.11.0/24 gateway on .2
-  #X place NIC2 on production
-  #X place NIC3 on Production
-
-  # Remove iSCSI adapter from esx2
-  
-  #lab 11 in the original used the iscsi IP for nfs
-  # in this clone it uses .14, and has a 100gb vol instead an 8gb vol.
 
 # Pre-Lab Guide Configuration
 # Student Desktop:
-# - create student01 admin account
 # - log in as student01
 # - install firefox
 # - add bookmarks
+  # - bookmarks folder "vSphere Site-A"
+  #  - "Host Client (SA-ESXi-01)"
+  #  - "Host Client (SA-ESXi-02)"
+  #  - "Host Client (SA-ESXi-04)"
+  #  - "Host Client (SA-ESXi-05)"
+  #  - "Host Client (SA-ESXi-06)"
+  #  - "vSphere Client (SA-VCSA-01)"
 # - add putty sessions
 
 # sa-vcsa-01
@@ -215,16 +210,14 @@ all:
             # Install Putty
             - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
             - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+            # Create Student01 account
+            - "New-LocalUser -Name Student01 -Password (ConvertTo-SecureString VMware1! -AsPlainText -Force) -FullName Student01 -AccountNeverExpires"
+            - "Add-LocalGroupMember -Group Administrators -Member Student01"
     vcenter:
       hosts:
         sa-vcsa-01:
           ip_address: 172.20.10.50
           vm_fqdn: "sa-vcsa-01.vclass.local"
-          #ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
-          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.2.00000-22385739_OVF10.ova"
-        sa-vcsa-02:
-          ip_address: 172.20.10.40
-          vm_fqdn: "sa-vcsa-02.vclass.local"
           ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
           #ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.2.00000-22385739_OVF10.ova"
     nestedesx:

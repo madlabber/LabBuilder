@@ -1,7 +1,7 @@
 all:
   hosts:
   vars:
-    lab_name: lab_proxmox81
+    lab_name: lab_proxmox
     lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
@@ -45,22 +45,13 @@ all:
       vars:
         vm_memory_mb: 16384
         vm_num_cpus: 2
-        vm_disk_gb: 250 
+        vm_disk_gb: 512
       hosts:
         pve01:
           ip_address: 192.168.0.51
         pve02:
           ip_address: 192.168.0.52
-        pve03:
-          ip_address: 192.168.0.53
-    ontapselecteval:
-      hosts:
-        ots-01:  
-          ontap_version: "9.14.1RC1"           
-          ontap_node_mgmt_ip:    192.168.0.91
-          ontap_cluster_name:    "demo"
-          ontap_cluster_mgmt_ip: 192.168.0.90
-          vm_data_disk_gb:       1024
+
 
 
 

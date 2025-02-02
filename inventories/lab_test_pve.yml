@@ -5,14 +5,14 @@ all:
     lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
-    lab_vm_datastore: "{{ lab_name }}"
+    lab_vm_datastore: "local-lvm"
     lab_wan_portgroup: "{{ vm_network }}"
-    lab_lan1_portgroup: "{{ lab_prefix }}net1"
+    lab_lan1_portgroup: "vmbr1001"
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
     lab_lan1_dns_ip: "192.168.0.11"
-    lab_lan2_portgroup: "{{ lab_prefix }}net2"
+    lab_lan2_portgroup: "vmbr1002"
     lab_domain_name: "lab.local"
     lab_dc01_hostname: "dc01"
     lab_dc01_ip: "192.168.0.11"

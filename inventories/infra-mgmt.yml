@@ -85,6 +85,13 @@ all:
       vars:
           esx_version: "8.0u2"
           enable_ssh: 'True'
+    pve_hosts:
+      hosts:
+        192.168.123.51:
+          ansible_user: root
+          ansible_password: P@ssw0rd
+
+        
     ovf:
       vars:
       hosts:
