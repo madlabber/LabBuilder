@@ -5,6 +5,7 @@
 vars/rhsm_secrets.yml
 files/.DS_Store
 files/*.tgz
+files/*.gz
 files/CentOS8/.DS_Store
 .DS_Store
 *.vib
