@@ -16,19 +16,21 @@
     dest: "{{ playbook_dir }}/files/"
   delegate_to: localhost
   when: 
-  - install_iso_exists.failed
-  - local_install_iso_exists.failed
+  - not install_iso_exists.stat.exists
+  - not local_install_iso_exists.stat.exists
 
 - name: Extract the pfSense ISO from gzip
   shell: 'gunzip {{ playbook_dir }}/files/{{install_iso}}.gz'
   args:
     creates: '{{ playbook_dir }}/files/{{install_iso}}'
   delegate_to: localhost
-  when: install_iso_exists.failed
+  when: 
+  - not install_iso_exists.stat.exists
 
 - name: Copy install iso to datastore
   copy:
     src: "{{ playbook_dir }}/files/{{install_iso}}"
     dest: "{{ iso_path }}/{{install_iso}}"
   delegate_to: temp_host
-  when: install_iso_exists.failed
+  when: 
+  - not install_iso_exists.stat.exists

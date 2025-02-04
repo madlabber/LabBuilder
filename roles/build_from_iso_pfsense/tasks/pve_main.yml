@@ -7,16 +7,8 @@
     ansible_password: '{{ pve_password }}'
     ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 
-- name: Check if ISO exists on host
-  stat:
-    path: "{{ iso_path }}/{{install_iso}}"
-  delegate_to: temp_host
-  register: install_iso_exists
-
-- name: build vm on esxi
-  include_tasks: main_esxi.yml
-  when: 
-  - install_iso_exists.failed
+- name: Upload install ISO
+  include_tasks: pve_upload_install_iso.yml
 
 - name: Create new VM with 2 NICs
   community.general.proxmox_kvm:
