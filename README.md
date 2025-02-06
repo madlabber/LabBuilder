@@ -36,3 +36,26 @@ vCenter Server
 The default vars related to the lab hosting infrastructure are read from vars/main.yml
 To load an alternate configuration, store an alternate set of vars in vars/<altconfig>.yml and load it at runtime with
  - -e mainvars=<altconfig>.yml
+
+# Adding ISO and OVA files
+The various VM build roles require installation media or OVA files.  In some cases these can be downloaded on demand, in other cases they need to be added to the files folder. 
+
+ISO files can be prepopulated by copying them into the ISO datastore.  
+Vendor OVA files need to be staged in the LabBuilder "files" folder. 
+
+## Installation Sources that will be downloaded as needed:
+ - pfsense install ISOs
+ - Windows Install ISOs
+ - Most linux install ISOs 
+
+## Installation Sources that need to be added manually:
+ - RedHat linux ISOs
+ - Nested ESXi OVA files
+ - vCenter OVA files
+ - NetApp Simulator OVA files
+ - NetApp ONTAP Select eval OVA files
+ - NetApp StorageGrid OVA files
+ - NetApp AIQUM OVA files
+
+
+
