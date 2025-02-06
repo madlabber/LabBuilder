@@ -1,0 +1,28 @@
+- name: Check if ISO exists on host
+  stat:
+    path: "{{ iso_path }}/{{install_iso}}"
+  delegate_to: temp_host
+  register: install_iso_exists
+
+- name: Check if ISO exists locally
+  stat:
+    path: '{{ playbook_dir }}/files/{{install_iso}}'
+  delegate_to: temp_host
+  register: local_install_iso_exists
+
+- name: download install ISO
+  get_url:
+    url: "{{ install_iso_url }}"
+    dest: "{{ playbook_dir }}/files/{{install_iso}}"
+  delegate_to: localhost
+  when: 
+  - not install_iso_exists.stat.exists
+  - not local_install_iso_exists.stat.exists
+
+- name: Copy install iso to datastore
+  copy:
+    src: "{{ playbook_dir }}/files/{{install_iso}}"
+    dest: "{{ iso_path }}/{{install_iso}}"
+  delegate_to: temp_host
+  when:
+  - not install_iso_exists.stat.exists

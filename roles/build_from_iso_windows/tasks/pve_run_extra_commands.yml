@@ -1,0 +1,21 @@
+- name: Get VMID by Name
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    node: "{{ pve_node }}"
+    name: '{{ vm_name|replace("_", "-") }}'
+    state: current
+  register: create_vm
+  delegate_to: localhost
+
+- name: run extra commands
+  command:
+    cmd: 'qm guest exec {{ create_vm.vmid }} --timeout 600 -- powershell.exe -command "({{item}})"'
+  delegate_to: temp_host
+  loop_control:
+    pause: 5
+  ignore_errors: yes
+  register: result
+  loop: "{{extra_commands}}"
+  when: extra_commands is defined

@@ -1,0 +1,33 @@
+- name: Reboot Guest
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: restarted
+    name: '{{ vm_name|replace("_", "-") }}'
+  delegate_to: localhost
+  retries: 3
+  delay: 10
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+
+- name: Wait for 60 seconds
+  wait_for: timeout=60
+  delegate_to: localhost
+
+- name: Wait for guest tools to start 
+  community.general.proxmox_vm_info:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    node: "{{ pve_node }}"
+    type: qemu
+    name: '{{ vm_name|replace("_", "-") }}'
+    network: True
+  delegate_to: localhost
+  retries: 60
+  delay: 10
+  register: vminfo
+  until: vminfo is succeeded
+  ignore_errors: true

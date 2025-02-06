@@ -1,0 +1,41 @@
+- name: Add PVE Host to Dynamic Inventory
+  add_host:
+    hostname: temp_host
+    group: "temp_hosts"
+    ansible_host: '{{ pve_address }}'
+    ansible_user: '{{ pve_username }}'
+    ansible_password: '{{ pve_password }}'
+    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+
+- name: set version defaults 
+  set_fact:
+    install_iso: '{{ versions[version].install_iso }}'
+    install_iso_url: '{{ versions[version].install_iso_url }}'
+    virtio_win_gt_x64_url: '{{ versions[version].virtio_win_gt_x64_url }}'
+    virtio_win_guest_tools_url: '{{ versions[version].virtio_win_guest_tools_url }}'
+  when: version != ""
+
+- name: upload install iso
+  include_tasks: pve_upload_install_iso.yml
+
+- name: create config iso
+  include_tasks: pve_create_config_iso.yml
+
+- name: build VM
+  include_tasks: pve_build_vm.yml
+
+- name: configure guest
+  include_tasks: pve_configure_guest.yml
+
+- name: reboot guest
+  include_tasks: pve_reboot_guest.yml
+
+- name: dcpromo
+  include_tasks: pve_dcpromo.yml
+  vars:
+    vm_password: '{{ vm_password_new }}'
+  when: dcpromo|default(false)
+
+- name: Run extra commands
+  include_tasks: pve_run_extra_commands.yml
+  when: extra_commands is defined

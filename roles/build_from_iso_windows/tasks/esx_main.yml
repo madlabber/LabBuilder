@@ -1,0 +1,11 @@
+- name: map login variables
+  set_fact:
+    vcenter_address: "{{ esxi_address }}"
+    vcenter_username: "{{ esxi_username }}"
+    vcenter_password: "{{ esxi_password }}"
+    vcenter_datacenter: "ha-datacenter"
+  delegate_to: localhost
+
+# from here the vcenter workflow can be used
+- name: start vmw_main
+  include_tasks: vmw_main.yml

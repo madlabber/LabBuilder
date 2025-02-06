@@ -1,0 +1,56 @@
+# set defaults
+- name: set version defaults 
+  set_fact:
+    vm_guest_id: '{{ versions[version].vm_guest_id }}'
+    install_iso: '{{ versions[version].install_iso }}'
+    install_iso_url: '{{ versions[version].install_iso_url }}'
+    vmware_tools_url: '{{ versions[version].vmware_tools_url }}'
+  when: version != ""
+
+- name: upload install iso
+  include_tasks: vmw_upload_install_iso.yml
+
+- name: download iso via esx
+  include_tasks: vmw_download_via_esx.yml
+
+- name: create config iso
+  include_tasks: vmw_create_config_iso.yml
+
+- name: Build VM
+  include_tasks: vmw_build_vm.yml
+
+- name: check PSVersion
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{vm_username}}"
+    vm_password: '{{ vm_password_new }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+    vm_shell_args: " -command \"({{item}})\""
+    wait_for_process: true
+  delegate_to: localhost
+  register: checkpsversion
+  ignore_errors: true
+  loop:
+    - "$result=$(if($PSVersionTable.PSVersion.Major -lt 3){throw})"
+
+- name: Configure Guest
+  include_tasks: vmw_configure_guest.yml
+  when: checkpsversion is succeeded
+
+- name: Configure Old Guest
+  include_tasks: vmw_configure_old_guest.yml
+  when: checkpsversion is failed
+
+- name: dcpromo
+  include_tasks: vmw_dcpromo.yml
+  vars:
+    vm_password: '{{ vm_password_new }}'
+  when: dcpromo|default(false)
+
+- name: Run extra commands
+  include_tasks: vmw_run_extra_commands.yml
+  when: extra_commands is defined

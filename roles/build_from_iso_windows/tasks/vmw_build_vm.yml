@@ -1,0 +1,135 @@
+---
+# default disk configuration
+- name: add disk 1
+  set_fact:
+    default_disks:
+      - size_gb: '{{ vm_disk_gb }}'
+        type: thin
+
+- name: add disk 2
+  set_fact:
+    default_disks:
+      - size_gb: '{{ vm_disk_gb }}'
+        type: thin
+      - size_gb: '{{ vm_disk2_gb }}'
+        type: thin
+  when: 
+    - vm_disk2_gb|int > 0
+
+- name: Create VM
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: "{{vcenter_datacenter}}"
+    cluster: '{{vcenter_cluster}}'
+    folder: /
+    name: '{{ vm_name }}'
+    state: present
+    guest_id: '{{vm_guest_id}}'
+    datastore: '{{ vm_datastore }}'
+    cdrom:
+        - controller_number: 0
+          unit_number: 0
+          state: present
+          type: iso
+          iso_path: '[{{ iso_datastore }}] {{ install_iso }}'
+        - controller_number: 0
+          unit_number: 1
+          state: present
+          type: iso
+          iso_path: '[{{ vm_datastore }}] {{ config_iso }}'
+    disk: '{{ disks|default(default_disks) }}'
+    hardware:
+      memory_mb: '{{ vm_memory_mb|int }}'
+      num_cpus: '{{ vm_num_cpus|int }}'
+      nested_virt: '{{ nested_virtualization|default(false) }}'
+      scsi: lsilogicsas
+    networks:
+    - name: '{{ vm_network }}'
+      device_type: e1000
+    wait_for_ip_address: no
+  delegate_to: localhost
+  register: deploy_vm
+  ignore_errors: true
+
+- name: Set boot order
+  community.vmware.vmware_guest_boot_manager:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    boot_delay: 1000
+    enter_bios_setup: False
+    boot_retry_enabled: True
+    boot_retry_delay: 20000
+    boot_firmware: bios
+    secure_boot_enabled: False
+    boot_order:
+      - cdrom
+      - disk
+      - ethernet
+      - floppy
+  delegate_to: localhost
+  register: vm_boot_order
+
+# Create serial ports
+- name: Create multiple serial ports with Backing type - network, pipe, device and file
+  community.vmware.vmware_guest_serial_port:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+    name: '{{ vm_name }}'
+    backings: "{{serial_ports}}"
+  delegate_to: localhost
+  register: create_serial_ports
+  when:
+    - serial_ports is defined
+    - serial_ports is not false
+
+- name: Power-On the virtual machine
+  community.vmware.vmware_guest_powerstate:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    state: powered-on
+  delegate_to: localhost
+  register: powerstate
+
+- name: Wait for VMware tools to become available
+  community.vmware.vmware_guest_tools_wait:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  retries: 10
+  delay: 60
+  register: result
+  until: result is succeeded
+
+- name: Set password via vmware_vm_shell
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{vm_username}}"
+    vm_id: '{{ vm_name }}'
+    vm_password: '{{ vm_password_old }}'
+    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+    vm_shell_args: '-command "(net user Administrator {{ vm_password_new }})"'
+    wait_for_process: true
+  delegate_to: localhost
+  register: setpassword
+  ignore_errors: yes
+
+
+
+

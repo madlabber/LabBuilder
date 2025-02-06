@@ -1,0 +1,83 @@
+- name: Get VMID by Name
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    node: "{{ pve_node }}"
+    name: '{{ vm_name|replace("_", "-") }}'
+    state: current
+  register: create_vm
+  delegate_to: localhost
+
+- name: Check OS ProductType
+  command:
+    cmd: 'qm guest exec {{ create_vm.vmid }} -- powershell.exe -command "({{item}})"'
+  delegate_to: temp_host
+  loop_control:
+    pause: 5
+  ignore_errors: yes
+  register: checkdc
+  loop: 
+    - "$($osInfo = Get-WmiObject -Class Win32_OperatingSystem;$osInfo.ProductType)"
+
+- debug:
+    msg:
+      - "{{ vm_name }} is not a DC."
+  when: checkdc.results[0].stdout_lines[3].find('2') == -1
+
+- name: DCPromo
+  block:  
+  - name: Prepare for DCPromo
+    command:
+      cmd: 'qm guest exec {{ create_vm.vmid }} -- powershell.exe -command "({{item}})"'
+    delegate_to: temp_host
+    loop_control:
+      pause: 5
+    ignore_errors: yes
+    register: result
+    loop: 
+      # Install AD-Domain-Services
+      - "Install-windowsfeature AD-Domain-Services -IncludeAllSubFeature -IncludeManagementTools"
+      # Install RSAT-ADDS        
+      - "Install-windowsfeature RSAT-ADDS"
+      # Unrestrict remote scripts
+      - "Set-ExecutionPolicy unrestricted"
+
+  - name: reboot guest
+    include_tasks: pve_reboot_guest.yml
+
+  - name: Create Domain
+    command:
+      cmd: 'qm guest exec {{ create_vm.vmid }} --timeout 600 -- powershell.exe -command "({{item}})"'
+    delegate_to: temp_host
+    loop_control:
+      pause: 5
+    ignore_errors: yes
+    register: result
+    loop:
+      - "Import-module addsdeployment"
+      - "Install-ADDSForest -DomainName {{vm_domain}} -CreateDnsDelegation:$false -InstallDNS:$true -NoRebootOnCompletion:$true -DatabasePath C:\\Windows\\NTDS -LogPath C:\\Windows\\NTDS -SysvolPath C:\\Windows\\SYSVOL -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password }} -AsPlainText -Force:$true) -Force:$true -WarningAction silentlyContinue"
+
+  - name: reboot guest
+    include_tasks: pve_reboot_guest.yml
+
+  - name: Perform additional configuration steps
+    command:
+      cmd: 'qm guest exec {{ create_vm.vmid }} -- powershell.exe -command "({{item}})"'
+    delegate_to: temp_host
+    loop_control:
+      pause: 5
+    ignore_errors: yes
+    register: result
+    loop:
+      # Assign dns server to itself      
+      - "Set-DnsClientServerAddress -InterfaceAlias Ethernet -ServerAddresses 127.0.0.1"
+      - "Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses 127.0.0.1"
+      # re-enable remote desktop
+      - "set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name fDenyTSConnections -Value 0"
+      # re-add the remote desktop firewall fule
+      - "Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'"
+      # Disable firewall for Domain, Public and Private profiles
+      - "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False"
+  # End of Block
+  when: checkdc.results[0].stdout_lines[3].find('2') == -1

@@ -1,0 +1,43 @@
+---
+- name: download virtio_win_gt_x64
+  get_url:
+    url:  "{{ virtio_win_gt_x64_url }}"
+    dest: "{{ role_path }}/files/{{ version }}/virtio_win_gt_x64.msi"
+  delegate_to: localhost
+
+- name: download virtio_win_guest_tools
+  get_url:
+    url:  "{{ virtio_win_guest_tools_url }}"
+    dest: "{{ role_path }}/files/{{ version }}/virtio_win_guest_tools.exe"
+  delegate_to: localhost
+
+- name: download ConfigureRemotingForAnsible.ps1
+  get_url:
+    url: "{{ winrm_script_url }}"
+    dest: "{{ role_path }}/files/{{ version }}/ConfigureRemotingForAnsible.ps1"
+  delegate_to: localhost
+
+- name: Create kickstart ISO
+  community.general.iso_create:
+    src_files:
+      - "{{ unattend_file_pve }}"
+      - "{{ role_path }}/files/{{ version }}/virtio_win_gt_x64.msi"
+      - "{{ role_path }}/files/{{ version }}/virtio_win_guest_tools.exe"
+      - "{{ role_path }}/files/{{ version }}/ConfigureRemotingForAnsible.ps1"
+    dest_iso: "{{ role_path }}/files/{{config_iso}}"
+    interchange_level: 3
+    joliet: 3
+    vol_ident: UNATTEND
+  delegate_to: localhost
+
+- name: Copy config iso to datastore
+  copy:
+    src: "{{ role_path }}/files/{{config_iso}}"
+    dest: "{{ iso_path }}/{{config_iso}}"
+  delegate_to: temp_host
+
+- name: delete kickstart ISO
+  ansible.builtin.file:
+    path: "{{ role_path }}/files/{{config_iso}}"
+    state: absent
+  delegate_to: localhost

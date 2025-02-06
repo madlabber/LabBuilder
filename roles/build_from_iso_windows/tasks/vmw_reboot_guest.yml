@@ -27,4 +27,3 @@
   register: tools_result
   until: tools_result is succeeded
 
-
