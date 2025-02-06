@@ -7,7 +7,7 @@ install_iso: "pfSense-CE-2.7.1-RELEASE-amd64.iso"
 install_iso_url: "https://atxfiles.netgate.com/mirror/downloads/pfSense-CE-2.7.1-RELEASE-amd64.iso.gz"
 
 # How long to wait while pfSense installs from ISO
-install_timer: 45
+install_timer: 60
 boot_timer: 90
 
 # defaults

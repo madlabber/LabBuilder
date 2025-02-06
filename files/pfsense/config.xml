@@ -97,7 +97,7 @@
 		<lan>
 			<enable></enable>
 			<range>
-				<from>192.168.0.10</from>
+				<from>192.168.0.100</from>
 				<to>192.168.0.245</to>
 			</range>
 			<failover_peerip></failover_peerip>
