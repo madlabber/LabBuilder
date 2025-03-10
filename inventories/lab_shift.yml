@@ -34,13 +34,12 @@ all:
             - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
     winservers:
       hosts:
-        # scvmm:
-        #   ip_address: 192.168.0.60
-        #   version: "Server2022eval"
-        #   vm_memory_mb: 24576
-        #   vm_num_cpus: 4
-        #   vm_disk_gb: 200
-        #   nested_virtualization: true
+        shift:
+          ip_address: 192.168.0.12
+          version: "Server2022eval"
+          vm_memory_mb: 16384
+          vm_num_cpus: 4
+          vm_disk_gb: 200
         hv1:
           ip_address: 192.168.0.61
           version: "Server2022eval"

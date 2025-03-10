@@ -35,12 +35,18 @@ all:
             - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
     winservers:
       hosts:
-        posh:
+        hlod:
           ip_address: 192.168.123.22
-          version: "Server2019eval"
+          version: "Server2022eval"
           vm_memory_mb: 2048
           vm_num_cpus: 2
           vm_disk_gb: 40
+        labshift:
+          ip_address: 192.168.123.27
+          version: "Server2022eval"
+          vm_memory_mb: 8192
+          vm_num_cpus: 2
+          vm_disk_gb: 80
     centos:
       hosts:
         ansible:
