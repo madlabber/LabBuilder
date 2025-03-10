@@ -1,7 +1,15 @@
-#default distro:
-distro: "centos"
-#default state:
+#defaults:
 state: present
+distro: "centos"
+vm_disk_gb: 40
+vm_network: "VM Network"
+default_disks:
+  - size_gb: '{{ vm_disk_gb }}'
+    type: thin
+default_networks:
+  - name: "{{ vm_network }}"
+    device_type: e1000
+serial_ports: false
 
 
 # centos7

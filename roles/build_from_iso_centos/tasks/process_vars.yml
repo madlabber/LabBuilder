@@ -1,0 +1,59 @@
+- name: variable defaults
+  set_fact:
+    vm_address:      "{{vm_address      | default('') }}"
+    vm_netmask_cidr: "{{vm_netmask_cidr | default('') }}"
+    vm_gateway:      "{{vm_gateway      | default('') }}"
+    vm_dns_server:   "{{vm_dns_server   | default('') }}"
+    vm_domain:       "{{vm_domain       | default('') }}"
+    vm_hostname:     "{{vm_hostname     | default('centosvm') }}"
+    vm_name:         "{{vm_name         | default('centosvm') }}"
+    vm_eth_name:     "{{vm_eth_name     | default('ens32') }}"
+    vm_password_old: "{{kickstart_password | default('Changeme!') }}"
+    vm_password_new: "{{vm_password | default('P@ssw0rd') }}"
+    config_iso:      "{{vm_name}}-ks.iso"
+    dnf_or_yum:      "dnf"
+
+#Translate old version format to new version format
+- name: set centos7 facts
+  set_fact:
+    distro: "centos"
+    version: "7"
+  when: version|lower == "centos7"
+
+- name: set centos8 facts
+  set_fact:
+    distro: "centos"
+    version: "8"
+  when: version|lower == "centos8"
+
+- name: set rocky8 facts
+  set_fact:
+    distro: "rocky"
+    version: "8"
+  when: version|lower == "rocky8"
+
+- name: set alma8 facts
+  set_fact:
+    distro: "alma"
+    version: "8"
+  when: version|lower == "alma8"
+
+- name: set rhel8 facts
+  set_fact:
+    distro: "rhel"
+    version: "8"
+  when: version|lower == "rhel8"
+# end of version translation
+
+- name: set dnf or yum
+  set_fact:
+    dnf_or_yum: "yum"
+  when: version|float < 8
+
+- name: distro and version vars lookup
+  set_fact:
+    #dnf_or_yum: "{{ lookup('vars', distro + version + '_dnf_or_yum') }}"
+    install_iso: "{{ lookup('vars', distro + version + '_iso') }}"
+    install_iso_url: "{{ lookup('vars', distro + version + '_iso_url') }}"
+    kickstart_file:  "{{ lookup('vars', distro + version + '_kickstart_file') }}"
+    kickstart_password: "{{ lookup('vars', distro + version + '_kickstart_password') }}"

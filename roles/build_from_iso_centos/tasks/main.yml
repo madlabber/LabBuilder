@@ -1,8 +1,19 @@
 ---
-- name: remove if absent
-  include_tasks: absent.yml
-  when: state == "absent" or state == "force"
+- name: build vm on vcenter
+  include_tasks: main_vcenter.yml
+  when: 
+    - vcenter_address|default('') != ''
+    - vcenter_address != esxi_address
+    - pve_address|default('') == ''
 
-- name: Build CentOS VM - ansible
-  include_tasks: build_vm.yml
-  when: state|default('present') == "present" or state == "force"
+- name: build vm on esxi
+  include_tasks: main_esxi.yml
+  when: 
+    - vcenter_address|default('') == '' or vcenter_address == esxi_address
+    - pve_address|default('') == ''
+
+- name: build vm on PVE
+  include_tasks: pve_main.yml
+  when:
+    - pve_address|default('') != ''
+    
