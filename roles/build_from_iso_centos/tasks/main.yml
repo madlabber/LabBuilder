@@ -1,6 +1,6 @@
 ---
 - name: build vm on vcenter
-  include_tasks: main_vcenter.yml
+  include_tasks: vmw_main.yml
   when: 
     - vcenter_address|default('') != ''
     - vcenter_address != esxi_address
