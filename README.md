@@ -34,8 +34,8 @@ vCenter Server
 
 # using alternate main vars
 The default vars related to the lab hosting infrastructure are read from vars/main.yml
-To load an alternate configuration, store an alternate set of vars in vars/<altconfig>.yml and load it at runtime with
- - -e mainvars=<altconfig>.yml
+To load an alternate configuration, store an alternate set of vars in vars/\<altconfig\>.yml and load it at runtime with
+ - -e mainvars=\<altconfig\>.yml
 
 # Adding ISO and OVA files
 The various VM build roles require installation media or OVA files.  In some cases these can be downloaded on demand, in other cases they need to be added to the files folder. 
