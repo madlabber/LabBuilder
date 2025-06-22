@@ -13,6 +13,7 @@ test_ - playbooks that demonstrate how to use the tasks
 2 ways to use this library:
 1. build a playbook that calls the roles and tasks to assemble a lab, 
 2. build an inventory file that describes a lab and pass it to main.yml
+   
    ansible-playbook -i inventories/lab_mylabblueprint.yml main.yml
 
 
