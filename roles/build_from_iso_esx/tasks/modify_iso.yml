@@ -1,0 +1,23 @@
+- name: "Customize ISO file"
+  community.general.iso_customize:
+    src_iso: "{{ playbook_dir }}/files/{{install_iso}}"
+    dest_iso: "{{ playbook_dir }}/files/ks1-{{install_iso}}"
+    delete_files:
+      - "/EFI/BOOT/BOOT.CFG"
+    # add_files:
+    #   - src_file: "{{ role_path }}/files/BOOT.CFG"
+    #     dest_file: "/EFI/BOOT/BOOT.CFG"
+  delegate_to: localhost
+  register: customize_iso_result1
+
+- name: "Customize ISO file"
+  community.general.iso_customize:
+    src_iso: "{{ playbook_dir }}/files/ks1-{{install_iso}}"
+    dest_iso: "{{ playbook_dir }}/files/ks-{{install_iso}}"
+    delete_files:
+      - "/EFI/BOOT/BOOT.CFG"
+    add_files:
+      - src_file: "{{ role_path }}/files/BOOT.CFG"
+        dest_file: "/EFI/BOOT/BOOT.CFG"
+  delegate_to: localhost
+  register: customize_iso_result1

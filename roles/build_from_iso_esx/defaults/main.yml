@@ -1,0 +1,15 @@
+#defaults:
+state: present
+install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
+kickstart_file: "{{role_path}}/files/KS.CFG"
+vm_disk_gb: 40
+vm_network: "VM Network"
+default_disks:
+  - size_gb: '{{ vm_disk_gb }}'
+    type: thin
+default_networks:
+  - name: "{{ vm_network }}"
+    device_type: vmxnet3
+  - name: "{{ vm_network }}"
+    device_type: vmxnet3
+serial_ports: false

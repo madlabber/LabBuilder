@@ -1,0 +1,29 @@
+---
+- name: Create Config ISO
+  community.general.iso_create:
+    src_files:
+      - "{{kickstart_file}}"
+    dest_iso: "{{ role_path }}/files/{{config_iso}}"
+    interchange_level: 3
+    joliet: 3
+    vol_ident: OEMDRV
+  delegate_to: localhost
+
+- name: Copy kickstart iso to datastore
+  community.vmware.vsphere_copy:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    src: "{{ role_path }}/files/{{config_iso}}"
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ vm_datastore }}"
+    path: "{{ config_iso }}"
+  delegate_to: localhost
+  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
+
+- name: delete kickstart ISO
+  ansible.builtin.file:
+    path: "{{ role_path }}/files/{{config_iso}}"
+    state: absent
+  delegate_to: localhost

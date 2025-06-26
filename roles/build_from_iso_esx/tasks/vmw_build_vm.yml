@@ -1,0 +1,139 @@
+---
+- name: Build VM
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: "{{vcenter_datacenter}}"
+    cluster: '{{vcenter_cluster}}'
+    folder: /
+    name: '{{ vm_name }}'
+    state: present
+    guest_id: vmkernel8Guest
+    datastore: '{{ vm_datastore }}'
+    cdrom:
+        - controller_number: 0
+          controller_type: sata
+          unit_number: 0
+          state: present
+          type: iso
+          iso_path: '[{{ iso_datastore }}] {{ install_iso }}'
+        - controller_number: 0
+          controller_type: sata
+          unit_number: 1
+          state: present
+          type: iso
+          iso_path: '[{{ vm_datastore }}] {{config_iso}}'
+    disk: '{{ disks|default(default_disks) }}'
+    hardware:
+      memory_mb: '{{ vm_memory_mb | default(8192) }}'
+      num_cpus: '{{ vm_num_cpus | default(2) }}'
+      nested_virt: true
+      scsi: paravirtual
+    networks: '{{ networks|default(default_networks) }}'
+    wait_for_ip_address: no
+  delegate_to: localhost
+  register: deploy_vm
+
+- name: set guest video memory
+  community.vmware.vmware_guest_video:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+    name: '{{ vm_name }}'
+    gather_video_facts: false
+    video_memory_mb: 32.0
+    display_number: 2
+    enable_3D: false
+    use_auto_detect: false 
+  delegate_to: localhost
+  register: set_vram
+
+# Create serial ports
+- name: Create serial ports
+  community.vmware.vmware_guest_serial_port:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+    name: '{{ vm_name }}'
+    backings: "{{serial_ports}}"
+  delegate_to: localhost
+  register: create_serial_ports
+  when:
+    - serial_ports is not false
+
+- name: Set boot order
+  community.vmware.vmware_guest_boot_manager:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    boot_delay: 1000
+    enter_bios_setup: False
+    boot_retry_enabled: True
+    boot_retry_delay: 20000
+    boot_firmware: bios
+    secure_boot_enabled: False
+    boot_order:
+      - disk
+      - cdrom
+      - ethernet
+      - floppy
+  delegate_to: localhost
+  register: vm_boot_order
+
+- name: Power-On the virtual machine
+  community.vmware.vmware_guest_powerstate:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    state: powered-on
+  delegate_to: localhost
+  register: powerstate
+
+- name: Wait for 11 seconds for menu
+  wait_for: timeout=11
+  delegate_to: localhost
+
+- name: press Shift+o
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: "{{ vm_name }}"
+    string_send: 
+      - "O ks=cdrom:/KS.CFG  "
+  delegate_to: localhost
+
+- name: press enter
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: "{{ vm_name }}"
+    keys_send: 
+      - BACKSPACE
+      - BACKSPACE
+      - ENTER
+  delegate_to: localhost
+
+# - name: Wait for VMware tools to become available
+#   community.vmware.vmware_guest_tools_wait:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}'
+#     validate_certs: no
+#     name: '{{ vm_name }}'
+#   delegate_to: localhost
+#   retries: 10
+#   delay: 60
+#   register: result
+#   until: result is succeeded

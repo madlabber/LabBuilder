@@ -1,0 +1,28 @@
+---
+- name: Check if install ISO exists
+  community.vmware.vsphere_file:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: "{{vcenter_datacenter}}"
+    datastore: "{{ iso_datastore }}"
+    path: "ks-{{ install_iso }}"
+    state: file
+  register: install_iso_exists
+  delegate_to: localhost
+  ignore_errors: true
+
+- name: Copy install iso to datastore
+  community.vmware.vsphere_copy:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    src: "{{ playbook_dir }}/files/ks-{{install_iso}}"
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ iso_datastore }}"
+    path: "ks-{{ install_iso }}"
+  delegate_to: localhost
+  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
+  when: install_iso_exists.failed
