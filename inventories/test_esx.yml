@@ -1,0 +1,38 @@
+all:
+  hosts:
+  vars:
+    lab_name: lab_test
+    lab_prefix: "{{ lab_name }}_"
+    lab_netmask: 255.255.255.0
+    lab_password: P@ssw0rd
+    lab_vm_datastore: "{{ lab_name }}"
+    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.11"
+    lab_domain_name: "lab.local"
+    #lab_domain_controller: "dc01"
+  children:       
+    esx:
+      hosts:
+        esx01:
+          ip_address: 192.168.0.51
+        # esx02:
+        #   ip_address: 192.168.0.52
+        # esx03:
+        #   ip_address: 192.168.0.53
+        # esx04:
+        #   ip_address: 192.168.0.54
+      vars:
+          esx_version: "9.0"
+          vm_memory_mb: 10240
+          vm_num_cpus: 2
+          vm_disk1_size_gb: 4
+          vm_disk2_size_gb: 40
+          create_local_vmfs: 'False'
+          enable_ssh: 'True'
+
+
+

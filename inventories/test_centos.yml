@@ -64,11 +64,11 @@ all:
         #     - type: 'pipe'
         #       pipe_name: '\\.\pipe\{{lab_name}}_com1'
         #       endpoint: 'client'
-        rocky8:
+        rocky810:
           state: force
-          ip_address: 192.168.0.183
+          ip_address: 192.168.0.182
           distro: "rocky"
-          version: "8.9"
+          version: "8.10"
           install_xrdp: true
           install_ansible: true
           nested_virtualization: true
