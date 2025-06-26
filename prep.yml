@@ -9,7 +9,7 @@
   #- include_vars: "{{ mainvars }}"
   - debug:
       msg:
-      - "vcenter_address:    {{ vcenter_address }}"
+      - "vcenter_address:    {{ vcenter_address|default(esxi_address) }}"
       - "lab name:           {{ lab_name|default('') }}"
       - "lab_vm_datastore:   {{ lab_vm_datastore|default('') }}"
       - "lab_lan1_portgroup: {{ lab_lan1_portgroup|default('') }}"
@@ -17,11 +17,11 @@
 
   - name: Get Portgroup info
     community.vmware.vmware_portgroup_info:
-      hostname: "{{ vcenter_address }}"
-      username: "{{ vcenter_username }}"
-      password: "{{ vcenter_password }}"
+      hostname: "{{ vcenter_address|default(esxi_address) }}"
+      username: "{{ vcenter_username|default(esxi_username) }}"
+      password: "{{ vcenter_password|default(esxi_password) }}"
       validate_certs: no
-      cluster_name: "{{ vcenter_cluster }}"
+      cluster_name: "{{ vcenter_cluster|default('') }}"
     delegate_to: localhost
     register: portgroupinfo
 
@@ -37,24 +37,25 @@
 
   - name: VM Portgroup to all hosts in a cluster
     community.vmware.vmware_portgroup:
-      hostname: "{{ vcenter_address }}"
-      username: "{{ vcenter_username }}"
-      password: "{{ vcenter_password }}"
+      hostname: "{{ vcenter_address|default(esxi_address) }}"
+      username: "{{ vcenter_username|default(esxi_username) }}"
+      password: "{{ vcenter_password|default(esxi_password) }}"
       validate_certs: no
-      cluster_name: "{{ vcenter_cluster }}"
+      cluster_name: "{{ vcenter_cluster|default('') }}"
       switch: "{{ esxi_vswitch }}"
       portgroup: "{{ lab_lan1_portgroup }}"
       vlan_id: "{{ unused_vlans[0] }}"
     delegate_to: localhost
     when: lab_lan1_portgroup|default('') != ""
 
+
   - name: VM Portgroup to all hosts in a cluster
     community.vmware.vmware_portgroup:
-      hostname: "{{ vcenter_address }}"
-      username: "{{ vcenter_username }}"
-      password: "{{ vcenter_password }}"
+      hostname: "{{ vcenter_address|default(esxi_address) }}"
+      username: "{{ vcenter_username|default(esxi_username) }}"
+      password: "{{ vcenter_password|default(esxi_password) }}"
       validate_certs: no
-      cluster_name: "{{ vcenter_cluster }}"
+      cluster_name: "{{ vcenter_cluster|default('') }}"
       switch: "{{ esxi_vswitch }}"
       portgroup: "{{ lab_lan2_portgroup }}"
       vlan_id: "{{ unused_vlans[1] }}"
