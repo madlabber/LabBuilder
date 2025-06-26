@@ -1,0 +1,57 @@
+# If there is no vcenter, use the esxi host crendentials 
+# to complete the vcenter variables
+vcenter_address: vcsa.lab.madlabber.com
+vcenter_username: administrator@vsphere.local
+vcenter_password: P@ssw0rd
+
+# # If there is no vcenter, use 'ha-datacenter'
+vcenter_datacenter: Datacenter 
+
+# Default cluster for new VM provisioning
+# if there is no cluster set it to ""
+vcenter_cluster: "Cluster"
+cluster_hosts:
+  - esx46.lab.madlabber.com
+
+# Credentials for a host with access to the datastore
+# Used when ISOs are missing from the ISO datastore
+esxi_address: 192.168.125.46
+esxi_username: root
+esxi_password: P@ssw0rd
+
+# If there is a vcenter, this must match the host's name in vcenter inventory
+# if there is no vcenter, the name can be the IP address
+esxi_hostname: "esx46.lab.madlabber.com"
+
+# Default datastore for new VMs
+vm_datastore: "datastore1"
+
+# Default datastore for ISO files
+iso_datastore: "ISOs"
+
+# Default portgroup for new VMs
+vm_network: "VM Network"
+
+# uncomment to test ESX target mode
+# vcenter_address: 192.168.123.49
+# vcenter_username: root
+# vcenter_password: P@ssw0rd
+# vcenter_datacenter: 'ha-datacenter' 
+# vcenter_cluster: ""
+
+# VLAN Pool for building lab pod portgroups
+vlan_start: 1000
+vlan_count: 1000
+
+# ONTAP vars required to build lab pod datastores
+ontap_address: "192.168.123.60"
+ontap_password: "P@ssw0rd"
+ontap_svm_name: "ots60svm0"
+ontap_svm_address: "192.168.123.63"
+ontap_svm_lif: "lif_ots60svm0_492"
+ontap_vol_labs: "labs"
+ontap_vol_size_gb: 500
+ontap_aggregate: "ots60_01_SSD_1"
+
+# Default vswitch for new portgroups
+esxi_vswitch: "vSwitch1"
