@@ -1,4 +1,10 @@
 ---
+- name: Map ESXi variables
+  include_tasks: vmw_esxi.yml
+  when: 
+    - state == "present" or state == "force"
+    - vcenter_address|default(esxi_address) == esxi_address
+    
 - name: remove if absent or forced
   include_tasks: vmw_absent.yml
   when: state == "absent" or state == "force"

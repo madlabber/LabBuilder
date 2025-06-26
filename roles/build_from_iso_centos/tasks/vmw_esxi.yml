@@ -6,6 +6,3 @@
     vcenter_datacenter: "ha-datacenter"
   delegate_to: localhost
 
-# from here the vcenter workflow can be used
-- name: start vmw_main
-  include_tasks: vmw_main.yml
