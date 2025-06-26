@@ -63,9 +63,9 @@ versions:
     virtio_win_guest_tools_url: "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.266-1/virtio-win-guest-tools.exe"
 
 #Host Vars
-vcenter_address:
-vcenter_username:
-vcenter_password:
+# vcenter_address: ""
+# vcenter_username:
+# vcenter_password:
 vcenter_datacenter: ha-datacenter
 vcenter_cluster:
 vm_datastore:
