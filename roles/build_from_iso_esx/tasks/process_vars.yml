@@ -1,6 +1,7 @@
 - name: variable defaults
   set_fact:
     vm_address:      "{{vm_address      | default('') }}"
+    vm_netmask:     "{{vm_netmask     | default('') }}"
     vm_netmask_cidr: "{{vm_netmask_cidr | default('') }}"
     vm_gateway:      "{{vm_gateway      | default('') }}"
     vm_dns_server:   "{{vm_dns_server   | default('') }}"

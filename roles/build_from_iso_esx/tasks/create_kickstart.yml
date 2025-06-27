@@ -1,0 +1,60 @@
+  - name: Creating a new kickstart directory
+    file:
+      path: "{{ role_path }}/files/{{vm_name}}"
+      state: directory
+    delegate_to: localhost
+
+  - name: Remove old kickstart file
+    file:
+      path: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      state: absent
+    delegate_to: localhost
+
+  - name: Creating a new kickstart file
+    file:
+      path: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      state: touch
+    delegate_to: localhost
+
+  - name: Write kickstart file
+    copy:
+      dest: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      content: |
+        #created by LabBuilder
+        vmaccepteula
+        rootpw {{vm_password}}
+        install --firstdisk=local --overwritevmfs --ignoreprereqwarnings --ignoreprereqerrors --forceunsupportedinstall 
+        network --bootproto=static --device=vmnic0 --ip={{vm_address}} --netmask={{vm_netmask}} --gateway={{vm_gateway}} --nameserver={{vm_dns_server}} --hostname={{vm_hostname}}.{{vm_domain}}
+        reboot
+    delegate_to: localhost
+
+        #network --bootproto=dhcp --device=vmnic0
+
+  - name: Enable enable_ssh
+    blockinfile:
+      path: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      insertafter: eof
+      block: |
+        # FIRST BOOT SCRIPT
+        %firstboot --interpreter=busybox
+
+        # enable & start SSH
+        vim-cmd hostsvc/enable_ssh
+        vim-cmd hostsvc/start_ssh
+        
+        # enable & start ESXi Shell
+        vim-cmd hostsvc/enable_esx_shell
+        vim-cmd hostsvc/start_esx_shell
+        
+        # Suppress ESXi Shell warning
+        esxcli system settings advanced set -o /UserVars/SuppressShellWarning -i 1
+    when: enable_ssh == 'True'
+    delegate_to: localhost
+
+  - name: Disable local vmfs creation
+    lineinfile:
+      path: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      regexp: '^install'
+      line: 'install --firstdisk=local --overwritevmfs --ignoreprereqwarnings --ignoreprereqerrors --forceunsupportedinstall --novmfsondisk'
+    when: create_local_vmfs == 'False'
+    delegate_to: localhost

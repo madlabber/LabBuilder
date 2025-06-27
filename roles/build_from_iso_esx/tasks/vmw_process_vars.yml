@@ -1,0 +1,79 @@
+- name: variable defaults
+  set_fact:
+    vm_address:      "{{vm_address      | default('') }}"
+    vm_netmask:     "{{vm_netmask     | default('') }}"
+    vm_netmask_cidr: "{{vm_netmask_cidr | default('') }}"
+    vm_gateway:      "{{vm_gateway      | default('') }}"
+    vm_dns_server:   "{{vm_dns_server   | default('') }}"
+    vm_domain:       "{{vm_domain       | default('') }}"
+    vm_hostname:     "{{vm_hostname     | default('esx') }}"
+    vm_name:         "{{vm_name         | default('esx') }}"
+    vm_password_old: "{{kickstart_password | default('Changeme!') }}"
+    vm_password_new: "{{vm_password | default('P@ssw0rd') }}"
+    config_iso:      "{{vm_name}}-ks.iso"
+
+- name: configure disks
+  set_fact:
+    disks:
+      - size_gb: '{{ vm_disk_gb }}'
+        controller_type: '{{ disk_controller }}'
+        controller_number: 0
+        unit_number: 0
+        type: thin
+      - size_gb: "{{ vm_disk1_size_gb | default(4) }}"
+        controller_type: '{{ disk_controller }}'
+        controller_number: 0
+        unit_number: 1
+        type: thin
+  when: vm_disk1_size_gb is defined
+
+- name: configure disks 2
+  set_fact:
+    disks:
+      - size_gb: '{{ vm_disk_gb }}'
+        controller_type: '{{ disk_controller }}'
+        controller_number: 0
+        unit_number: 0
+        type: thin
+      - size_gb: "{{ vm_disk1_size_gb | default(4) }}"
+        controller_type: '{{ disk_controller }}'
+        controller_number: 0
+        unit_number: 1
+        type: thin
+      - size_gb: "{{ vm_disk2_size_gb | default(40) }}"
+        controller_type: '{{ disk_controller }}'
+        controller_number: 0
+        unit_number: 2
+        type: thin
+  when: 
+    - vm_disk1_size_gb is defined
+    - vm_disk2_size_gb is defined
+
+- name: configure disks 3
+  set_fact:
+    disks:
+      - size_gb: '{{ vm_disk_gb }}'
+        controller_type: '{{ disk_controller }}'
+        controller_number: 0
+        unit_number: 0
+        type: thin
+      - size_gb: "{{ vm_disk1_size_gb | default(4) }}"
+        controller_type: '{{ disk_controller }}'
+        controller_number: 0
+        unit_number: 1
+        type: thin
+      - size_gb: "{{ vm_disk2_size_gb | default(40) }}"
+        controller_type: '{{ disk_controller }}'
+        controller_number: 0
+        unit_number: 2
+        type: thin
+      - size_gb: "{{ vm_disk3_size_gb | default(60) }}"
+        controller_type: '{{ disk_controller }}'
+        controller_number: 0
+        unit_number: 3
+        type: thin
+  when: 
+    - vm_disk1_size_gb is defined
+    - vm_disk2_size_gb is defined
+    - vm_disk3_size_gb is defined
+    

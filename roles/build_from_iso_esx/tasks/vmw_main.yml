@@ -10,7 +10,7 @@
   when: state == "absent" or state == "force"
 
 - name: Process vars
-  include_tasks: process_vars.yml
+  include_tasks: vmw_process_vars.yml
   when: state == "present" or state == "force"
 
 # - name: modify install iso
@@ -21,8 +21,16 @@
   include_tasks: vmw_upload_install_iso.yml
   when: state == "present" or state == "force"
 
+- name: create kickstart file
+  include_tasks: create_kickstart.yml
+  when: state == "present" or state == "force"
+
 - name: create config iso
   include_tasks: vmw_create_config_iso.yml
+  when: state == "present" or state == "force"
+
+- name: delete kickstart file
+  include_tasks: delete_kickstart.yml
   when: state == "present" or state == "force"
 
 - name: Build VM

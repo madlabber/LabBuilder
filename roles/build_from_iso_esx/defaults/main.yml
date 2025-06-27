@@ -1,11 +1,16 @@
 #defaults:
 state: present
 install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
-kickstart_file: "{{role_path}}/files/KS.CFG"
+#kickstart_file: "{{role_path}}/files/KS.CFG"
+kickstart_file: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
 vm_disk_gb: 40
 vm_network: "VM Network"
+disk_controller: paravirtual
 default_disks:
   - size_gb: '{{ vm_disk_gb }}'
+    controller_type: '{{ disk_controller }}'
+    controller_number: 0
+    unit_number: 0
     type: thin
 default_networks:
   - name: "{{ vm_network }}"
