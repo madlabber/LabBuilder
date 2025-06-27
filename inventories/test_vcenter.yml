@@ -22,4 +22,5 @@ all:
           #vm_fqdn: "vcsa.lab.local" 
           #ovf_file: "files/VMware-vCenter-Server-Appliance-7.0.2.00500-18455184_OVF10.ova"  
           #ovf_file: "files/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
-          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.0.10000-20519528_OVF10.ova"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-9.0.0.0.24755230_OVF10.ova"
+
