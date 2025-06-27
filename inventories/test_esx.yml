@@ -19,10 +19,12 @@ all:
       hosts:
         esx01:
           ip_address: 192.168.0.51
-        # esx02:
-        #   ip_address: 192.168.0.52
-        # esx03:
-        #   ip_address: 192.168.0.53
+        esx02:
+          ip_address: 192.168.0.52
+          install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
+        esx03:
+          ip_address: 192.168.0.53
+          install_iso: "VMware-VMvisor-Installer-7.0U3n-21930508.x86_64.iso"
         # esx04:
         #   ip_address: 192.168.0.54
       vars:
