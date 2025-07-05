@@ -1,0 +1,22 @@
+---
+- name: Create Config ISO
+  community.general.iso_create:
+    src_files:
+      - "{{kickstart_file}}"
+    dest_iso: "{{ role_path }}/files/{{config_iso}}"
+    interchange_level: 3
+    joliet: 3
+    vol_ident: OEMDRV
+  delegate_to: localhost
+
+- name: Copy config iso to datastore
+  copy:
+    src: "{{ role_path }}/files/{{config_iso}}"
+    dest: "{{ iso_path }}/{{config_iso}}"
+  delegate_to: temp_host
+
+- name: delete kickstart ISO
+  ansible.builtin.file:
+    path: "{{ role_path }}/files/{{config_iso}}"
+    state: absent
+  delegate_to: localhost
