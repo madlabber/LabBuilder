@@ -1,0 +1,92 @@
+- name: Create new VM 
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: present
+    name: '{{ vm_name|replace("_", "-") }}'
+    node: "{{ pve_node }}"
+    net:
+      net0: 'e1000,bridge={{ vm_network }}'
+    sata:
+      sata0: '{{vm_datastore}}:{{ vm_disk_gb |int }}'
+    ide:
+      ide1: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
+      ide2: "{{iso_datastore}}:iso/{{config_iso}},media=cdrom"
+    cores: '{{ vm_num_cpus|int }}'
+    vcpus: '{{ vm_num_cpus|int }}'
+    memory: '{{ vm_memory_mb |int}}'
+    agent: true
+  delegate_to: localhost
+  register: create_vm
+
+- name: Attach Install ISO
+  community.general.proxmox_disk:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    #vmid: "{{ create_vm.vmid }}"
+    name: '{{ vm_name|replace("_", "-") }}'
+    disk: ide1
+    media: cdrom
+    iso_image: "{{iso_datastore}}:iso/{{install_iso}}"
+  delegate_to: localhost
+
+- name: Attach Config ISO
+  community.general.proxmox_disk:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    #vmid: "{{ create_vm.vmid }}"
+    name: '{{ vm_name|replace("_", "-") }}'
+    disk: ide2
+    media: cdrom
+    iso_image: "{{iso_datastore}}:iso/{{config_iso}}"
+  delegate_to: localhost
+
+# Fixme: Configure Serial Ports
+
+- name: Start VM
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: started
+    name: '{{ vm_name|replace("_", "-") }}'
+  delegate_to: localhost
+  retries: 3
+  delay: 10
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  
+- name: Wait for 30 seconds for menu
+  wait_for: timeout=30
+  delegate_to: localhost
+
+- name: trigger install
+  command:
+    cmd: 'qm sendkey {{ create_vm.vmid }} {{item}}'
+  delegate_to: temp_host
+  loop: 
+    - shift-i
+    - ret
+
+- name: Wait for guest tools to start 
+  community.general.proxmox_vm_info:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    node: "{{ pve_node }}"
+    type: qemu
+    name: '{{ vm_name|replace("_", "-") }}'
+    network: True
+  delegate_to: localhost
+  retries: 60
+  delay: 10
+  register: vminfo
+  until: vminfo is succeeded
+  ignore_errors: true
+
+- debug:
+    msg: '{{vminfo}}'

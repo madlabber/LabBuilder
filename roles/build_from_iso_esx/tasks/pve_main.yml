@@ -8,32 +8,38 @@
     ansible_password: '{{ pve_password }}'
     ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 
-# - name: Map PVE variables
-#   include_tasks: pve_vars.yml
-#   when: 
-#     - state == "present" or state == "force"
-#     - vcenter_address|default(esxi_address) == esxi_address
-    
-- name: remove if absent or forced
-  include_tasks: pve_absent.yml
-  when: state == "absent" or state == "force"
-
 - name: Process vars
   include_tasks: process_vars.yml
   when: state == "present" or state == "force"
+    
+# - name: remove if absent or forced
+#   include_tasks: pve_absent.yml
+#   when: state == "absent" or state == "force"
+
+# - name: Process vars
+#   include_tasks: pve_process_vars.yml
+#   when: state == "present" or state == "force"
+
+# - name: modify install iso
+#   include_tasks: modify_iso.yml
+#   when: state == "present" or state == "force"
 
 - name: upload install iso
   include_tasks: pve_upload_install_iso.yml
+  when: state == "present" or state == "force"
+
+- name: create kickstart file
+  include_tasks: create_kickstart.yml
   when: state == "present" or state == "force"
 
 - name: create config iso
   include_tasks: pve_create_config_iso.yml
   when: state == "present" or state == "force"
 
-- name: Build CentOS VM - ansible
-  include_tasks: pve_build_vm.yml
+- name: delete kickstart file
+  include_tasks: delete_kickstart.yml
   when: state == "present" or state == "force"
 
-- name: Configure Guest
-  include_tasks: pve_configure_guest.yml
+- name: Build VM
+  include_tasks: pve_build_vm.yml
   when: state == "present" or state == "force"

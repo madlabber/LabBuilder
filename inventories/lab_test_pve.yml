@@ -44,4 +44,128 @@ all:
           vm_memory_mb: 2048
           vm_num_cpus: 2
           vm_disk_gb: 40
-
+    centos:
+      vars:
+        vm_memory_mb: 4096
+        vm_num_cpus: 2
+        vm_disk_gb: 40
+        install_xrdp: true
+      hosts:
+        # centos7:
+        #   state: present
+        #   ip_address: 192.168.0.171
+        #   distro: "centos"
+        #   version: "7"
+        #   install_xrdp: true
+        #   install_ansible: true
+        #   extra_commands:
+        #     # Install Docker-CE
+        #     - "yum install -y epel-release"
+        #     - "yum remove -y python-docker-py docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine"
+        #     - "yum-config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+        #     - "yum install -y docker-ce docker-ce-cli containerd.io"
+        #     - "systemctl enable docker --now"
+        # centos8:
+        #   state: absent
+        #   ip_address: 192.168.0.181
+        #   distro: "centos"
+        #   version: "8"
+        #   install_xrdp: true
+        #   #install_ansible: true # broken in centos8, missing dependancy
+        # alma8:
+        #   state: force
+        #   ip_address: 192.168.0.182
+        #   distro: "alma"
+        #   version: "8"
+        #   install_xrdp: true
+        #   install_ansible: true
+        #   disks:
+        #     - size_gb: 140
+        #       type: thin
+        #     - size_gb: 200
+        #       type: thin
+        #   networks:
+        #     - name: "{{ lab_lan1_portgroup }}"
+        #       device_type: e1000
+        #     - name: "{{ lab_lan1_portgroup }}"
+        #       device_type: e1000
+        #   serial_ports:
+        #     - type: 'pipe'
+        #       pipe_name: '\\.\pipe\{{lab_name}}_com1'
+        #       endpoint: 'client'
+        rocky810:
+          state: force
+          ip_address: 192.168.0.182
+          distro: "rocky"
+          version: "8.10"
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true
+        #   extra_commands:
+        #     # Install Docker-CE
+        #     - "dnf install -y epel-release"
+        #     - "dnf remove -y python-docker-py docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine"
+        #     - "dnf remove -y runc podman buildah"
+        #     - "dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo"
+        #     - "dnf install -y docker-ce docker-ce-cli containerd.io"
+        #     - "systemctl enable docker --now"
+        # rhel8:
+        #   state: absent
+        #   ip_address: 192.168.0.184
+        #   distro: "rhel"
+        #   version: "8.8"
+        #   install_xrdp: true
+        #   install_ansible: true
+        # stream8:
+        #   state: absent
+        #   ip_address: 192.168.0.185
+        #   distro: "stream"
+        #   version: "8"
+        #   install_xrdp: true
+        #   install_ansible: true
+        #   nested_virtualization: true
+        # stream9:
+        #   state: present
+        #   ip_address: 192.168.0.186
+        #   distro: "stream"
+        #   version: "9"
+        #   vm_memory_mb: 4096
+        #   install_xrdp: true
+        #   install_ansible: true
+        #   nested_virtualization: true
+        rocky91:
+          state: present
+          ip_address: 192.168.0.187
+          distro: "rocky"
+          version: "9.1"
+          vm_memory_mb: 4096
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true
+        rocky92:
+          state: present
+          ip_address: 192.168.0.192
+          distro: "rocky"
+          version: "9.2"
+          vm_memory_mb: 4096
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true
+        rocky93:
+          state: present
+          ip_address: 192.168.0.193
+          distro: "rocky"
+          version: "9.3"
+          vm_memory_mb: 4096
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true
+        rocky94:
+          state: present
+          ip_address: 192.168.0.194
+          distro: "rocky"
+          version: "9.4"
+          vm_memory_mb: 4096
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true

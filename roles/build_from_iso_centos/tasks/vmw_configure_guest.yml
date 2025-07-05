@@ -12,7 +12,7 @@
     vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin root\""
     wait_for_process: true
   delegate_to: localhost
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Set admin Passwd
   community.vmware.vmware_vm_shell:
@@ -27,7 +27,7 @@
     vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
     wait_for_process: true
   delegate_to: localhost
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Check Hostname
   community.vmware.vmware_vm_shell:

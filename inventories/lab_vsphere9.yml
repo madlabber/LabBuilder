@@ -1,0 +1,60 @@
+all:
+  hosts:
+  vars:
+    lab_name: lab_vsphere9
+    lab_prefix: "{{ lab_name }}_"
+    lab_password: P@ssw0rd
+    lab_vm_datastore: "{{ lab_name }}"
+    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.1"
+    lab_domain_name:   "lab.local"
+    lab_domain_controller: "dc01"
+  children:
+    pfsense:
+      hosts:
+        gateway:
+          vm_network_wan: "{{lab_wan_portgroup}}"
+          vm_network_lan: "{{lab_lan1_portgroup}}"
+          config_xml_file: "files/pfsense/config.xml"
+    dc:
+      hosts:
+        dc01:
+          version: "Server2022eval"
+          ip_address: 192.168.0.11
+          extra_commands:
+            # Install Chrome
+            - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
+            - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+            # Install Putty
+            - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+            - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+    vcenter:
+      hosts:
+        vcsa:
+          ip_address: 192.168.0.50
+          vm_fqdn: "vcsa.lab.local"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-9.0.0.0.24755230_OVF10.ova"
+    esx:
+      hosts:
+        esx01:
+          ip_address: 192.168.0.51
+        esx02:
+          ip_address: 192.168.0.52
+        esx03:
+          ip_address: 192.168.0.53
+        esx04:
+          ip_address: 192.168.0.54
+      vars:
+          install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
+          vm_memory_mb: 16348
+          vm_num_cpus: 4
+          disk_controller: nvme
+          vm_disk1_size_gb: 4
+          vm_disk2_size_gb: 40
+          create_local_vmfs: 'False'
+          enable_ssh: 'True'
+
