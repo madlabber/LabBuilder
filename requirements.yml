@@ -4,3 +4,4 @@ collections:
 - netapp.ontap
 - community.general
 - community.vmware
+- community.proxmox

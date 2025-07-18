@@ -234,6 +234,7 @@
         vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_network: "{{lab_lan1_portgroup}}"
         vm_password_new: "{{lab_password}}"
+        vm_netmask: "{{lab_lan1_netmask}}"
         vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
         vm_gateway: "{{lab_lan1_gateway}}"
         vm_dns_server: "{{lab_lan1_dns_ip}}"

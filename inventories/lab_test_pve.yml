@@ -50,6 +50,7 @@ all:
         vm_num_cpus: 2
         vm_disk_gb: 40
         install_xrdp: true
+        network_device_type: virtio
       hosts:
         # centos7:
         #   state: present

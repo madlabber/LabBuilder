@@ -1,5 +1,5 @@
 - name: Create new VM 
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
@@ -7,7 +7,7 @@
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
     net:
-      net0: 'e1000,bridge={{ vm_network }}'
+      net0: 'virtio,bridge={{ vm_network }}'
     sata:
       sata0: '{{vm_datastore}}:{{ vm_disk_gb |int }}'
     ide:
@@ -21,7 +21,7 @@
   register: create_vm
 
 - name: Attach Install ISO
-  community.general.proxmox_disk:
+  community.proxmox.proxmox_disk:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
@@ -31,9 +31,13 @@
     media: cdrom
     iso_image: "{{iso_datastore}}:iso/{{install_iso}}"
   delegate_to: localhost
+  retries: 3
+  delay: 10
+  register: result
+  until: result is succeeded
 
 - name: Attach Config ISO
-  community.general.proxmox_disk:
+  community.proxmox.proxmox_disk:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
@@ -43,11 +47,15 @@
     media: cdrom
     iso_image: "{{iso_datastore}}:iso/{{config_iso}}"
   delegate_to: localhost
+  retries: 3
+  delay: 10
+  register: result
+  until: result is succeeded
 
 # Fixme: Configure Serial Ports
 
 - name: Start VM
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
@@ -73,7 +81,7 @@
     - ret
 
 - name: Wait for guest tools to start 
-  community.general.proxmox_vm_info:
+  community.proxmox.proxmox_vm_info:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
@@ -82,11 +90,15 @@
     name: '{{ vm_name|replace("_", "-") }}'
     network: True
   delegate_to: localhost
-  retries: 60
-  delay: 10
+  retries: 20
+  delay: 60
   register: vminfo
   until: vminfo is succeeded
   ignore_errors: true
 
-- debug:
-    msg: '{{vminfo}}'
+- name: Wait for 60 seconds for guest to settle
+  wait_for: timeout=60
+  delegate_to: localhost
+  
+# - debug:
+#     msg: '{{vminfo}}'

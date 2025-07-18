@@ -1,4 +1,4 @@
----
+#---
 # - name: remove if absent or forced
 #   vmware_guest:
 #     hostname: '{{ vcenter_address }}'
@@ -12,7 +12,7 @@
 #   when: state == "absent" or state == "force"
 
 - name: remove if absent or forced
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'

@@ -1,279 +1,108 @@
 
-# - name: Set root Passwd
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     vm_username: "root"
-#     vm_password: '{{ vm_password_old }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin root\""
-#     wait_for_process: true
-#   delegate_to: localhost
-#   ignore_errors: true
-- name: Set passwords
-  command:
-    cmd: "qm guest exec {{ create_vm.vmid }} -- {{item}}"
+- name: Get VMID 
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: current
+    name: '{{ vm_name|replace("_", "-") }}'
+    node: "{{ pve_node }}"
+  delegate_to: localhost
+  register: create_vm
+  when: create_vm is not defined
+
+- name: CentOS 8 defibrilator
+  shell:
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
   delegate_to: temp_host
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  ignore_errors: true
   loop_control:
     pause: 5
   loop: 
-    - "echo {{vm_password_new}} | passwd --stdin admin"
-    - "echo {{vm_password_new}} | passwd --stdin root"
+    - "sed -i -e 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*"
+    - "sed -i -e 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*"
+  when:
+    - distro|lower == "centos"
+    - version|float >= 8
 
-# - name: Set admin Passwd
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     vm_username: "root"
-#     vm_password: '{{ vm_password_new }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
-#     wait_for_process: true
-#   delegate_to: localhost
-#   ignore_errors: true
+- name: scale the paywall
+  shell:
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
+  delegate_to: temp_host
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop_control:
+    pause: 5
+  loop:
+    - "subscription-manager register --org {{ rhsm_orgid }} --activationkey {{ rhsm_activationkey }}"
+    - "subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms"
+    - "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
+  when: distro|lower == "rhel"
 
-# - name: Check Hostname
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     vm_username: "{{ vm_username | default('root') }}"
-#     vm_password: '{{ vm_password_new }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: " -c \"[ $(hostname) == {{ vm_hostname }}.{{ vm_domain }} ]\""
-#     wait_for_process: true
-#   register: checkhostname
-#   delegate_to: localhost
-#   ignore_errors: true
+- name: Install xRDP
+  shell:
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
+  delegate_to: temp_host
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop_control:
+    pause: 5
+  loop:
+    - "{{dnf_or_yum | default('dnf') }} install -y epel-release"
+    - "{{dnf_or_yum | default('dnf') }} install -y xrdp"
+    - "xrdp-keygen xrdp auto"
+    - "systemctl enable xrdp --now"
+    - "firewall-cmd --permanent --add-port=3389/tcp"
+    - "firewall-cmd --reload"
+    - "ls /foo"
+  when: install_xrdp|default(false)
 
-# - name: Run shell command via vm_shell
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     vm_username: "root"
-#     vm_password: '{{ vm_password_new }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: "{{item}}"
-#     wait_for_process: true
-#   delegate_to: localhost
-#   retries: 3
-#   delay: 5
-#   register: result
-#   until: result is succeeded
-#   loop:
-#     - "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
-#     - "-c \"hostnamectl set-hostname {{ vm_hostname }}.{{ vm_domain }}\""
-#     - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.address {{vm_address}}/{{vm_netmask_cidr}} IPv4.gateway {{vm_gateway}} IPv4.method manual\""
-#     - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.dns {{vm_dns_server}}\""
+- name: Install Ansible and related components
+  shell:
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
+  delegate_to: temp_host
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop_control:
+    pause: 5
+  loop:
+    - "{{dnf_or_yum | default('dnf') }} install -y epel-release"
+    - "{{dnf_or_yum | default('dnf') }} install -y ansible"
+    - "{{dnf_or_yum | default('dnf') }} install -y python3-pip"
+    #- "{{dnf_or_yum}} install -y python3-devel"
+    #- "{{dnf_or_yum}} groupinstall -y 'development tools'"
+    - "pip3 install --upgrade pip"
+    # - "pip3 install ansible"
+    - "pip3 install netapp-lib"
+    - "pip3 install pyvmomi"
+    - "pip3 install pywinrm"
+    - "pip3 install pycdlib"
+  when: install_ansible|default(false)
 
-# - name: Check selinux
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     vm_username: "root"
-#     vm_password: '{{ vm_password_new }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: " -c \"[ $(cat /etc/selinux/config | grep ^SELINUX=) == SELINUX=disabled ]\""
-#     wait_for_process: true
-#   register: checkselinux
-#   delegate_to: localhost
-#   ignore_errors: true
-
-# - name: Disable SELinux
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     vm_username: "root"
-#     vm_password: '{{ vm_password_new }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: " -c \"{{item}}\""
-#     wait_for_process: true
-#   delegate_to: localhost
-#   when: checkselinux is failed
-#   loop:
-#     - "sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config"
-#     - "sed -i 's/SELINUX=permissive/SELINUX=disabled/' /etc/selinux/config"
-
-# - name: reboot guest
-#   block:
-#   - name: Reboot-Guest
-#     community.vmware.vmware_guest_powerstate:
-#       hostname: '{{ vcenter_address }}'
-#       username: '{{ vcenter_username }}'
-#       password: '{{ vcenter_password }}'
-#       validate_certs: no
-#       name: '{{ vm_name }}'
-#       state: reboot-guest
-#     delegate_to: localhost
-#     register: deploy
-
-#   - name: Wait for 30 seconds
-#     wait_for: timeout=30
-#     delegate_to: localhost
-
-#   - name: Wait for VMware tools to become available by name
-#     community.vmware.vmware_guest_tools_wait:
-#       hostname: '{{ vcenter_address }}'
-#       username: '{{ vcenter_username }}'
-#       password: '{{ vcenter_password }}'
-#       validate_certs: no
-#       name: '{{ vm_name }}'
-#     delegate_to: localhost
-#     retries: 3
-#     delay: 15
-#     register: result
-#     until: result is succeeded
-
-#   - name: Wait for 30 seconds for VMware Tools refresh
-#     wait_for: timeout=30
-#     delegate_to: localhost
-#   when: (checkhostname is failed) or (checkselinux is failed)
-# ###end: reboot guest
-
-# - name: CentOS 8 defibrilator
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     vm_username: "{{ vm_username | default('root') }}"
-#     vm_password: '{{ vm_password_new }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: " -c \"{{item}}\""
-#     wait_for_process: true
-#   delegate_to: localhost
-#   retries: 3
-#   delay: 5
-#   register: result
-#   until: result is succeeded
-#   ignore_errors: true
-#   loop:
-#     - "sed -i -e 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*"
-#     - "sed -i -e 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*"
-#   when:
-#     - distro|lower == "centos"
-#     - version|float >= 8
-
-# - name: scale the paywall
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     vm_username: "root"
-#     vm_password: '{{ vm_password_new }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: " -c \"{{item}}\""
-#     wait_for_process: true
-#   delegate_to: localhost
-#   retries: 3
-#   delay: 5
-#   register: result
-#   until: result is succeeded
-#   ignore_errors: true
-#   loop:
-#     - "subscription-manager register --org {{ rhsm_orgid }} --activationkey {{ rhsm_activationkey }}"
-#     - "subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms"
-#     - "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
-#   when: distro|lower == "rhel"
-
-# - name: Install xRDP
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     vm_username: "{{ vm_username | default('root') }}"
-#     vm_password: '{{ vm_password_new }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: " -c \"{{item}}\""
-#     wait_for_process: true
-#   delegate_to: localhost
-#   retries: 3
-#   delay: 5
-#   register: result
-#   until: result is succeeded
-#   ignore_errors: true
-#   loop:
-#     - "{{dnf_or_yum}} install -y epel-release"
-#     - "{{dnf_or_yum}} install -y xrdp"
-#     - "xrdp-keygen xrdp auto"
-#     - "systemctl enable xrdp --now"
-#     - "firewall-cmd --permanent --add-port=3389/tcp"
-#     - "firewall-cmd --reload"
-#   when: install_xrdp|default(false)
-
-# - name: Install Ansible and related components
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     vm_username: "{{ vm_username | default('root') }}"
-#     vm_password: '{{ vm_password_new }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: " -c \"{{item}}\""
-#     wait_for_process: true
-#   delegate_to: localhost
-#   retries: 3
-#   delay: 5
-#   register: result
-#   until: result is succeeded
-#   ignore_errors: true
-#   loop:
-#     - "{{dnf_or_yum}} install -y epel-release"
-#     - "{{dnf_or_yum}} install -y ansible"
-#     - "{{dnf_or_yum}} install -y python3-pip"
-#     #- "{{dnf_or_yum}} install -y python3-devel"
-#     #- "{{dnf_or_yum}} groupinstall -y 'development tools'"
-#     - "pip3 install --upgrade pip"
-#     # - "pip3 install ansible"
-#     - "pip3 install netapp-lib"
-#     - "pip3 install pyvmomi"
-#     - "pip3 install pywinrm"
-#     - "pip3 install pycdlib"
-#   when: install_ansible|default(false)
-
-# - name: Run extra shell command via vm_shell
-#   community.vmware.vmware_vm_shell:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     vm_username: "{{ vm_username | default('root') }}"
-#     vm_password: '{{ vm_password_new }}'
-#     vm_id: "{{ vm_name }}"
-#     vm_shell: '/usr/bin/sh'
-#     vm_shell_args: " -c \"{{item}}\""
-#     wait_for_process: true
-#     timeout: 3600
-#   delegate_to: localhost
-#   retries: 3
-#   delay: 60
-#   register: result
-#   until: result is succeeded
-#   ignore_errors: true
-#   loop: "{{ extra_commands }}"
-#   when:
-#     - extra_commands is defined
+- name: Run extra shell command via vm_shell
+  shell:
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
+  delegate_to: temp_host
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop_control:
+    pause: 5
+  loop: "{{ extra_commands }}"
+  when:
+    - extra_commands is defined

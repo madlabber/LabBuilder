@@ -3,13 +3,15 @@ state: present
 distro: "centos"
 vm_disk_gb: 40
 vm_network: "VM Network"
+network_device_type: "e1000"
 default_disks:
   - size_gb: '{{ vm_disk_gb }}'
     type: thin
 default_networks:
   - name: "{{ vm_network }}"
-    device_type: e1000
+    device_type: "{{ network_device_type }}"
 serial_ports: false
+dnf_or_yum: "dnf"
 
 
 # centos7

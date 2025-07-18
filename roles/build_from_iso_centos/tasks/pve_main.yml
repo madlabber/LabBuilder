@@ -7,12 +7,6 @@
     ansible_user: '{{ pve_username }}'
     ansible_password: '{{ pve_password }}'
     ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
-
-# - name: Map PVE variables
-#   include_tasks: pve_vars.yml
-#   when: 
-#     - state == "present" or state == "force"
-#     - vcenter_address|default(esxi_address) == esxi_address
     
 - name: remove if absent or forced
   include_tasks: pve_absent.yml
@@ -26,8 +20,16 @@
   include_tasks: pve_upload_install_iso.yml
   when: state == "present" or state == "force"
 
+- name: create kickstart file
+  include_tasks: create_kickstart.yml
+  when: state == "present" or state == "force"
+
 - name: create config iso
   include_tasks: pve_create_config_iso.yml
+  when: state == "present" or state == "force"
+
+- name: delete kickstart file
+  include_tasks: delete_kickstart.yml
   when: state == "present" or state == "force"
 
 - name: Build CentOS VM - ansible

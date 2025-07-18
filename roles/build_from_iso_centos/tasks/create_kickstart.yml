@@ -1,0 +1,100 @@
+  - name: Set kickstart_file
+    set_fact:
+      kickstart_file:  "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+    delegate_to: localhost
+
+  - name: hash passwords
+    set_fact: 
+      root_password_hash:  '{{ vm_password_new | password_hash }}'
+      user_password_hash:  '{{ vm_password_new | password_hash }}'
+
+  - name: Creating a new kickstart directory
+    file:
+      path: "{{ role_path }}/files/{{vm_name}}"
+      state: directory
+    delegate_to: localhost
+
+  - name: Remove old kickstart file
+    file:
+      path: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      state: absent
+    delegate_to: localhost
+
+  - name: Creating a new kickstart file
+    file:
+      path: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      state: touch
+    delegate_to: localhost
+
+  - name: Write kickstart file
+    copy:
+      dest: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      content: |
+        #version=RHEL8
+        # Use graphical install
+        graphical
+
+        repo --name="AppStream" --baseurl=file:///run/install/sources/mount-0000-cdrom/AppStream
+
+        %packages
+        @^graphical-server-environment
+        @guest-agents
+        kexec-tools
+        qemu-guest-agent
+
+        %end
+
+        # Keyboard layouts
+        keyboard --xlayouts='us'
+        # System language
+        lang en_US.UTF-8
+
+        # Network information
+        #network --onboot=yes --device=link --bootproto=dhcp --noipv6 --hostname={{ vm_hostname }}.{{ vm_domain }}
+        network --onboot=yes --device=link --bootproto=static --noipv6 --ip={{vm_address}} --netmask={{vm_netmask}} --gateway={{vm_gateway}}  --hostname={{ vm_hostname }}.{{ vm_domain }} --nameserver={{vm_dns_server}}
+
+        # Use CDROM installation media
+        cdrom
+
+        # Run the Setup Agent on first boot
+        firstboot --disabled
+        eula --agreed
+
+        ignoredisk --only-use=sda
+        autopart
+        # Partition clearing information
+        clearpart --none --initlabel
+
+        # System timezone
+        timezone America/New_York --isUtc
+
+        # Root password
+        rootpw --iscrypted {{ root_password_hash }}
+        user --groups=wheel --name=admin --password={{ user_password_hash }} --iscrypted --gecos="admin"
+
+        # SELinux
+        selinux --disabled
+
+        %addon com_redhat_kdump --enable --reserve-mb='auto'
+        %end
+
+        %anaconda
+        pwpolicy root --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+        pwpolicy user --minlen=6 --minquality=1 --notstrict --nochanges --emptyok
+        pwpolicy luks --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+        %end
+
+        # Post 
+        %post --log=/root/post.log
+
+        # enable vm-guest-exec 
+        sed -i '/^[^#]/ s/\(^.*BLACKLIST_RPC=.*$\)/#\ \1/' /etc/sysconfig/qemu-ga
+        systemctl restart qemu-guest-agent
+        
+        %end
+
+        # Completion Action
+        reboot
+
+    delegate_to: localhost
+
