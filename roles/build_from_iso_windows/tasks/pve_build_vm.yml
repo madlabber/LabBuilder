@@ -13,6 +13,7 @@
     ide:
       ide1: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
       ide2: "{{iso_datastore}}:iso/{{config_iso}},media=cdrom"
+    cpu: host
     cores: '{{ vm_num_cpus|int }}'
     vcpus: '{{ vm_num_cpus|int }}'
     memory: '{{ vm_memory_mb |int}}'

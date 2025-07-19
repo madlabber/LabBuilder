@@ -89,8 +89,9 @@
 
         # enable vm-guest-exec 
         sed -i '/^[^#]/ s/\(^.*BLACKLIST_RPC=.*$\)/#\ \1/' /etc/sysconfig/qemu-ga
+        sed -i '/^[^#]/ s/\(^.*FILTER_RPC_ARGS=.*$\)/#\ \1/' /etc/sysconfig/qemu-ga
         systemctl restart qemu-guest-agent
-        
+
         %end
 
         # Completion Action

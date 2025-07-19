@@ -13,56 +13,53 @@ default_networks:
 serial_ports: false
 dnf_or_yum: "dnf"
 
-
 # centos7
 centos7_iso: "CentOS-7-x86_64-DVD-2009.iso"
-centos7_iso_url: "http://mirror.fileplanet.com/centos/7.9.2009/isos/x86_64/CentOS-7-x86_64-DVD-2009.iso"
+centos7_iso_url: "https://img.cs.montana.edu/linux/centos/7.9.2009/isos/x86_64/CentOS-7-x86_64-DVD-2009.iso"
 centos7_kickstart_file: "{{role_path}}/files/CentOS7/ks.cfg"
 centos7_kickstart_password: Changeme!
-centos7_dnf_or_yum: "yum"
 
 # centos8 - default when version=8
 centos8_iso: "CentOS-8.5.2111-x86_64-dvd1.iso"
 centos8_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.5.2111/isos/x86_64/CentOS-8.5.2111-x86_64-dvd1.iso"
 centos8_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
 centos8_kickstart_password: Changeme!
-centos8_dnf_or_yum: "dnf"
+
 # centos 8.5
 centos8.5_iso: "CentOS-8.5.2111-x86_64-dvd1.iso"
 centos8.5_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.5.2111/isos/x86_64/CentOS-8.5.2111-x86_64-dvd1.iso"
 centos8.5_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
 centos8.5_kickstart_password: Changeme!
-centos8.5_dnf_or_yum: "dnf"
+
 # centos 8.4
 centos8.4_iso: "CentOS-8.4.2105-x86_64-dvd1.iso"
 centos8.4_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.4.2105/isos/x86_64/CentOS-8.4.2105-x86_64-dvd1.iso"
 centos8.4_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
 centos8.4_kickstart_password: Changeme!
-centos8.4_dnf_or_yum: "dnf"
+
 # centos 8.3
 centos8.3_iso: "CentOS-8.3.2011-x86_64-dvd1.iso"
 centos8.3_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso"
 centos8.3_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
 centos8.3_kickstart_password: Changeme!
-centos8.3_dnf_or_yum: "dnf"
+
 # centos 8.2
 centos8.2_iso: "CentOS-8.2.2004-x86_64-dvd1.iso"
 centos8.2_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.2.2004/isos/x86_64/CentOS-8.2.2004-x86_64-dvd1.iso"
 centos8.2_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
 centos8.2_kickstart_password: Changeme!
-centos8.2_dnf_or_yum: "dnf"
+
 # centos 8.1
 centos8.1_iso: "CentOS-8.1.1911-x86_64-dvd1.iso"
 centos8.1_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-dvd1.iso"
 centos8.1_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
 centos8.1_kickstart_password: Changeme!
-centos8.1_dnf_or_yum: "dnf"
+
 # centos 8.0
 centos8.0_iso: "CentOS-8-x86_64-1905-dvd1.iso"
 centos8.0_iso_url: "https://mirror.chpc.utah.edu/pub/vault.centos.org/8.0.1905/isos/x86_64/CentOS-8-x86_64-1905-dvd1.iso"
 centos8.0_kickstart_file: "{{role_path}}/files/CentOS8/ks.cfg"
 centos8.0_kickstart_password: Changeme!
-centos8.0_dnf_or_yum: "dnf"
 
 # Rocky linux
 # rocky 9 default when version=9
@@ -70,86 +67,86 @@ rocky9_iso: "Rocky-9.3-x86_64-dvd.iso"
 rocky9_iso_url: "https://dl.rockylinux.org/vault/rocky/9.3/isos/x86_64/Rocky-9.3-x86_64-dvd.iso"
 rocky9_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
 rocky9_kickstart_password: Changeme!
-rocky9_dnf_or_yum: "dnf"
+
 # rocky 9.4
 rocky9.4_iso: "Rocky-9.4-x86_64-dvd.iso"
 rocky9.4_iso_url: "https://dl.rockylinux.org/vault/rocky/9.4/isos/x86_64/Rocky-9.4-x86_64-dvd.iso"
 rocky9.4_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
 rocky9.4_kickstart_password: Changeme!
-rocky9.4_dnf_or_yum: "dnf"
+
 # rocky 9.3
 rocky9.3_iso: "Rocky-9.3-x86_64-dvd.iso"
 rocky9.3_iso_url: "https://dl.rockylinux.org/vault/rocky/9.3/isos/x86_64/Rocky-9.3-x86_64-dvd.iso"
 rocky9.3_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
 rocky9.3_kickstart_password: Changeme!
-rocky9.3_dnf_or_yum: "dnf"
+
 # rocky 9.2
 rocky9.2_iso: "Rocky-9.2-x86_64-dvd.iso"
 rocky9.2_iso_url: "https://dl.rockylinux.org/vault/rocky/9.2/isos/x86_64/Rocky-9.2-x86_64-dvd.iso"
 rocky9.2_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
 rocky9.2_kickstart_password: Changeme!
-rocky9.2_dnf_or_yum: "dnf"
+
 # rocky 9.1
 rocky9.1_iso: "Rocky-9.1-20221214.1-x86_64-dvd.iso"
 rocky9.1_iso_url: "https://dl.rockylinux.org/vault/rocky/9.1/isos/x86_64/Rocky-9.1-20221214.1-x86_64-dvd.iso"
 rocky9.1_kickstart_file: "{{role_path}}/files/rocky9/ks.cfg"
 rocky9.1_kickstart_password: Changeme!
-rocky9.1_dnf_or_yum: "dnf"
+
 
 # rocky8 default when version=8
 rocky8_iso: "Rocky-8.9-x86_64-dvd1.iso"
 rocky8_iso_url: "https://dl.rockylinux.org/vault/rocky/8.9/isos/x86_64/Rocky-8.9-x86_64-dvd1.iso"
 rocky8_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8_kickstart_password: Changeme!
-rocky8_dnf_or_yum: "dnf"
+
 # rocky 8.10
 rocky8.10_iso: "Rocky-8.10-x86_64-dvd1.iso"
 rocky8.10_iso_url: "https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.10-x86_64-dvd1.iso"
 rocky8.10_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8.10_kickstart_password: Changeme!
-rocky8.10_dnf_or_yum: "dnf"
+
 # rocky 8.9
 rocky8.9_iso: "Rocky-8.9-x86_64-dvd1.iso"
 rocky8.9_iso_url: "https://dl.rockylinux.org/vault/rocky/8.9/isos/x86_64/Rocky-8.9-x86_64-dvd1.iso"
 rocky8.9_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8.9_kickstart_password: Changeme!
-rocky8.9_dnf_or_yum: "dnf"
+
 # rocky 8.8
 rocky8.8_iso: "Rocky-8.8-x86_64-dvd1.iso"
 rocky8.8_iso_url: "https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.8-x86_64-dvd1.iso"
 rocky8.8_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8.8_kickstart_password: Changeme!
-rocky8.8_dnf_or_yum: "dnf"
+
 # rocky 8.7
 rocky8.7_iso: "Rocky-8.7-x86_64-dvd1.iso"
 rocky8.7_iso_url: "https://dl.rockylinux.org/vault/rocky/8.7/isos/x86_64/Rocky-8.7-x86_64-dvd1.iso"
 rocky8.7_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8.7_kickstart_password: Changeme!
-rocky8.7_dnf_or_yum: "dnf"
+
 # rocky 8.6
 rocky8.6_iso: "Rocky-8.6-x86_64-dvd1.iso"
 rocky8.6_iso_url: "https://dl.rockylinux.org/vault/rocky/8.6/isos/x86_64/Rocky-8.6-x86_64-dvd1.iso"
 rocky8.6_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8.6_kickstart_password: Changeme!
-rocky8.6_dnf_or_yum: "dnf"
+
 # rocky 8.5
 rocky8.5_iso: "Rocky-8.5-x86_64-dvd1.iso"
 rocky8.5_iso_url: "https://dl.rockylinux.org/vault/rocky/8.5/isos/x86_64/Rocky-8.5-x86_64-dvd1.iso"
 rocky8.5_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8.5_kickstart_password: Changeme!
-rocky8.5_dnf_or_yum: "dnf"
+
 # rocky 8.4
 rocky8.4_iso: "Rocky-8.4-x86_64-dvd1.iso"
 rocky8.4_iso_url: "https://dl.rockylinux.org/vault/rocky/8.4/isos/x86_64/Rocky-8.4-x86_64-dvd1.iso"
 rocky8.4_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8.4_kickstart_password: Changeme!
-rocky8.4_dnf_or_yum: "dnf"
+
 # rocky 8.3
 rocky8.3_iso: "Rocky-8.3-x86_64-dvd1.iso"
 rocky8.3_iso_url: "https://dl.rockylinux.org/vault/rocky/8.3/isos/x86_64/Rocky-8.3-x86_64-dvd1.iso"
 rocky8.3_kickstart_file: "{{role_path}}/files/rocky8/ks.cfg"
 rocky8.3_kickstart_password: Changeme!
-rocky8.3_dnf_or_yum: "dnf"
+
 #For anything older use CentOS
 
 # alma8 defaults
@@ -157,43 +154,42 @@ alma8_iso: "AlmaLinux-8.8-x86_64-dvd.iso"
 alma8_iso_url: "http://ftp.ucsb.edu/pub/mirrors/linux/almalinux/8.8/isos/x86_64/AlmaLinux-8.8-x86_64-dvd.iso"
 alma8_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
 alma8_kickstart_password: Changeme!
-alma8_dnf_or_yum: "dnf"
+
 # alma8.8 defaults
 alma8.8_iso: "AlmaLinux-8.8-x86_64-dvd.iso"
 alma8.8_iso_url: "http://ftp.ucsb.edu/pub/mirrors/linux/almalinux/8.8/isos/x86_64/AlmaLinux-8.8-x86_64-dvd.iso"
 alma8.8_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
 alma8.8_kickstart_password: Changeme!
-alma8.8_dnf_or_yum: "dnf"
+
 # alma8.7 defaults
 alma8.7_iso: "AlmaLinux-8.7-x86_64-dvd.iso"
 alma8.7_iso_url: "https://repo.almalinux.org/vault/8.7/isos/x86_64/AlmaLinux-8.7-x86_64-dvd.iso"
 alma8.7_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
 alma8.7_kickstart_password: Changeme!
-alma8.7_dnf_or_yum: "dnf"
+
 # alma8.6 defaults
 alma8.6_iso: "AlmaLinux-8.6-x86_64-dvd.iso"
 alma8.6_iso_url: "https://repo.almalinux.org/vault/8.6/isos/x86_64/AlmaLinux-8.6-x86_64-dvd.iso"
 alma8.6_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
 alma8.6_kickstart_password: Changeme!
-alma8.6_dnf_or_yum: "dnf"
+
 # alma8.5 defaults
 alma8.5_iso: "AlmaLinux-8.5-x86_64-dvd.iso"
 alma8.5_iso_url: "https://repo.almalinux.org/vault/8.5/isos/x86_64/AlmaLinux-8.5-x86_64-dvd.iso"
 alma8.5_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
 alma8.5_kickstart_password: Changeme!
-alma8.5_dnf_or_yum: "dnf"
+
 # alma8.4 defaults
 alma8.4_iso: "AlmaLinux-8.4-x86_64-dvd.iso"
 alma8.4_iso_url: "https://repo.almalinux.org/vault/8.4/isos/x86_64/AlmaLinux-8.4-x86_64-dvd.iso"
 alma8.4_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
 alma8.4_kickstart_password: Changeme!
-alma8.4_dnf_or_yum: "dnf"
+
 # alma8.3 defaults
 alma8.3_iso: "AlmaLinux-8.3-x86_64-dvd.iso"
 alma8.3_iso_url: "https://repo.almalinux.org/vault/8.3/isos/x86_64/AlmaLinux-8.3-x86_64-dvd.iso"
 alma8.3_kickstart_file: "{{role_path}}/files/alma8/ks.cfg"
 alma8.3_kickstart_password: Changeme!
-alma8.3_dnf_or_yum: "dnf"
 
 # Red Hat Enterprise Linux
 # note: rhel URLs rarely if ever work.  When they don't, pre-stage the ISO in the datastore
@@ -202,13 +198,13 @@ rhel8_iso: "rhel-8.8-x86_64-dvd.iso"
 rhel8_iso_url: "https://developers.redhat.com/download-manager/file/rhel-8.8-x86_64-dvd.iso"
 rhel8_file: "{{role_path}}/files/RHEL8/ks.cfg"
 rhel8_password: Changeme!
-rhel8_dnf_or_yum: "dnf"
+
 # rhel8
 rhel8.8_iso: "rhel-8.8-x86_64-dvd.iso"
 rhel8.8_iso_url: "https://developers.redhat.com/download-manager/file/rhel-8.8-x86_64-dvd.iso"
 rhel8.8_kickstart_file: "{{role_path}}/files/RHEL8/ks.cfg"
 rhel8.8_kickstart_password: Changeme!
-rhel8.8_dnf_or_yum: "dnf"
+
 # rhel9
 # RHEL9 requires a code change to build_vm.yml to accomodate paywalled EL9 repositories
 # maybe someday
@@ -219,10 +215,10 @@ stream8_iso: "CentOS-Stream-8-x86_64-latest-dvd1.iso"
 stream8_iso_url: "http://linux.mirrors.es.net/centos/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-latest-dvd1.iso"
 stream8_kickstart_file: "{{role_path}}/files/stream8/ks.cfg"
 stream8_kickstart_password: Changeme!
-stream8_dnf_or_yum: "dnf"
+
 # stream9
 stream9_iso: "CentOS-Stream-9-latest-x86_64-dvd1.iso"
 stream9_iso_url: "http://mirror.siena.edu/centos-stream/9-stream/BaseOS/x86_64/iso/CentOS-Stream-9-latest-x86_64-dvd1.iso"
 stream9_kickstart_file: "{{role_path}}/files/stream9/ks.cfg"
 stream9_kickstart_password: Changeme!
-stream9_dnf_or_yum: "dnf"
+

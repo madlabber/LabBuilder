@@ -9,8 +9,28 @@
     node: "{{ pve_node }}"
   delegate_to: localhost
   register: create_vm
-  when: create_vm is not defined
 
+- name: CentOS 7 defibrilator
+  shell:
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
+  delegate_to: temp_host
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop_control:
+    pause: 5
+  loop: 
+    - "sed -i -e 's|mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*"
+    - "sed -i -e 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*"
+    - "yum-config-manager --enable extras"
+    - "yum install -y dnf"
+  when:
+    - distro|lower == "centos"
+    - version|float >= 7
+    - version|float < 8
+  
 - name: CentOS 8 defibrilator
   shell:
     cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
@@ -58,13 +78,12 @@
   loop_control:
     pause: 5
   loop:
-    - "{{dnf_or_yum | default('dnf') }} install -y epel-release"
-    - "{{dnf_or_yum | default('dnf') }} install -y xrdp"
+    - "dnf install -y epel-release"
+    - "dnf install -y xrdp"
     - "xrdp-keygen xrdp auto"
     - "systemctl enable xrdp --now"
     - "firewall-cmd --permanent --add-port=3389/tcp"
     - "firewall-cmd --reload"
-    - "ls /foo"
   when: install_xrdp|default(false)
 
 - name: Install Ansible and related components
@@ -79,11 +98,9 @@
   loop_control:
     pause: 5
   loop:
-    - "{{dnf_or_yum | default('dnf') }} install -y epel-release"
-    - "{{dnf_or_yum | default('dnf') }} install -y ansible"
-    - "{{dnf_or_yum | default('dnf') }} install -y python3-pip"
-    #- "{{dnf_or_yum}} install -y python3-devel"
-    #- "{{dnf_or_yum}} groupinstall -y 'development tools'"
+    - "dnf install -y epel-release"
+    - "dnf install -y ansible"
+    - "dnf install -y python3-pip"
     - "pip3 install --upgrade pip"
     # - "pip3 install ansible"
     - "pip3 install netapp-lib"

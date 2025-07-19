@@ -52,13 +52,13 @@ all:
         install_xrdp: true
         network_device_type: virtio
       hosts:
-        # centos7:
-        #   state: present
-        #   ip_address: 192.168.0.171
-        #   distro: "centos"
-        #   version: "7"
-        #   install_xrdp: true
-        #   install_ansible: true
+        centos7:
+          state: force
+          ip_address: 192.168.0.171
+          distro: "centos"
+          version: "7"
+          install_xrdp: true
+          install_ansible: true
         #   extra_commands:
         #     # Install Docker-CE
         #     - "yum install -y epel-release"
@@ -162,7 +162,7 @@ all:
           install_ansible: true
           nested_virtualization: true
         rocky94:
-          state: present
+          state: force
           ip_address: 192.168.0.194
           distro: "rocky"
           version: "9.4"

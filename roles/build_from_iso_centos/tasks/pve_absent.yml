@@ -1,16 +1,3 @@
-#---
-# - name: remove if absent or forced
-#   vmware_guest:
-#     hostname: '{{ vcenter_address }}'
-#     username: '{{ vcenter_username }}'
-#     password: '{{ vcenter_password }}'
-#     validate_certs: no
-#     name: '{{ vm_name }}'
-#     state: absent
-#     force: yes
-#   delegate_to: localhost
-#   when: state == "absent" or state == "force"
-
 - name: remove if absent or forced
   community.proxmox.proxmox_kvm:
     api_user: '{{ pve_username }}@pam'
@@ -22,5 +9,4 @@
     node: "{{ pve_node }}"
   delegate_to: localhost
   when: state == "absent" or state == "force"
-# - meta: end_host
-#   when: state == "absent"
+
