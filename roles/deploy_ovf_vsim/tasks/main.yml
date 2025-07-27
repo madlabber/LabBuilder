@@ -1,25 +1,12 @@
 ---
-- name: remove if absent
-  include_tasks: absent.yml
-  when: state == "absent" or force
-
-- name: disk_model vha
-  include_tasks: vha.yml
+- name: build vm on VMware
+  include_tasks: vmw_main.yml
   when: 
-    - disk_model|default("vha") == "vha"
-    - state == "present"
+    - vcenter_address|default(esxi_address|default('')) != ''
+    - pve_address|default('') == ''
 
-- name: disk_model vscsi
-  include_tasks: vscsi.yml
-  when: 
-    - disk_model|default("vha") == "vscsi"
-    - partner_name|default("") == ""
-    - state == "present"
-
-- name: disk_model shared
-  include_tasks: shared.yml
-  when: 
-    - disk_model|default("vha") == "vscsi"
-    - partner_name|default("") != ""
-    - state == "present"
+- name: build vm on PVE
+  include_tasks: pve_main.yml
+  when:
+    - pve_address|default('') != ''
 

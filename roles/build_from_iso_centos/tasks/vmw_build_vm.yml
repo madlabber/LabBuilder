@@ -127,7 +127,11 @@
     validate_certs: no
     name: '{{ vm_name }}'
   delegate_to: localhost
-  retries: 10
+  retries: 30
   delay: 60
   register: result
   until: result is succeeded
+
+- name: Wait for 60 seconds for guest to settle
+  wait_for: timeout=60
+  delegate_to: localhost

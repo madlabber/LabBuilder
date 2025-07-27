@@ -43,3 +43,5 @@ roles/build_from_iso_windows/files/Server2019eval/virtio_win_gt_x64.msi
 roles/build_from_iso_windows/files/Server2019eval/virtio_win_guest_tools.exe
 roles/build_from_iso_windows/files/Server2022eval/virtio_win_gt_x64.msi
 roles/build_from_iso_windows/files/Server2022eval/virtio_win_guest_tools.exe
+snippets
+.vscode/settings.json

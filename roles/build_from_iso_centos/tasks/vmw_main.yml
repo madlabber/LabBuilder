@@ -21,8 +21,16 @@
   include_tasks: vmw_download_via_esx.yml
   when: state == "present" or state == "force"
 
+- name: create kickstart file
+  include_tasks: create_kickstart.yml
+  when: state == "present" or state == "force"
+
 - name: create config iso
   include_tasks: vmw_create_config_iso.yml
+  when: state == "present" or state == "force"
+
+- name: delete kickstart file
+  include_tasks: delete_kickstart.yml
   when: state == "present" or state == "force"
 
 - name: Build CentOS VM - ansible

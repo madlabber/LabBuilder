@@ -8,7 +8,6 @@
     vm_hostname:     "{{vm_hostname     | default('centosvm') }}"
     vm_name:         "{{vm_name         | default('centosvm') }}"
     vm_eth_name:     "{{vm_eth_name     | default('ens32') }}"
-    vm_password_old: "{{kickstart_password | default('Changeme!') }}"
     vm_password_new: "{{vm_password | default('P@ssw0rd') }}"
     config_iso:      "{{vm_name}}-ks.iso"
 
@@ -49,4 +48,3 @@
     install_iso: "{{ lookup('vars', distro + version + '_iso') }}"
     install_iso_url: "{{ lookup('vars', distro + version + '_iso_url') }}"
     kickstart_file:  "{{ lookup('vars', distro + version + '_kickstart_file') }}"
-    kickstart_password: "{{ lookup('vars', distro + version + '_kickstart_password') }}"
