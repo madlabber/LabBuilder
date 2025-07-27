@@ -170,3 +170,26 @@ all:
           install_xrdp: true
           install_ansible: true
           nested_virtualization: true
+
+    vsims:
+      hosts:
+        vha-01:
+          state: force
+          ovf_version: "9.9.1"
+          ip_address:    192.168.0.141
+        #   cluster_name:    "demo2"
+        #   cluster_mgmt_ip: 192.168.0.140
+        #   sys_serial_number: "408236-85-07"
+        #   add_nodes_by_serial: "408236-85-08,408236-85-09,408236-85-10"
+        # vha-02:
+        #   ovf_version: "9.9.1"
+        #   ip_address:    192.168.0.142
+        #   sys_serial_number: "408236-85-08"
+        # vha-03:
+        #   ovf_version: "9.9.1"
+        #   ip_address:    192.168.0.143
+        #   sys_serial_number: "408236-85-09"
+        # vha-04:
+        #   ovf_version: "9.9.1"
+        #   ip_address:    192.168.0.144
+        #   sys_serial_number: "408236-85-10"
