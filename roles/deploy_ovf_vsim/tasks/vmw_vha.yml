@@ -8,7 +8,7 @@
       validate_certs: no
 
 - name: parse vars
-  include_tasks: parse_vars.yml
+  include_tasks: vmw_parse_vars.yml
 
 - name: 'Deploy ovf file: {{ovf_file}}'
   community.vmware.vmware_deploy_ovf:
@@ -50,7 +50,7 @@
 # This wierdness is because with_sequence evaluates and fails even when this task is not executed
 # bug closed as a wont_fix by ansible
 - name: add nics
-  include_tasks: add_nics.yml
+  include_tasks: vmw_add_nics.yml
   when: vm_num_nics|int > 4
 
 - set_fact:
@@ -206,4 +206,4 @@
   until: result is succeeded
 
 - name: run setup
-  include_tasks: setup.yml
+  include_tasks: vmw_setup.yml

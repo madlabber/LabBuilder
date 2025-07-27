@@ -15,7 +15,7 @@
       validate_certs: no
 
 - name: parse vars
-  include_tasks: parse_vars.yml
+  include_tasks: vmw_parse_vars.yml
 
 - name: set partner identifiers
   set_fact:
@@ -113,7 +113,7 @@
         controller_number: 1
         unit_number: 1
         destroy: true
-  ignore_errors: yes
+  ignore_errors: true
   delegate_to: localhost
   register: disk_facts
   loop:
@@ -123,7 +123,7 @@
 # This wierdness is because with_sequence evaluates and fails even when this task is not executed
 # bug closed as a wont_fix by ansible
 - name: '{{node_name}}: add nics'
-  include_tasks: add_nics.yml
+  include_tasks: vmw_add_nics.yml
   vars:
     vm_name: "{{ node_name }}"
   when: vm_num_nics|int > 4
@@ -241,7 +241,7 @@
     - partner_serial_ports is not false
 
 - name: create shared disk shelf 0
-  include_tasks: share_disk.yml
+  include_tasks: vmw_share_disk.yml
   vars:
     disk_size_mb: "{{shelf0_size}}"
     node1_scsi_controller: 0
@@ -268,7 +268,7 @@
       - { disk: 15, unit_number: 15 }
 
 - name: create shared disk shelf 1
-  include_tasks: share_disk.yml
+  include_tasks: vmw_share_disk.yml
   vars:
     disk_size_mb: "{{shelf1_size}}"
     node1_scsi_controller: 1
@@ -295,7 +295,7 @@
       - { disk: 15, unit_number: 15 }
 
 - name: create shared disk shelf 2
-  include_tasks: share_disk.yml
+  include_tasks: vmw_share_disk.yml
   vars:
     disk_size_mb: "{{shelf2_size}}"
     node1_scsi_controller: 2
@@ -322,7 +322,7 @@
       - { disk: 15, unit_number: 15 }
 
 - name: create shared disk shelf 3
-  include_tasks: share_disk.yml
+  include_tasks: vmw_share_disk.yml
   vars:
     disk_size_mb: "{{shelf3_size}}"
     node1_scsi_controller: 3
@@ -574,4 +574,4 @@
   until: result is succeeded
 
 - name: run setup
-  include_tasks: setup.yml
+  include_tasks: vmw_setup.yml
