@@ -32,6 +32,13 @@
     become_user: root
     ignore_errors: True
 
+  - name: Install qemu-img
+    ansible.builtin.package:
+      name: qemu-img
+      state: present
+    become: True
+    become_user: root
+    ignore_errors: True
 
 
 
