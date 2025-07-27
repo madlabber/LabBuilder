@@ -14,9 +14,6 @@
       password: '{{ vcenter_password }}'
       validate_certs: no
 
-- name: parse vars
-  include_tasks: vmw_parse_vars.yml
-
 - name: set partner identifiers
   set_fact:
     node1_name:   "{{ vm_name }}"
@@ -573,5 +570,3 @@
   register: result
   until: result is succeeded
 
-- name: run setup
-  include_tasks: vmw_setup.yml

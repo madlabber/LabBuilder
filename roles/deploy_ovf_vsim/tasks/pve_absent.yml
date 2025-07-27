@@ -1,0 +1,12 @@
+- name: remove if absent or forced
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: absent
+    force: true
+    name: '{{ vm_name|replace("_", "-") }}'
+    node: "{{ pve_node }}"
+  delegate_to: localhost
+  when: state == "absent" or state == "force"
+

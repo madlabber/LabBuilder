@@ -1,25 +1,32 @@
 ---
 - name: remove if absent
   include_tasks: vmw_absent.yml
-  when: state == "absent" or force
+  when: state == "absent" or state == "force"
+
+- name: parse vars
+  include_tasks: parse_vars.yml
+  when: state == "present" or state == "force"
 
 - name: disk_model vha
   include_tasks: vmw_vha.yml
   when: 
     - disk_model|default("vha") == "vha"
-    - state == "present"
+    - state == "present" or state == "force"
 
 - name: disk_model vscsi
   include_tasks: vmw_vscsi.yml
   when: 
     - disk_model|default("vha") == "vscsi"
     - partner_name|default("") == ""
-    - state == "present"
+    - state == "present" or state == "force"
 
 - name: disk_model shared
   include_tasks: vmw_shared.yml
   when: 
     - disk_model|default("vha") == "vscsi"
     - partner_name|default("") != ""
-    - state == "present"
+    - state == "present" or state == "force"
 
+- name: run setup
+  include_tasks: vmw_setup.yml
+  when: state == "present" or state == "force"

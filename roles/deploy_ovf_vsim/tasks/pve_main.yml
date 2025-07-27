@@ -1,0 +1,18 @@
+---
+- name: Add PVE Host to Dynamic Inventory
+  add_host:
+    hostname: temp_host
+    group: "temp_hosts"
+    ansible_host: '{{ pve_address }}'
+    ansible_user: '{{ pve_username }}'
+    ansible_password: '{{ pve_password }}'
+    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+    
+- name: remove if absent or forced
+  include_tasks: pve_absent.yml
+  when: state == "absent" or state == "force"
+
+- name: parse vars
+  include_tasks: parse_vars.yml
+  when: state == "absent" or state == "force"
+  

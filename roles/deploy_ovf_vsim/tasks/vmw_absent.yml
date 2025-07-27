@@ -10,7 +10,7 @@
     force: yes
   delegate_to: localhost
   when: 
-    - state == "absent" or force
+    - state == "absent" or state == "force"
     - partner_name|default("") != ""
 
 - name: remove if absent or forced
@@ -23,7 +23,7 @@
     state: absent
     force: yes
   delegate_to: localhost
-  when: state == "absent" or force
+  when: state == "absent" or state == "force"
 
 # - meta: end_host
 #   when: state == "absent"
