@@ -1,0 +1,55 @@
+# Well this is awkward
+- name: Add Network Adapters
+  set_fact:
+    networks:
+      net0: 'e1000,bridge={{ cluster_network }}'
+      net1: 'e1000,bridge={{ cluster_network }}'
+      net2: 'e1000,bridge={{ data_network }}'
+      net3: 'e1000,bridge={{ data_network }}'
+  when: vm_num_nics|int <= 4
+
+- name: Add Network Adapters
+  set_fact:
+    networks:
+      net0: 'e1000,bridge={{ cluster_network }}'
+      net1: 'e1000,bridge={{ cluster_network }}'
+      net2: 'e1000,bridge={{ data_network }}'
+      net3: 'e1000,bridge={{ data_network }}'
+      net4: 'e1000,bridge={{ data_network }}'
+  when: vm_num_nics|int == 5
+
+- name: Add Network Adapters
+  set_fact:
+    networks:
+      net0: 'e1000,bridge={{ cluster_network }}'
+      net1: 'e1000,bridge={{ cluster_network }}'
+      net2: 'e1000,bridge={{ data_network }}'
+      net3: 'e1000,bridge={{ data_network }}'
+      net4: 'e1000,bridge={{ data_network }}'
+      net5: 'e1000,bridge={{ data_network }}'
+  when: vm_num_nics|int == 6
+
+- name: Add Network Adapters
+  set_fact:
+    networks:
+      net0: 'e1000,bridge={{ cluster_network }}'
+      net1: 'e1000,bridge={{ cluster_network }}'
+      net2: 'e1000,bridge={{ data_network }}'
+      net3: 'e1000,bridge={{ data_network }}'
+      net4: 'e1000,bridge={{ data_network }}'
+      net5: 'e1000,bridge={{ data_network }}'
+      net6: 'e1000,bridge={{ data_network }}'
+  when: vm_num_nics|int == 7
+
+- name: Add Network Adapters
+  set_fact:
+    networks:
+      net0: 'e1000,bridge={{ cluster_network }}'
+      net1: 'e1000,bridge={{ cluster_network }}'
+      net2: 'e1000,bridge={{ data_network }}'
+      net3: 'e1000,bridge={{ data_network }}'
+      net4: 'e1000,bridge={{ data_network }}'
+      net5: 'e1000,bridge={{ data_network }}'
+      net6: 'e1000,bridge={{ data_network }}'
+      net7: 'e1000,bridge={{ data_network }}'
+  when: vm_num_nics|int >= 8

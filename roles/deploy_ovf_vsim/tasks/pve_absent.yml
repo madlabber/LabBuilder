@@ -9,4 +9,7 @@
     node: "{{ pve_node }}"
   delegate_to: localhost
   when: state == "absent" or state == "force"
-
+  register: make_absent
+  retries: 3
+  delay: 10
+  until: make_absent is succeeded
