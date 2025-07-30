@@ -181,6 +181,14 @@ all:
           cluster_mgmt_ip: 192.168.0.140
           sys_serial_number: "408236-85-07"
           add_nodes_by_serial: "408236-85-08"
+          bootargs:
+            - bootarg.vm.madlabber=true
+          extra_commands:
+            - sleep 180 # give nodes time to join
+            - node run vha-01 disk assign all
+            - node run vha-02 disk assign all
+            - storage aggregate create -aggregate aggr1 -diskcount 8 -node vha-01
+            - storage aggregate create -aggregate aggr2 -diskcount 8 -node vha-02
           #add_nodes_by_serial: "408236-85-08,408236-85-09,408236-85-10"
         vha-02:
           state: force

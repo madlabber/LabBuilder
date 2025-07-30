@@ -13,6 +13,8 @@ Store the archive in either the role's files directory, or the playbook's files 
 
 - Requires pyvmoni.
 
+- (experimental) Proxmox targets require qemu-img and mtools/mcopy
+
 Installation
 ------------
 
@@ -77,6 +79,24 @@ Role Variables
 | adpv2_enabled           | **False**, True     | Enables ADPv2 Root-Data-Data partitioning (vscsi only) |
 | serial_ports            | **False**, True, <spec> | If true serial ports are created with a default backing spec.  If serial_ports contains a serial port backing spec, it will override the default|
 | partner_serial_ports    | **False**, True, <spec> | If true serial ports are created with a default backing spec.  If serial_ports contains a serial port backing spec, it will override the default|
+
+Proxmox Host Variables:
+| Variable        | Example                    | Comments                               |
+|-----------------|----------------------------|----------------------------------------|
+| pve_node        | "PVE01"                    | proxmox server name                    |
+| pve_address     | "192.168.0.51"             | proxmox ip address or hostname         |
+| pve_username    | root                       | proxmox username                       |
+| pve_password    | "ChangeMe!"                | proxmox password                       |
+| vm_datastore    | "Local-LVM"                | Proxmox Storage ID for VM Disks        |
+| iso_datastore   | local                      | Proxmox Storage ID for ISO files       |
+| iso_path        | "/var/lib/vz/template/iso" | Path to ISO folder on proxmox host     |
+| data_network    | "vmbr0"                    | Proxmox Network Bridge (Data ports)    |
+| cluster_network | "vmbr1"                    | Proxmox Network Bridge (Cluster ports) |
+
+Proxmox Notes:
+--------------
+Proxmox support is preliminary and currently only supports VHA style simulators.  
+
 
 Default Configuration(s)
 ------------------------  

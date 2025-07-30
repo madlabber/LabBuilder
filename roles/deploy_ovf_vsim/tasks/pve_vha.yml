@@ -29,6 +29,12 @@
 - debug: 
     msg: "{{ create_vm.vmid }}"
 
+- name: Remove staging directory
+  file:
+    path: "{{ playbook_dir }}/files/{{vm_name}}"
+    state: absent
+  delegate_to: localhost
+
 - name: Creating a new staging directory
   file:
     path: "{{ playbook_dir }}/files/{{vm_name}}"
@@ -40,6 +46,23 @@
     src: "{{ovf_file}}"
     dest: "{{ playbook_dir }}/files/{{vm_name}}"
   delegate_to: localhost
+
+- name: Check file naming
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.vmdk"
+  delegate_to: localhost
+  register: file_check
+
+- name: Ensure file names align with modern conventions
+  shell:
+    cmd: "{{item}}"
+  delegate_to: localhost
+  with_items:
+    - "mv {{ playbook_dir }}/files/{{vm_name}}/*-disk1.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.vmdk"
+    - "mv {{ playbook_dir }}/files/{{vm_name}}/*-disk2.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk2.vmdk"
+    - "mv {{ playbook_dir }}/files/{{vm_name}}/*-disk3.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk3.vmdk"
+    - "mv {{ playbook_dir }}/files/{{vm_name}}/*-disk4.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk4.vmdk"
+  when: not file_check.stat.exists
 
 - name: Convert boot disk to raw
   shell:
@@ -55,6 +78,7 @@
   shell:
     cmd: "mcopy -n -i {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s ::/files/setup.ngsh {{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"
   delegate_to: localhost
+  ignore_errors: true
 
 # - name: unsetenv
 #   ansible.builtin.lineinfile:
@@ -68,44 +92,53 @@
 - name: setenv
   ansible.builtin.lineinfile:
     path: "{{ playbook_dir }}/files/{{vm_name}}/env"
-    regexp: '^setenv {{item.key}} .*$'
-    line: 'setenv {{item.key}} {{item.value}}'
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
   delegate_to: localhost
   with_items:
     # Don't run VMware tool on PVE  
-    - { key: bootarg.vm.run_vmtools, value: "false" }
+    - bootarg.vm.run_vmtools="false"
     # Use serial console on PVE
-    - { key: console, value: "comconsole,vidconsole" }
+    - console="comconsole,vidconsole"
     # set the node's unique identifiers
-    - { key: SYS_SERIAL_NUM, value: "{{sys_serial_number}}" }
-    - { key: bootarg.nvram.sysid, value: "{{nvram_sysid}}" }
+    - SYS_SERIAL_NUM="{{sys_serial_number}}"
+    - bootarg.nvram.sysid="{{nvram_sysid}}"
     # configure the simulated disk shelves
-    - { key: bootarg.vm.sim.vdevinit, value: "{{vdevinit}}" }
-    - { key: bootarg.sim.vdevinit, value: "{{vdevinit}}" }
+    - bootarg.vm.sim.vdevinit="{{vdevinit}}"
+    - bootarg.sim.vdevinit="{{vdevinit}}"
     # set automatic 4a
-    - { key: bootarg.bootmenu.allow_opts, value: "true" }
-    - { key: bootarg.bootmenu.args, value: "4a" }
+    - bootarg.bootmenu.allow_opts="true"
+    - bootarg.bootmenu.args="4a"
     # Old method for automating 4a
-    #- { key: bootarg.init.initnextV2, value: "true" }
-    #- { key: bootarg.init.wipeclean, value: "true" }
+    #- bootarg.init.initnextV2="true"
+    #- bootarg.init.wipeclean="true"
     # make the node discoverable on the cluster network
-    - { key: bootarg.init.auto_cluster_lif.disable, value: "false" }
+    - bootarg.init.auto_cluster_lif.disable="false"
     # disable dhcp for node_mgmt to prevent mgmt_auto lif creation
-    - { key: bootarg.init.dhcp.disable, value: "true" }
+    - bootarg.init.dhcp.disable="true"
     # Enable the setup.ngsh script
-    - { key: bootarg.setup.auto.internal, value: "true" }
-    - { key: bootarg.setup.auto.file, value: "\"/cfcard/files/setup.ngsh\"" }
-    - { key: bootarg.setup.auto, value: "true" }
+    - bootarg.setup.auto.internal="true"
+    - bootarg.setup.auto.file="/cfcard/files/setup.ngsh"
+    - bootarg.setup.auto="true"
 
-- name: verbose console
+- name: set extra bootargs
   ansible.builtin.lineinfile:
     path: "{{ playbook_dir }}/files/{{vm_name}}/env"
-    regexp: '^setenv {{item.key}} .*$'
-    line: 'setenv {{item.key}} {{item.value}}'
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items: "{{bootargs}}"
+  when: bootargs is defined
+
+- name: unmute console output
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
   delegate_to: localhost
   with_items:
-    - { key: setenv boot_verbose, value: "true" }
-    - { key: setenv bootarg.init.console_muted, value: "false" }
+    - boot_verbose="true"
+    - bootarg.init.console_muted="false"
   when:
     - not console_muted|default(true)
 
@@ -151,6 +184,14 @@
   when:
     - ontap_cluster_mgmt_ip|default("") != ""
 
+- name: notify add nodes by serial
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"
+    line: "ngsh -c  echo Adding nodes by serial {{add_nodes_by_serial|default('')}}"
+  delegate_to: localhost
+  when:
+    - add_nodes_by_serial|default("") != ""
+
 - name: Add nodes by serial
   ansible.builtin.lineinfile:
     path: "{{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"
@@ -160,14 +201,29 @@
     - add_nodes_by_serial|default("") != ""
   with_items: "{{ add_nodes_by_serial.split(',') }}"
 
+- name: Add extra commands to setup.ngsh
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"
+    line: "ngsh -c {{item}}"
+  delegate_to: localhost
+  with_items: "{{ extra_commands }}"
+  when:
+    - extra_commands is defined
+
 - name: inject env file
   shell:
     cmd: "mcopy -o -i {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s {{ playbook_dir }}/files/{{vm_name}}/env ::/env/env "
   delegate_to: localhost
 
+- name: create fies directory on cfcard
+  shell:
+    cmd: "mmd -D s -i {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s ::/files"
+  delegate_to: localhost
+  ignore_errors: true
+
 - name: inject setup.ngsh file
   shell:
-    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s {{ playbook_dir }}/files/{{vm_name}}/setup.ngsh ::/files/setup.ngsh"
+    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s {{ playbook_dir }}/files/{{vm_name}}/setup.ngsh ::/files/"
   delegate_to: localhost
 
 - name: Convert boot disk to vmdk
