@@ -128,7 +128,7 @@
     wait_for_process: true
   delegate_to: localhost
   register: setpassword
-  ignore_errors: yes
+  ignore_errors: true
 
 
 

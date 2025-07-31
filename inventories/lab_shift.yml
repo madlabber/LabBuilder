@@ -52,14 +52,15 @@ all:
         vcsa:
           ip_address: 192.168.0.50
           vm_fqdn: "vcsa.lab.local"
-          ovf_file: "files/VMware-vCenter-Server-Appliance-7.0.2.00100-17920168_OVF10.ova"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
     nestedesx:
       hosts:
         esx01:
           ip_address: 192.168.0.51
       vars:
-          esx_version: "7.0u2"
-          vm_memory_mb: 24576
+          #esx_version: "8.0u3"
+          ovf_file: files/Nested_ESXi8.0u3_Appliance_Template_v1.ova
+          vm_memory_mb: 32768
           vm_num_cpus: 6
           vm_disk1_size_gb: 40
           vm_disk2_size_gb: 200
@@ -71,7 +72,7 @@ all:
         kvm1:
           ip_address: 192.168.0.41
       vars:
-        vm_memory_mb: 24576
+        vm_memory_mb: 32768
         vm_num_cpus: 6
         vm_disk_gb: 160
         install_xrdp: true
@@ -98,8 +99,8 @@ all:
         vm_num_cpus: 2
         vm_disk_gb: 250 
       hosts:
-        pve01:
-          ip_address: 192.168.0.71
+        # pve01:
+        #   ip_address: 192.168.0.71
         # pve02:
         #   ip_address: 192.168.0.52
         # pve03:
@@ -108,8 +109,8 @@ all:
     ontapselecteval:
       hosts:
         ots-01:  
-          ontap_version: "9.11.1"           
+          ontap_version: "9.15.1"           
           ontap_node_mgmt_ip:    192.168.0.111
           ontap_cluster_name:    "ontap"
           ontap_cluster_mgmt_ip: 192.168.0.101
-          vm_data_disk_gb:       500
+          vm_data_disk_gb:       1024

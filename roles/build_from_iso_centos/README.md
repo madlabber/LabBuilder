@@ -44,6 +44,8 @@ Role Variables
 | rhsm_orgid | 1234567 | RHEL only: RSHM Org ID |
 | rhsm_activationkey | rhelkey | RHEL only: activation key |
 
+
+
 Dependencies
 ------------
 
