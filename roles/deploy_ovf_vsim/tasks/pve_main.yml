@@ -25,3 +25,10 @@
   when: 
     - disk_model|default("vha") == "vha"
     - state == "present" or state == "force"
+
+- name: disk_model vscsi
+  include_tasks: pve_vscsi.yml
+  when: 
+    - disk_model|default("vha") == "vscsi"
+    - partner_name|default("") == ""
+    - state == "present" or state == "force"

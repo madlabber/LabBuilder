@@ -96,6 +96,7 @@ Proxmox Host Variables:
 Proxmox Notes:
 --------------
 Proxmox support is preliminary and currently only supports VHA style simulators.  
+Proxmox has a 31 Virtio disk limit as of 8.4, so in vSCSI mode the total number of disks cannot exceed 31.
 
 
 Default Configuration(s)
