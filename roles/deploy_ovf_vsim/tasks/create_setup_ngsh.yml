@@ -39,7 +39,7 @@
     - security login password -username admin -new-password {{ ontap_password }}
     - security login create -username admin -application ssh -authmethod password
 
-- name: Script Node Setup
+- name: Script Partner Node Setup
   ansible.builtin.lineinfile:
     path: "{{ playbook_dir }}/files/{{partner_name}}/setup.ngsh"
     line: "ngsh -c '{{item}}'"
@@ -59,6 +59,8 @@
     # Set the admin password
     - security login password -username admin -new-password {{ ontap_password }}
     - security login create -username admin -application ssh -authmethod password
+  when: partner_name != ''
+
 
 # - name: Script partner node setup
 #   ansible.builtin.lineinfile:
