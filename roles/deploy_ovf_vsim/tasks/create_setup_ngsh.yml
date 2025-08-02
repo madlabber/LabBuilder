@@ -1,0 +1,122 @@
+
+# - debug:
+#     msg:
+#       - "partner: {{partner}}"
+#       - "partner_node_name: {{partner_node_name}}"
+#       - "partner_name: {{partner_name}}"
+#       - "partner_ip: {{partner_ip}}"
+
+- name: Create new setup.ngsh
+  copy:
+    dest: "{{ playbook_dir }}/files/{{item}}/setup.ngsh"
+    content: |
+      #!/bin/sh
+      #Created by LabBuilder
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+
+- name: Script Node Setup
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"
+    line: "ngsh -c '{{item}}'"
+  delegate_to: localhost
+  with_items:
+    # Wait for cluster lif creation
+    - set diagnostic; system node wait-for-cluster-lif-setup
+    # Set the nodename
+    - system node rename -newname {{ node_name }}
+    # Ensure ports e0c/e0d land in the Default ipspace
+    - network port modify -node {{ node_name }} -port e0c -ipspace Default
+    - network port modify -node {{ node_name }} -port e0d -ipspace Default
+    # Create node management lif
+    - network interface create -lif mgmt1 -role node-mgmt -home-node {{ node_name }} -home-port e0c -status-admin up -address {{ ontap_node_mgmt_ip }} -netmask {{ ontap_netmask }}
+    # Create default route
+    - network route create -gateway {{ontap_gateway}} -vserver Default -metric 20
+    # Set the admin password
+    - security login password -username admin -new-password {{ ontap_password }}
+    - security login create -username admin -application ssh -authmethod password
+
+- name: Script Node Setup
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{partner_name}}/setup.ngsh"
+    line: "ngsh -c '{{item}}'"
+  delegate_to: localhost
+  with_items:
+    # Wait for cluster lif creation
+    - set diagnostic; system node wait-for-cluster-lif-setup
+    # Set the nodename
+    - system node rename -newname {{ partner }}
+    # Ensure ports e0c/e0d land in the Default ipspace
+    - network port modify -node {{ partner }} -port e0c -ipspace Default
+    - network port modify -node {{ partner }} -port e0d -ipspace Default
+    # Create node management lif
+    - network interface create -lif mgmt1 -role node-mgmt -home-node {{ partner }} -home-port e0c -status-admin up -address {{ partner_ip }} -netmask {{ ontap_netmask }}
+    # Create default route
+    - network route create -gateway {{ontap_gateway}} -vserver Default -metric 20
+    # Set the admin password
+    - security login password -username admin -new-password {{ ontap_password }}
+    - security login create -username admin -application ssh -authmethod password
+
+# - name: Script partner node setup
+#   ansible.builtin.lineinfile:
+#     path: "{{ playbook_dir }}/files/{{partner_name}}/setup.ngsh"
+#     line: "ngsh -c '{{item}}'"
+#   delegate_to: localhost
+#   with_items:
+#     # Wait for cluster lif creation
+#     - set diagnostic; system node wait-for-cluster-lif-setup
+#     # Set the nodename
+#     - system node rename -newname {{ partner_name }}
+#     # Ensure ports e0c/e0d land in the Default ipspace
+#     - network port modify -node {{ partner_name }} -port e0c -ipspace Default
+#     - network port modify -node {{ partner_node_name }} -port e0d -ipspace Default
+#     # Create node management lif
+#     - network interface create -lif mgmt1 -role node-mgmt -home-node {{ partner_node_name }} -home-port e0c -status-admin up -address {{ node2_mgmt_ip }} -netmask {{ ontap_netmask }}
+#     # Create default route
+#     - network route create -gateway {{ontap_gateway}} -vserver Default -metric 20
+#     # Set the admin password
+#     - security login password -username admin -new-password {{ ontap_password }}
+#     - security login create -username admin -application ssh -authmethod password
+#   When: partner_name != ''
+
+- name: Script Cluster Setup
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"
+    line: "ngsh -c {{item}}"
+  delegate_to: localhost
+  with_items:
+    # Create the cluster
+    - cluster create -clustername {{ ontap_cluster_name }}
+    # Create the cluster management lif
+    - network interface create -vserver {{ ontap_cluster_name }} -lif cluster_mgmt -role cluster-mgmt -home-node {{ node_name }} -home-port e0d -address {{ ontap_cluster_mgmt_ip }} -netmask {{ ontap_netmask }}
+  when:
+    - ontap_cluster_mgmt_ip|default("") != ""
+
+- name: notify add nodes by serial
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"
+    line: "ngsh -c  echo Adding nodes by serial {{add_nodes_by_serial|default('')}}"
+  delegate_to: localhost
+  when:
+    - add_nodes_by_serial|default("") != ""
+
+- name: Add nodes by serial
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"
+    line: "ngsh -c add-node -cluster-ips $(ngsh -c 'show-discovered -fields serial-number,address' | grep {{item}}| tr -s ' ' | cut -d' ' -f3)"
+  delegate_to: localhost
+  when:
+    - add_nodes_by_serial|default("") != ""
+  with_items: "{{ add_nodes_by_serial.split(',') }}"
+
+- name: Add extra commands to setup.ngsh
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"
+    line: "ngsh -c {{item}}"
+  delegate_to: localhost
+  with_items: "{{ extra_commands }}"
+  when:
+    - extra_commands is defined

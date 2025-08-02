@@ -20,6 +20,16 @@
   include_tasks: pve_parse_vars.yml
   when: state == "absent" or state == "force"
 
+- name: open OVA
+  include_tasks: open_ova.yml
+  when: 
+    - state == "present" or state == "force"
+
+- name: install update
+  include_tasks: install_update.yml
+  when: 
+    - state == "present" or state == "force"
+
 - name: disk_model vha
   include_tasks: pve_vha.yml
   when: 
@@ -32,3 +42,6 @@
     - disk_model|default("vha") == "vscsi"
     - partner_name|default("") == ""
     - state == "present" or state == "force"
+
+- name: cleanup
+  include_tasks: cleanup.yml

@@ -160,3 +160,27 @@
 #     msg: 
 #       - "vdevinit: {{vdevinit}}"
 # - meta: end_host
+
+- name: set partner identifiers
+  set_fact:
+    node1_name:   "{{ vm_name }}"
+    node2_name:   "{{ partner_name }}"
+    node1_sysid:  "{{ nvram_sysid }}"
+    node2_sysid:  "{{ nvram_sysid|int + 1 }}"
+    node1_serial: "{{ sys_serial_number }}"
+    node2_serial: "{{ partner_serial|default('4034389-06-2',true) }}"
+    node1_icmac:   "{{ node1_icmac | default('02:0C:01' | random_mac ) }}"
+    node2_icmac:   "{{ node2_icmac | default('02:0C:02' | random_mac ) }}"
+    node2_mgmt_ip: "{{ node2_mgmt_ip | default(partner_ip|default('')) }}"
+    node_setup_delay: "{{ node_setup_delay | default(120) }}"
+    add_nodes_by_serial: "{{ add_nodes_by_serial | default( partner_serial|default('4034389-06-2',true),true ) }}"
+  when: 
+    - partner_name|default("") != ""
+
+- name: enforce minimum nics
+  set_fact:
+    vm_num_nics: 5
+  when: 
+    - vm_num_nics|int <= 4
+    - partner_name|default("") != ""
+    

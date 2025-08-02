@@ -1,0 +1,206 @@
+---
+- name: set credentials
+  set_fact:
+    esxi_login: &esxi_login
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'
+      validate_certs: no
+
+# Now we can deploy the VM
+- name: 'Deploy ovf file: {{ovf_file}}'
+  community.vmware.vmware_deploy_ovf:
+    <<: *esxi_login
+    datacenter: '{{ vcenter_datacenter }}'
+    cluster: '{{ vcenter_cluster }}'
+    datastore: "{{ vm_datastore }}"
+    name: "{{ vm_name }}"
+   # ovf: "{{ovf_file}}"
+    ovf: "{{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate.ovf"
+    disk_provisioning: "{{vm_disk_provisioning}}"
+    power_on: no
+    networks: "{u'hostonly':u'{{ cluster_network }}',u'nat':u'{{ data_network }}'}"
+    wait_for_ip_address: false
+  delegate_to: localhost
+  retries: 10
+  delay: 60
+  register: result
+  until: result is succeeded
+
+- name: Adjust VM Sizing
+  community.vmware.vmware_guest:
+    <<: *esxi_login
+    name: '{{ vm_name }}'
+    state: present
+    hardware:
+      memory_mb: "{{ vm_memory_mb}}"
+      num_cpus: '{{ vm_num_cpus }}'
+    advanced_settings:
+      - key: pciHole.start
+        value: 1024  # Moving the PCI hole here gives ONTAP access to more system ram
+      - key: "disk.EnableUUID"
+        value: "true"  # Required for vSCSI support
+  delegate_to: localhost
+
+# This wierdness is because with_sequence evaluates and fails even when this task is not executed
+# bug closed as a wont_fix by ansible
+- name: add nics
+  include_tasks: vmw_add_nics.yml
+  when: vm_num_nics|int > 4
+
+- set_fact:
+    serial_ports:
+      - type: 'pipe'
+        pipe_name: '\\.\pipe\{{ vm_name}}_com1'
+        endpoint: 'client'
+      - type: 'pipe'
+        pipe_name: '\\.\pipe\{{ vm_name}}_com2'
+        endpoint: 'client'
+  when:
+    - serial_ports|default(false) is false
+
+# Create serial ports
+- name: Create multiple serial ports with Backing type - network, pipe, device and file
+  community.vmware.vmware_guest_serial_port:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+    name: '{{ vm_name }}'
+    backings: "{{serial_ports}}"
+  delegate_to: localhost
+  register: create_serial_ports
+  when:
+    - serial_ports is defined
+    - serial_ports is not false
+
+- name: Build Disk Shelf 0
+  community.vmware.vmware_guest_disk:
+    <<: *esxi_login
+    datacenter: '{{vcenter_datacenter}}'
+    name: '{{ vm_name }}'
+    disk:
+      - { size_mb: '{{shelf0_size}}', scsi_controller: 0, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning|lower}}", state: present, datastore: '{{vm_datastore}}'  }
+  delegate_to: localhost
+  when:
+    - shelf0_disk_size|default("") != ""
+    - item.disk <= shelf0_disk_count|default(shelf0_qty)|int
+  loop:
+      - { disk:  1, unit_number: 0 }
+      - { disk:  2, unit_number: 1 }
+      - { disk:  3, unit_number: 2 }
+      - { disk:  4, unit_number: 3 }
+      - { disk:  5, unit_number: 4 }
+      - { disk:  6, unit_number: 5 }
+      - { disk:  7, unit_number: 6 }
+      - { disk:  8, unit_number: 8 }
+      - { disk:  9, unit_number: 9 }
+      - { disk: 10, unit_number: 10 }
+      - { disk: 11, unit_number: 11 }
+      - { disk: 12, unit_number: 12 }
+      - { disk: 13, unit_number: 13 }
+      - { disk: 14, unit_number: 14 }
+      - { disk: 15, unit_number: 15 }
+
+- name: Build Disk Shelf 1
+  community.vmware.vmware_guest_disk:
+    <<: *esxi_login
+    datacenter: '{{vcenter_datacenter}}'
+    name: '{{ vm_name }}'
+    disk:
+      - { size_mb: '{{shelf1_size}}', scsi_controller: 1, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning|lower}}", state: present, datastore: '{{vm_datastore}}'  }
+  delegate_to: localhost
+  when:
+    - shelf1_disk_size|default("") != ""
+    - item.disk <= shelf1_disk_count|default(shelf1_qty)|int
+  loop:
+      - { disk:  1, unit_number: 0 }
+      - { disk:  2, unit_number: 1 }
+      - { disk:  3, unit_number: 2 }
+      - { disk:  4, unit_number: 3 }
+      - { disk:  5, unit_number: 4 }
+      - { disk:  6, unit_number: 5 }
+      - { disk:  7, unit_number: 6 }
+      - { disk:  8, unit_number: 8 }
+      - { disk:  9, unit_number: 9 }
+      - { disk: 10, unit_number: 10 }
+      - { disk: 11, unit_number: 11 }
+      - { disk: 12, unit_number: 12 }
+      - { disk: 13, unit_number: 13 }
+      - { disk: 14, unit_number: 14 }
+      - { disk: 15, unit_number: 15 }
+
+- name: Build Disk Shelf 2
+  community.vmware.vmware_guest_disk:
+    <<: *esxi_login
+    datacenter: '{{vcenter_datacenter}}'
+    name: '{{ vm_name }}'
+    disk:
+      - { size_mb: '{{shelf2_size}}', scsi_controller: 2, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning|lower}}", state: present, datastore: '{{vm_datastore}}'  }
+  delegate_to: localhost
+  when:
+    - shelf2_disk_size|default("") != ""
+    - item.disk <= shelf2_disk_count|default(shelf2_qty)|int
+  loop:
+      - { disk:  1, unit_number: 0 }
+      - { disk:  2, unit_number: 1 }
+      - { disk:  3, unit_number: 2 }
+      - { disk:  4, unit_number: 3 }
+      - { disk:  5, unit_number: 4 }
+      - { disk:  6, unit_number: 5 }
+      - { disk:  7, unit_number: 6 }
+      - { disk:  8, unit_number: 8 }
+      - { disk:  9, unit_number: 9 }
+      - { disk: 10, unit_number: 10 }
+      - { disk: 11, unit_number: 11 }
+      - { disk: 12, unit_number: 12 }
+      - { disk: 13, unit_number: 13 }
+      - { disk: 14, unit_number: 14 }
+      - { disk: 15, unit_number: 15 }
+
+- name: Build Disk Shelf 3
+  community.vmware.vmware_guest_disk:
+    <<: *esxi_login
+    datacenter: '{{vcenter_datacenter}}'
+    name: '{{ vm_name }}'
+    disk:
+      - { size_mb: '{{shelf3_size}}', scsi_controller: 3, unit_number: "{{item.unit_number}}", scsi_type: 'lsilogicsas', type: "{{vm_disk_provisioning|lower}}", state: present, datastore: '{{vm_datastore}}'  }
+  delegate_to: localhost
+  when:
+    - shelf3_disk_size|default("") != ""
+    - item.disk <= shelf3_disk_count|default(shelf3_qty)|int
+  loop:
+      - { disk:  1, unit_number: 0 }
+      - { disk:  2, unit_number: 1 }
+      - { disk:  3, unit_number: 2 }
+      - { disk:  4, unit_number: 3 }
+      - { disk:  5, unit_number: 4 }
+      - { disk:  6, unit_number: 5 }
+      - { disk:  7, unit_number: 6 }
+      - { disk:  8, unit_number: 8 }
+      - { disk:  9, unit_number: 9 }
+      - { disk: 10, unit_number: 10 }
+      - { disk: 11, unit_number: 11 }
+      - { disk: 12, unit_number: 12 }
+      - { disk: 13, unit_number: 13 }
+      - { disk: 14, unit_number: 14 }
+      - { disk: 15, unit_number: 15 }
+
+- name: Start VM
+  community.vmware.vmware_guest:
+    <<: *esxi_login
+    name: '{{ vm_name }}'
+    state: poweredon
+    wait_for_ip_address: false
+  delegate_to: localhost
+
+- name: Wait for VMware tools to become available
+  community.vmware.vmware_guest_tools_wait:
+    <<: *esxi_login
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  retries: 3
+  delay: 15
+  register: result
+  until: result is succeeded
+

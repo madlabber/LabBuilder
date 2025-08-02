@@ -1,0 +1,93 @@
+- name: Remove staging directory
+  file:
+    path: "{{ playbook_dir }}/files/{{item}}"
+    state: absent
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+
+- name: Creating a new staging directory
+  file:
+    path: "{{ playbook_dir }}/files/{{item}}"
+    state: directory
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+
+- name: Extract OVA
+  ansible.builtin.unarchive:
+    src: "{{ovf_file}}"
+    dest: "{{ playbook_dir }}/files/{{item}}"
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+
+- name: Check file naming
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.vmdk"
+  delegate_to: localhost
+  register: file_check
+
+- name: Ensure file names align with modern conventions
+  shell:
+    cmd: "{{item}}"
+  delegate_to: localhost
+  with_items:
+    - "mv {{ playbook_dir }}/files/{{vm_name}}/*-disk1.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.vmdk"
+    - "mv {{ playbook_dir }}/files/{{vm_name}}/*-disk2.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk2.vmdk"
+    - "mv {{ playbook_dir }}/files/{{vm_name}}/*-disk3.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk3.vmdk"
+    - "mv {{ playbook_dir }}/files/{{vm_name}}/*-disk4.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk4.vmdk"
+    - "mv {{ playbook_dir }}/files/{{vm_name}}/*.ovf {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate.ovf"
+    # Discard the manifest since we are about to invalidate the checksums
+    - "rm {{ playbook_dir }}/files/{{vm_name}}/*.mf"
+  when: not file_check.stat.exists
+
+- name: Ensure partner file names align with modern conventions
+  shell:
+    cmd: "{{item}}"
+  delegate_to: localhost
+  with_items:
+    - "mv {{ playbook_dir }}/files/{{partner_name}}/*-disk1.vmdk {{ playbook_dir }}/files/{{partner_name}}/vsim-NetAppDOT-simulate-disk1.vmdk"
+    - "mv {{ playbook_dir }}/files/{{partner_name}}/*-disk2.vmdk {{ playbook_dir }}/files/{{partner_name}}/vsim-NetAppDOT-simulate-disk2.vmdk"
+    - "mv {{ playbook_dir }}/files/{{partner_name}}/*-disk3.vmdk {{ playbook_dir }}/files/{{partner_name}}/vsim-NetAppDOT-simulate-disk3.vmdk"
+    - "mv {{ playbook_dir }}/files/{{partner_name}}/*-disk4.vmdk {{ playbook_dir }}/files/{{partner_name}}/vsim-NetAppDOT-simulate-disk4.vmdk"
+    - "mv {{ playbook_dir }}/files/{{partner_name}}/*.ovf {{ playbook_dir }}/files/{{partner_name}}/vsim-NetAppDOT-simulate.ovf"
+    # Discard the manifest since we are about to invalidate the checksums
+    - "rm {{ playbook_dir }}/files/{{partner_name}}/*.mf"
+  when: 
+    - partner_name != ''
+    - not file_check.stat.exists
+
+- name: Convert boot disk to raw
+  shell:
+    cmd: "qemu-img convert -f vmdk -O raw  {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.vmdk {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.raw"
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+
+- name: Extract env file
+  shell:
+    cmd: "mcopy -n -i {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s ::/env/env {{ playbook_dir }}/files/{{item}}/env"
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+
+- name: Extract setup.ngsh file
+  shell:
+    cmd: "mcopy -n -i {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s ::/files/setup.ngsh {{ playbook_dir }}/files/{{item}}/setup.ngsh"
+  delegate_to: localhost
+  ignore_errors: true
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"

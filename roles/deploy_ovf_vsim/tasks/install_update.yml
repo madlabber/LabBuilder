@@ -1,0 +1,129 @@
+
+- name: Creating a new staging image directory
+  file:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/image"
+    state: directory
+  delegate_to: localhost
+  when: update_package is defined
+
+- name: Extract Update package
+  ansible.builtin.unarchive:
+    src: "{{update_package}}"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/image/"
+  delegate_to: localhost
+  when: update_package is defined
+
+- name: Copy package files into image
+  shell:
+    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s {{ playbook_dir }}/files/{{vm_name}}/image/netboot/{{item}} ::/x86_64/freebsd/image1/"
+  delegate_to: localhost
+  when: update_package is defined
+  with_items:
+  - BUILD
+  - CHECKSUM
+  - COMPAT.TXT
+  - INSTALL
+  - VERSION
+  - bsdboot.tgz
+  - cap.xml
+  - if_gve.ko
+  - if_vmx.ko
+  - if_vtnet.ko
+  - kernel
+  - kernel.csfc.sig
+  - kernel.sig
+  - key_fingerprint.csfc.sig
+  - key_fingerprint.sig
+  - metadata.xml
+  - mlx4.ko
+  - mlx4en.ko
+  - mlxen.ko
+  - mpt.ko
+  - netapp_vmx.ko
+  - nvdimm.ko
+  - platform.ko
+  - platform.ko.csfc.sig
+  - platform.ko.sig
+  - pmroot_late.tgz
+  - checksum.os
+  - platfs.img
+  - platfs.img.sig
+  - platfs.img.csfc.sig
+  - pvscsi.ko
+  - rootfs.img
+  - rootfs.img.csfc.sig
+  - rootfs.img.sig
+  - virtio.ko
+  - virtio_blk.ko
+  - virtio_pci.ko
+  - virtio_scsi.ko
+  - xenhvm.ko
+  - fw.tgz
+  - hv_ata_pci_disengage.ko
+  - hv_netvsc.ko
+  - hv_storvsc.ko
+  - hv_utils.ko
+  - hv_vmbus.ko
+  ignore_errors: true
+
+
+- name: Copy package files into partner image
+  shell:
+    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{partner_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s {{ playbook_dir }}/files/{{vm_name}}/image/netboot/{{item}} ::/x86_64/freebsd/image1/"
+  delegate_to: localhost
+  when: 
+    - update_package is defined
+    - partner_name != ''
+  with_items:
+  - BUILD
+  - CHECKSUM
+  - COMPAT.TXT
+  - INSTALL
+  - VERSION
+  - bsdboot.tgz
+  - cap.xml
+  - if_gve.ko
+  - if_vmx.ko
+  - if_vtnet.ko
+  - kernel
+  - kernel.csfc.sig
+  - kernel.sig
+  - key_fingerprint.csfc.sig
+  - key_fingerprint.sig
+  - metadata.xml
+  - mlx4.ko
+  - mlx4en.ko
+  - mlxen.ko
+  - mpt.ko
+  - netapp_vmx.ko
+  - nvdimm.ko
+  - platform.ko
+  - platform.ko.csfc.sig
+  - platform.ko.sig
+  - pmroot_late.tgz
+  - checksum.os
+  - platfs.img
+  - platfs.img.sig
+  - platfs.img.csfc.sig
+  - pvscsi.ko
+  - rootfs.img
+  - rootfs.img.csfc.sig
+  - rootfs.img.sig
+  - virtio.ko
+  - virtio_blk.ko
+  - virtio_pci.ko
+  - virtio_scsi.ko
+  - xenhvm.ko
+  - fw.tgz
+  - hv_ata_pci_disengage.ko
+  - hv_netvsc.ko
+  - hv_storvsc.ko
+  - hv_utils.ko
+  - hv_vmbus.ko
+  ignore_errors: true
+
+- name: Remove staging directory
+  file:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/image"
+    state: absent
+  delegate_to: localhost

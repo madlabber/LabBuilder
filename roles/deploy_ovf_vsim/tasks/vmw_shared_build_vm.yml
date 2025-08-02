@@ -14,25 +14,6 @@
       password: '{{ vcenter_password }}'
       validate_certs: no
 
-- name: set partner identifiers
-  set_fact:
-    node1_name:   "{{ vm_name }}"
-    node2_name:   "{{ partner_name }}"
-    node1_sysid:  "{{ nvram_sysid }}"
-    node2_sysid:  "{{ nvram_sysid|int + 1 }}"
-    node1_serial: "{{ sys_serial_number }}"
-    node2_serial: "{{ partner_serial|default('4034389-06-2',true) }}"
-    node1_icmac:   "{{ node1_icmac | default('02:0C:01' | random_mac ) }}"
-    node2_icmac:   "{{ node2_icmac | default('02:0C:02' | random_mac ) }}"
-    node2_mgmt_ip: "{{ node2_mgmt_ip | default(partner_ip|default('')) }}"
-    node_setup_delay: "{{ node_setup_delay | default(120) }}"
-    add_nodes_by_serial: "{{ add_nodes_by_serial | default( partner_serial|default('4034389-06-2',true),true ) }}"
-
-- name: enforce minimum nics
-  set_fact:
-    vm_num_nics: 5
-  when: vm_num_nics|int <= 4
-
 # Now we can deploy the VM
 # use this version if the target is a cluster
 - name: '{{item}}: Deploy ovf file: {{ovf_file}}'
@@ -42,7 +23,7 @@
     cluster: '{{ vcenter_cluster }}'
     datastore: "{{ vm_datastore }}"
     name: "{{ item }}"
-    ovf:  "{{ ovf_file }}"
+    ovf: "{{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate.ovf"
     disk_provisioning: "{{vm_disk_provisioning}}"
     power_on: no
     networks: "{u'hostonly':u'{{ cluster_network }}',u'nat':u'{{ data_network }}'}"
@@ -65,7 +46,7 @@
     esxi_hostname: '{{esxi_hostname}}'
     datastore: "{{ vm_datastore }}"
     name: "{{ item }}"
-    ovf:  "{{ ovf_file }}"
+    ovf: "{{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate.ovf"
     disk_provisioning: "{{vm_disk_provisioning}}"
     power_on: no
     networks: "{u'hostonly':u'{{ cluster_network }}',u'nat':u'{{ data_network }}'}"
@@ -353,101 +334,6 @@
     wait_for_ip_address: false
   delegate_to: localhost
 
-- name: Wait for 10 seconds
-  wait_for: timeout=10
-  delegate_to: localhost
-
-- name: Press Space to interrupt autoboot
-  community.vmware.vmware_guest_sendkey:
-    <<: *esxi_login
-    name: "{{ node2_name }}"
-    keys_send: '{{item}}'
-  delegate_to: localhost
-  register: sendkeys_result
-  retries: 3
-  until: sendkeys_result is succeeded
-  loop: [ SPACE, SPACE, SPACE, SPACE, SPACE ]
-
-- name: configure loader variable via sendkeys
-  community.vmware.vmware_guest_sendkey:
-    <<: *esxi_login
-    name: "{{ node2_name }}"
-    keys_send: ENTER
-    string_send: "{{item}}"
-  delegate_to: localhost
-  register: sendkeys_result
-  retries: 3
-  until: sendkeys_result is succeeded
-  loop:
-    # Set Serial Number and Sysid
-    - "setenv SYS_SERIAL_NUM {{node2_serial}}"
-    - "setenv SYS_SERIAL_NUM {{node2_serial}}"
-    - "setenv bootarg.nvram.sysid {{node2_sysid}}"
-    # Enable dhcp for node_mgmt
-    - "setenv bootarg.init.dhcp.disable false"
-    # Ensure cluster lifs are auto-generated
-    - "setenv bootarg.init.auto_cluster_lif.disable false"
-    # Disable simulated disks
-    - "setenv bootarg.vm.sim.vdevinit false"
-    - "setenv bootarg.sim.vdevinit false"
-    - "setenv bootarg.srm.disk.simnames false"
-    - "setenv bootarg.srm.disk.simulated false"
-    # Enable virtual disks
-    - "setenv bootarg.srm.disk.config.pci true"
-    - "setenv bootarg.srm.virtual.adapter true"
-    - "setenv bootarg.vm.data_diskmodel vscsi"
-    # Set default raid type and checksum type
-    - "setenv bootarg.vm.raidtype RAID-DP"
-    - "setenv bootarg.vm.checksum_type block"
-    # ADP Settings
-    - "setenv root-uses-shared-disks? {{adp_enabled|default(adpv2_enabled|default('false'))}}"
-    - "setenv allow-root-data1-data2-partitions? {{adpv2_enabled|default('false')}}"
-    # Trigger an automatic option 4
-    - "setenv bootarg.bootmenu.allow_opts true"
-    - "setenv bootarg.bootmenu.args 4a"
-    - "setenv bootarg.init.initnextV2 true"
-    - "setenv bootarg.init.wipeclean true"
-    - "setenv bootarg.vm.ha true"
-    - "setenv bootarg.vm.ha_id 1"
-    - "setenv bootarg.ic_mac \"{{vm_num_nics+1}}:{{node1_icmac|default('00:50:56:3F:01:01')}}\""
-    - ""
-
-- name: enable fake-ssd
-  community.vmware.vmware_guest_sendkey:
-    <<: *esxi_login
-    name: "{{ node2_name }}"
-    keys_send: ENTER
-    string_send: "{{item}}"
-  delegate_to: localhost
-  register: sendkeys_result
-  retries: 3
-  until: sendkeys_result is succeeded
-  loop:
-    - "setenv wafl-idedupe-allow-lowend? true"
-    - "setenv allow-ssd-partitions? true"
-    - "setenv fake-ssd {{ ((((fake_ssd_disk_size)-1/9)*8/9)|int)-6}}"
-    - ""
-  when: fake_ssd_disk_size|default(0) != 0
-
-# This prevents duplicate sysids from being used when the role is called
-# multiple times within a playbook's tasks section.
-- name: clear nvram_sysid
-  set_fact:
-    nvram_sysid: ""
-
-- name: set extra bootargs
-  community.vmware.vmware_guest_sendkey:
-    <<: *esxi_login
-    name: "{{ node2_name }}"
-    keys_send: ENTER
-    string_send: "set {{item}}"
-  delegate_to: localhost
-  register: sendkeys_result
-  retries: 3
-  until: sendkeys_result is succeeded
-  loop: "{{bootargs}}"
-  when: bootargs is defined
-
 - name: Start Node 1
   community.vmware.vmware_guest:
     <<: *esxi_login
@@ -455,110 +341,6 @@
     state: poweredon
     wait_for_ip_address: false
   delegate_to: localhost
-
-- name: Wait for 10 seconds
-  wait_for: timeout=10
-  delegate_to: localhost
-
-- name: Press Space to interrupt autoboot
-  community.vmware.vmware_guest_sendkey:
-    <<: *esxi_login
-    name: "{{ node1_name }}"
-    keys_send: '{{item}}'
-  delegate_to: localhost
-  register: sendkeys_result
-  retries: 3
-  until: sendkeys_result is succeeded
-  loop: [ SPACE, SPACE, SPACE, SPACE, SPACE ]
-
-- name: configure loader variable via sendkeys
-  community.vmware.vmware_guest_sendkey:
-    <<: *esxi_login
-    name: "{{ node1_name }}"
-    keys_send: ENTER
-    string_send: "{{item}}"
-  delegate_to: localhost
-  register: sendkeys_result
-  retries: 3
-  until: sendkeys_result is succeeded
-  loop:
-    # Set Serial Number and Sysid
-    - "setenv SYS_SERIAL_NUM {{node1_serial}}"
-    - "setenv SYS_SERIAL_NUM {{node1_serial}}"
-    - "setenv bootarg.nvram.sysid {{node1_sysid}}"
-    # Enable dhcp for node_mgmt
-    - "setenv bootarg.init.dhcp.disable false"
-    # Ensure cluster lifs are auto-generated
-    - "setenv bootarg.init.auto_cluster_lif.disable false"
-    # Disable simulated disks
-    - "setenv bootarg.vm.sim.vdevinit false"
-    - "setenv bootarg.sim.vdevinit false"
-    - "setenv bootarg.srm.disk.simnames false"
-    - "setenv bootarg.srm.disk.simulated false"
-    # Enable virtual disks
-    - "setenv bootarg.srm.disk.config.pci true"
-    - "setenv bootarg.srm.virtual.adapter true"
-    - "setenv bootarg.vm.data_diskmodel vscsi"
-    # Set default raid type and checksum type
-    - "setenv bootarg.vm.raidtype RAID-DP"
-    - "setenv bootarg.vm.checksum_type block"
-    # ADP Settings
-    - "setenv root-uses-shared-disks? {{adp_enabled|default(adpv2_enabled|default('false'))}}"
-    - "setenv allow-root-data1-data2-partitions? {{adpv2_enabled|default('false')}}"
-    # Trigger an automatic option 4
-    - "setenv bootarg.bootmenu.allow_opts true"
-    - "setenv bootarg.bootmenu.args 4a"
-    - "setenv bootarg.init.initnextV2 true"
-    - "setenv bootarg.init.wipeclean true"
-    - "setenv bootarg.vm.ha true"
-    - "setenv bootarg.vm.ha_id 0"
-    - "setenv bootarg.ic_mac \"{{vm_num_nics+1}}:{{node2_icmac|default('00:50:56:3F:02:02')}}\""
-    - ""
-
-- name: enable fake-ssd
-  community.vmware.vmware_guest_sendkey:
-    <<: *esxi_login
-    name: "{{ node1_name }}"
-    keys_send: ENTER
-    string_send: "{{item}}"
-  delegate_to: localhost
-  register: sendkeys_result
-  retries: 3
-  until: sendkeys_result is succeeded
-  loop:
-    - "setenv wafl-idedupe-allow-lowend? true"
-    - "setenv allow-ssd-partitions? true"
-    - "setenv fake-ssd {{ ((((fake_ssd_disk_size)-1/9)*8/9)|int)-6}}"
-    - ""
-  when: fake_ssd_disk_size|default(0) != 0
-
-- name: boot_ontap
-  community.vmware.vmware_guest_sendkey:
-    <<: *esxi_login
-    name: "{{ node2_name }}"
-    keys_send: ENTER
-    string_send: "{{item}}"
-  delegate_to: localhost
-  register: sendkeys_result
-  retries: 3
-  until: sendkeys_result is succeeded
-  loop:
-    - "boot_ontap"
-    - "" # this is here to force the enter key after the preceding command
-
-- name: boot_ontap
-  community.vmware.vmware_guest_sendkey:
-    <<: *esxi_login
-    name: "{{ node1_name }}"
-    keys_send: ENTER
-    string_send: "{{item}}"
-  delegate_to: localhost
-  register: sendkeys_result
-  retries: 3
-  until: sendkeys_result is succeeded
-  loop:
-    - "boot_ontap"
-    - "" # this is here to force the enter key after the preceding command
 
 - name: Wait for VMware tools to become available
   community.vmware.vmware_guest_tools_wait:

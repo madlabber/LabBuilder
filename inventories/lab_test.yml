@@ -188,3 +188,80 @@ all:
           install_xrdp: true
           install_ansible: true
           nested_virtualization: true
+    vsims:
+      hosts:
+        vha-01:
+          state: force
+          ovf_version: "9.16.1"
+          ip_address:    192.168.0.141
+          cluster_name:    "vha"
+          cluster_mgmt_ip: 192.168.0.140
+          sys_serial_number: "408236-85-07"
+          add_nodes_by_serial: "408236-85-08"
+          bootargs:
+            - bootarg.vm.madlabber=true
+          extra_commands:
+            - sleep 180 # give nodes time to join
+            - node run vha-01 disk assign all
+            - node run vha-02 disk assign all
+            - storage aggregate create -aggregate aggr1 -diskcount 8 -node vha-01
+            - storage aggregate create -aggregate aggr2 -diskcount 8 -node vha-02
+          #update_package: files/9171RC1_v_image.tgz
+          #add_nodes_by_serial: "408236-85-08,408236-85-09,408236-85-10"
+        vha-02:
+          state: force
+          ovf_version: "9.16.1"
+          ip_address:    192.168.0.142
+          sys_serial_number: "408236-85-08"
+          #update_package: files/9171RC1_v_image.tgz
+        vscsi-01:
+          state: force
+          ovf_version: "9.16.1"
+          ip_address:    192.168.0.151
+          cluster_name:    "vscsi"
+          cluster_mgmt_ip: 192.168.0.150
+          sys_serial_number: "408236-85-07"
+          disk_model: "vscsi"
+          shelf0_disk_size: 4096
+          shelf0_disk_count: 12
+          # shelf1_disk_size: 1024
+          # shelf1_disk_count: 9
+          # shelf2_disk_size: 1096
+          # shelf2_disk_count: 9
+          # shelf3_disk_size: 1096
+          # shelf3_disk_count: 9
+          fake_ssd_disk_size: 4096
+          #add_nodes_by_serial: "408236-85-08"
+          # bootargs:
+          #   - bootarg.vm.madlabber=true
+          # extra_commands:
+          #   - sleep 180 # give nodes time to join
+          #   - node run vha-01 disk assign all
+          #   - node run vha-02 disk assign all
+          #   - storage aggregate create -aggregate aggr1 -diskcount 8 -node vha-01
+          #   - storage aggregate create -aggregate aggr2 -diskcount 8 -node vha-02
+          #update_package: files/9171RC1_v_image.tgz
+          #add_nodes_by_serial: "408236-85-08,408236-85-09,408236-85-10"
+        # vscsi-02:
+        #   state: force
+        #   ovf_version: "9.16.1"
+        #   ip_address:    192.168.0.142
+        #   sys_serial_number: "408236-85-08"
+        #   update_package: files/9171RC1_v_image.tgz
+        demo2-01:
+          partner:      "demo2-02"
+          cluster_name: "demo"
+          ovf_version:  "9.16.1"
+          #update_package: files/9171RC1_v_image.tgz
+          cluster_mgmt_ip: 192.168.0.160
+          ip_address:      192.168.0.161
+          partner_ip:      192.168.0.162
+          disk_model: "vscsi"
+          shelf0_disk_size: 4096
+          shelf0_disk_count: 12
+          shelf1_disk_size: 4096
+          shelf1_disk_count: 12
+          fake_ssd_disk_size: 4096
+          adp_enabled: "true"
+          sys_serial_number: "4082368-50-7"
+          partner_serial: "4034389-06-2"

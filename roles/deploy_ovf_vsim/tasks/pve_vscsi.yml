@@ -1,86 +1,3 @@
-- name: Create new VM 
-  community.proxmox.proxmox_kvm:
-    api_user: '{{ pve_username }}@pam'
-    api_password: '{{ pve_password }}'
-    api_host: '{{ pve_address }}'
-    state: present
-    name: '{{ vm_name|replace("_", "-") }}'
-    node: "{{ pve_node }}"
-    net: '{{ networks }}'
-      # net0: 'e1000,bridge={{ cluster_network }}'
-      # net1: 'e1000,bridge={{ cluster_network }}'
-      # net2: 'e1000,bridge={{ data_network }}'
-      # net3: 'e1000,bridge={{ data_network }}'
-    serial:
-      serial0: 'socket'
-      serial1: 'socket'
-    vga: serial0
-    cpu: host
-    sockets: '{{ vm_num_cpus|int }}'
-    vcpus: '{{ vm_num_cpus|int }}'
-    memory: '{{ vm_memory_mb |int}}'
-    agent: true
-    scsihw: virtio-scsi-pci
-  delegate_to: localhost
-  register: create_vm
-  retries: 3
-  delay: 10
-  until: create_vm is succeeded
-
-- debug: 
-    msg: "{{ create_vm.vmid }}"
-
-- name: Remove staging directory
-  file:
-    path: "{{ playbook_dir }}/files/{{vm_name}}"
-    state: absent
-  delegate_to: localhost
-
-- name: Creating a new staging directory
-  file:
-    path: "{{ playbook_dir }}/files/{{vm_name}}"
-    state: directory
-  delegate_to: localhost
-
-- name: Extract OVA
-  ansible.builtin.unarchive:
-    src: "{{ovf_file}}"
-    dest: "{{ playbook_dir }}/files/{{vm_name}}"
-  delegate_to: localhost
-
-- name: Check file naming
-  ansible.builtin.stat:
-    path: "{{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.vmdk"
-  delegate_to: localhost
-  register: file_check
-
-- name: Ensure file names align with modern conventions
-  shell:
-    cmd: "{{item}}"
-  delegate_to: localhost
-  with_items:
-    - "mv {{ playbook_dir }}/files/{{vm_name}}/*-disk1.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.vmdk"
-    - "mv {{ playbook_dir }}/files/{{vm_name}}/*-disk2.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk2.vmdk"
-    - "mv {{ playbook_dir }}/files/{{vm_name}}/*-disk3.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk3.vmdk"
-    - "mv {{ playbook_dir }}/files/{{vm_name}}/*-disk4.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk4.vmdk"
-  when: not file_check.stat.exists
-
-- name: Convert boot disk to raw
-  shell:
-    cmd: "qemu-img convert -f vmdk -O raw  {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.vmdk {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw"
-  delegate_to: localhost
-
-- name: Extract env file
-  shell:
-    cmd: "mcopy -n -i {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s ::/env/env {{ playbook_dir }}/files/{{vm_name}}/env"
-  delegate_to: localhost
-
-- name: Extract setup.ngsh file
-  shell:
-    cmd: "mcopy -n -i {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s ::/files/setup.ngsh {{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"
-  delegate_to: localhost
-  ignore_errors: true
-
 # - name: unsetenv
 #   ansible.builtin.lineinfile:
 #     path: "{{ playbook_dir }}/files/{{vm_name}}/env"
@@ -246,94 +163,41 @@
   when:
     - extra_commands is defined
 
-- name: inject env file
-  shell:
-    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s {{ playbook_dir }}/files/{{vm_name}}/env ::/env/env "
-  delegate_to: localhost
+- name: Close OVA
+  include_tasks: close_ova.yml
 
-- name: create fies directory on cfcard
-  shell:
-    cmd: "mmd -D s -i {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s ::/files"
+- name: Create new VM 
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: present
+    name: '{{ vm_name|replace("_", "-") }}'
+    node: "{{ pve_node }}"
+    net: '{{ networks }}'
+      # net0: 'e1000,bridge={{ cluster_network }}'
+      # net1: 'e1000,bridge={{ cluster_network }}'
+      # net2: 'e1000,bridge={{ data_network }}'
+      # net3: 'e1000,bridge={{ data_network }}'
+    serial:
+      serial0: 'socket'
+      serial1: 'socket'
+    vga: serial0
+    cpu: host
+    sockets: '{{ vm_num_cpus|int }}'
+    vcpus: '{{ vm_num_cpus|int }}'
+    memory: '{{ vm_memory_mb |int}}'
+    agent: true
+    scsihw: virtio-scsi-pci
   delegate_to: localhost
-  ignore_errors: true
+  register: create_vm
+  retries: 3
+  delay: 10
+  until: create_vm is succeeded
 
-- name: inject setup.ngsh file
-  shell:
-    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s {{ playbook_dir }}/files/{{vm_name}}/setup.ngsh ::/files/"
-  delegate_to: localhost
-
-- name: Creating a new staging directory
-  file:
-    path: "{{ playbook_dir }}/files/{{vm_name}}/image"
-    state: directory
-  delegate_to: localhost
-  when: update_package is defined
-  
-- name: Extract Update package
-  ansible.builtin.unarchive:
-    src: "{{update_package}}"
-    dest: "{{ playbook_dir }}/files/{{vm_name}}/image/"
-  delegate_to: localhost
-  when: update_package is defined
-
-- name: Copy package files into image
-  shell:
-    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s {{ playbook_dir }}/files/{{vm_name}}/image/netboot/{{item}} ::/x86_64/freebsd/image1/"
-  delegate_to: localhost
-  when: update_package is defined
-  with_items:
-  - BUILD
-  - CHECKSUM
-  - COMPAT.TXT
-  - INSTALL
-  - VERSION
-  - bsdboot.tgz
-  - cap.xml
-  - if_gve.ko
-  - if_vmx.ko
-  - if_vtnet.ko
-  - kernel
-  - kernel.csfc.sig
-  - kernel.sig
-  - key_fingerprint.csfc.sig
-  - key_fingerprint.sig
-  - metadata.xml
-  - mlx4.ko
-  - mlx4en.ko
-  - mlxen.ko
-  - mpt.ko
-  - netapp_vmx.ko
-  - nvdimm.ko
-  - platform.ko
-  - platform.ko.csfc.sig
-  - platform.ko.sig
-  - pmroot_late.tgz
-  - checksum.os
-  - platfs.img
-  - platfs.img.sig
-  - platfs.img.csfc.sig
-  - pvscsi.ko
-  - rootfs.img
-  - rootfs.img.csfc.sig
-  - rootfs.img.sig
-  - virtio.ko
-  - virtio_blk.ko
-  - virtio_pci.ko
-  - virtio_scsi.ko
-  - xenhvm.ko
-  # - fw.tgz
-  # - hv_ata_pci_disengage.ko
-  # - hv_netvsc.ko
-  # - hv_storvsc.ko
-  # - hv_utils.ko
-  # - hv_vmbus.ko
-  ignore_errors: true
-
-- name: Convert boot disk to vmdk
-  shell:
-    cmd: "qemu-img convert -f raw -O vmdk  {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.raw {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.vmdk"
-  delegate_to: localhost
-
+- debug: 
+    msg: "{{ create_vm.vmid }}"
+    
 - name: Copy disks to temporary storage
   copy:
     src: "{{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-{{item}}.vmdk"
@@ -565,15 +429,4 @@
   register: result
   until: result is succeeded
   ignore_errors: true
-
-# This prevents duplicate sysids from being used when the role is called
-# multiple times within a playbook's tasks section.
-- name: clear nvram_sysid
-  set_fact:
-    nvram_sysid: ""
-
-- name: Remove staging directory
-  file:
-    path: "{{ playbook_dir }}/files/{{vm_name}}"
-    state: absent
-  delegate_to: localhost
+  

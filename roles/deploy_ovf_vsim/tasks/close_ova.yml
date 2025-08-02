@@ -1,0 +1,54 @@
+
+- name: inject env file
+  shell:
+    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s {{ playbook_dir }}/files/{{item}}/env ::/env/env "
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+
+- name: create fies directory on cfcard
+  shell:
+    cmd: "mmd -D s -i {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s ::/files"
+  delegate_to: localhost
+  ignore_errors: true
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+
+- name: inject setup.ngsh file
+  shell:
+    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s {{ playbook_dir }}/files/{{item}}/setup.ngsh ::/files/"
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+
+- name: Convert boot disk to vmdk
+  shell:
+    cmd: "qemu-img convert -f raw -o subformat=streamOptimized -O vmdk  {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.raw {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.vmdk"
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+# To Do:
+# Generate clean ovf file for the VMware deployment workflow
+# Will have to accomodate diverging naming schemes eventually
+
+# The manifest does not appear to be required so we can skip this
+# - name: Create new manifest file
+#   shell:
+#     cmd: "{{item}}"
+#   delegate_to: localhost
+#   with_items:
+#     - echo "SHA1(vsim-NetAppDOT-simulate.ovf)= "$(\sha1sum {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate.ovf|cut -d' ' -f1) > {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate.md
+#     - echo "SHA1(vsim-NetAppDOT-simulate-disk1.vmdk)= "$(\sha1sum {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk1.vmdk|cut -d' ' -f1) >> {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate.md
+#     - echo "SHA1(vsim-NetAppDOT-simulate-disk2.vmdk)= "$(\sha1sum {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk2.vmdk|cut -d' ' -f1) >> {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate.md
+#     - echo "SHA1(vsim-NetAppDOT-simulate-disk3.vmdk)= "$(\sha1sum {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk3.vmdk|cut -d' ' -f1) >> {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate.md
+#     - echo "SHA1(vsim-NetAppDOT-simulate-disk4.vmdk)= "$(\sha1sum {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-disk4.vmdk|cut -d' ' -f1) >> {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate.md
+#     - echo "" >> {{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate.md
+
