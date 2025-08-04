@@ -155,12 +155,6 @@
     vdevinit: "{{ vdevinit }},{{ shelf3_type }}:{{ shelf3_qty|default(14,true) }}:3"
   when: shelf3_type|default("") != ""
 
-# - name: final vdevinit
-#   debug:
-#     msg: 
-#       - "vdevinit: {{vdevinit}}"
-# - meta: end_host
-
 - name: set partner identifiers
   set_fact:
     node1_name:   "{{ vm_name }}"

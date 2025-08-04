@@ -162,7 +162,7 @@
     # Set HA bootargs
     - bootarg.vm.ha=true
     - bootarg.vm.ha_id=0
-    - bootarg.ic_mac="{{vm_num_nics+1}}:{{node2_icmac|default('00:50:56:3F:02:02')}}"
+    - bootarg.ic_mac="{{ vm_num_nics|int + 1 }}:{{node2_icmac|default('00:50:56:3F:02:02')}}"
   when: 
     - partner_name != ""
     - node_name == vm_name
@@ -177,7 +177,7 @@
     # Set HA bootargs
     - bootarg.vm.ha=true
     - bootarg.vm.ha_id=1
-    - bootarg.ic_mac="{{vm_num_nics+1}}:{{node1_icmac|default('00:50:56:3F:02:02')}}"
+    - bootarg.ic_mac="{{ vm_num_nics|int + 1 }}:{{node1_icmac|default('00:50:56:3F:01:01')}}"
   when: 
     - partner_name != ""
     - node_name == partner_name

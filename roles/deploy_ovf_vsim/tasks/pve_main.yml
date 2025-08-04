@@ -20,9 +20,6 @@
 - name: install update
   include_tasks: install_update.yml
 
-- name: Create setup.ngsh
-  include_tasks: create_setup_ngsh.yml
-
 - name: Set bootargs
   include_tasks: set_bootargs.yml
   when: node_name != ''
@@ -31,6 +28,9 @@
   loop:
     - "{{vm_name}}"
     - "{{partner_name}}"
+    
+- name: Create setup.ngsh
+  include_tasks: create_setup_ngsh.yml
 
 - name: update OVA
   include_tasks: update_ova.yml
