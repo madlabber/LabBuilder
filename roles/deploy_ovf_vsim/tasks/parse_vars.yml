@@ -183,4 +183,6 @@
   when: 
     - vm_num_nics|int <= 4
     - partner_name|default("") != ""
+
+
     

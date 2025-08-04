@@ -2,6 +2,12 @@
 ovf_version: "9.12.1"
 ovf_file:    "{{ role_path }}/files/vsim-netapp-DOT{{ ovf_version }}-cm_nodar.ova"
 
+# Host type
+host_type: "vmw" # vmw | pve
+
+# Checksum Type
+checksum_type: "block" # block | zoned
+
 # Default action is to create.  
 state: "present"
 force: no
@@ -20,6 +26,13 @@ add_nodes_delay: 60       # seconds to wait between cluster setup and adding nod
 # vcenter_datacenter: "Datacenter"
 # vcenter_cluster: "Cluster"
 # vm_datastore: "datastore1"
+vcenter_address: ""
+
+# ESX variables:
+esxi_address: ""
+
+# Proxmox Variables
+pve_address: ""
 
 # Virtual Machine configuration
 vm_name:         "SimulateONTAP"

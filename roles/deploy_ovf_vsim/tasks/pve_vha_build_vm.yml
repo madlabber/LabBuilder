@@ -1,0 +1,110 @@
+- name: Create new VM 
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: present
+    name: '{{ vm_name|replace("_", "-") }}'
+    node: "{{ pve_node }}"
+    net: '{{ networks }}'
+      # net0: 'e1000,bridge={{ cluster_network }}'
+      # net1: 'e1000,bridge={{ cluster_network }}'
+      # net2: 'e1000,bridge={{ data_network }}'
+      # net3: 'e1000,bridge={{ data_network }}'
+    serial:
+      serial0: 'socket'
+      serial1: 'socket'
+    vga: serial0
+    cpu: host
+    sockets: '{{ vm_num_cpus|int }}'
+    vcpus: '{{ vm_num_cpus|int }}'
+    memory: '{{ vm_memory_mb |int}}'
+    agent: true
+  delegate_to: localhost
+  register: create_vm
+  retries: 3
+  delay: 10
+  until: create_vm is succeeded
+
+- debug: 
+    msg: "{{ create_vm.vmid }}"
+
+- name: Copy disks to temporary storage
+  copy:
+    src: "{{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-{{item}}.vmdk"
+    dest: "{{ import_path }}/{{ vm_name }}-{{item}}.vmdk"
+  delegate_to: temp_host
+  loop:
+    - disk1
+    - disk2
+    - disk3
+    - disk4
+
+- name: import disks
+  shell:  
+    cmd: "qm disk import {{ create_vm.vmid }} {{ import_path }}/{{ vm_name }}-{{item}}.vmdk {{vm_datastore}} --format raw"
+  delegate_to: temp_host
+  loop:
+    - disk1
+    - disk2
+    - disk3
+    - disk4
+
+- name: Attach disks
+  shell:  
+    cmd: "qm set {{ create_vm.vmid }} --ide{{item}} file={{vm_datastore}}:vm-{{create_vm.vmid}}-disk-{{item}}"
+  delegate_to: temp_host
+  loop:
+   - 0
+   - 1
+   - 2
+   - 3
+
+- name: Remove disks from temporary storage
+  ansible.builtin.file:
+    path: "{{ import_path }}/{{ vm_name }}-{{item}}.vmdk"
+    state: absent
+  delegate_to: temp_host
+  loop:
+    - disk1
+    - disk2
+    - disk3
+    - disk4
+
+# This disk is large and empty so it is faster to make a new one
+# - name: Create IDE3 (simdisks)
+#   community.proxmox.proxmox_disk:
+#     api_user: '{{ pve_username }}@pam'
+#     api_password: '{{ pve_password }}'
+#     api_host: '{{ pve_address }}'
+#     vmid: "{{ create_vm.vmid }}"
+#     # name: '{{ vm_name|replace("_", "-") }}'
+#     disk: ide3
+#     storage: "{{vm_datastore}}"
+#     size: 250
+#     create: forced
+#     state: present
+#   delegate_to: localhost
+#   retries: 3
+#   delay: 10
+#   register: result
+#   until: result is succeeded
+
+- name: Set boot order
+  shell:  
+    cmd: "qm set {{ create_vm.vmid }} --bootdisk ide0 --boot order=ide0"
+  delegate_to: temp_host
+
+- name: Start VM
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: started
+    name: '{{ vm_name|replace("_", "-") }}'
+  delegate_to: localhost
+  retries: 3
+  delay: 10
+  register: result
+  until: result is succeeded
+  ignore_errors: true

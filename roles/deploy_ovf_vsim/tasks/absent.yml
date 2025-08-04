@@ -1,0 +1,11 @@
+# Remove VM(s) if state==absent or state==forced
+- name: remove vm (vmw)
+  include_tasks: vmw_absent.yml
+  when: 
+    - vcenter_address|default(esxi_address|default('')) != ''
+    - pve_address|default('') == ''
+
+- name: remove vm (pve)
+  include_tasks: pve_absent.yml
+  when:
+    - pve_address|default('') != ''

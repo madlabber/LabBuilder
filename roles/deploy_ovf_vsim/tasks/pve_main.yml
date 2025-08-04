@@ -7,41 +7,44 @@
     ansible_user: '{{ pve_username }}'
     ansible_password: '{{ pve_password }}'
     ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
-    
-- name: remove if absent or forced
-  include_tasks: pve_absent.yml
-  when: state == "absent" or state == "force"
 
 - name: parse vars
   include_tasks: parse_vars.yml
-  when: state == "absent" or state == "force"
 
 - name: parse pve vars
   include_tasks: pve_parse_vars.yml
-  when: state == "absent" or state == "force"
 
 - name: open OVA
   include_tasks: open_ova.yml
-  when: 
-    - state == "present" or state == "force"
 
 - name: install update
   include_tasks: install_update.yml
-  when: 
-    - state == "present" or state == "force"
 
-- name: disk_model vha
-  include_tasks: pve_vha.yml
-  when: 
-    - disk_model|default("vha") == "vha"
-    - state == "present" or state == "force"
+- name: Create setup.ngsh
+  include_tasks: create_setup_ngsh.yml
 
-- name: disk_model vscsi
-  include_tasks: pve_vscsi.yml
+- name: Set bootargs
+  include_tasks: set_bootargs.yml
+  when: node_name != ''
+  loop_control:
+    loop_var: node_name
+  loop:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+
+- name: update OVA
+  include_tasks: update_ova.yml
+
+- name: Build VM (vha)
+  include_tasks: pve_vha_build_vm.yml
   when: 
-    - disk_model|default("vha") == "vscsi"
-    - partner_name|default("") == ""
-    - state == "present" or state == "force"
+    - disk_model == "vha"
+
+- name: Build VM (vscsi)
+  include_tasks: pve_vscsi_build_vm.yml
+  when: 
+    - disk_model == "vscsi"
+    - partner_name == ""
 
 - name: cleanup
   include_tasks: cleanup.yml

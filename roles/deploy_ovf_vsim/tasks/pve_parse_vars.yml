@@ -1,3 +1,8 @@
+- name: set pve vars
+  set_fact:
+    host_type: "pve"
+    checksum_type: "zoned"
+
 # Well this is awkward
 - name: Add Network Adapters
   set_fact:

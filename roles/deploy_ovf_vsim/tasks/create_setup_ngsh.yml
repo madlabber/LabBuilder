@@ -61,29 +61,6 @@
     - security login create -username admin -application ssh -authmethod password
   when: partner_name != ''
 
-
-# - name: Script partner node setup
-#   ansible.builtin.lineinfile:
-#     path: "{{ playbook_dir }}/files/{{partner_name}}/setup.ngsh"
-#     line: "ngsh -c '{{item}}'"
-#   delegate_to: localhost
-#   with_items:
-#     # Wait for cluster lif creation
-#     - set diagnostic; system node wait-for-cluster-lif-setup
-#     # Set the nodename
-#     - system node rename -newname {{ partner_name }}
-#     # Ensure ports e0c/e0d land in the Default ipspace
-#     - network port modify -node {{ partner_name }} -port e0c -ipspace Default
-#     - network port modify -node {{ partner_node_name }} -port e0d -ipspace Default
-#     # Create node management lif
-#     - network interface create -lif mgmt1 -role node-mgmt -home-node {{ partner_node_name }} -home-port e0c -status-admin up -address {{ node2_mgmt_ip }} -netmask {{ ontap_netmask }}
-#     # Create default route
-#     - network route create -gateway {{ontap_gateway}} -vserver Default -metric 20
-#     # Set the admin password
-#     - security login password -username admin -new-password {{ ontap_password }}
-#     - security login create -username admin -application ssh -authmethod password
-#   When: partner_name != ''
-
 - name: Script Cluster Setup
   ansible.builtin.lineinfile:
     path: "{{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"

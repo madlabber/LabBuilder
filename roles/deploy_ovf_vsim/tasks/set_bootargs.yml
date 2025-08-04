@@ -1,0 +1,192 @@
+- name: unsetenv
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    state: absent
+    regexp: '^setenv {{item}} .*$'
+  delegate_to: localhost
+  with_items: '{{unsetenv}}'
+  when: 
+    - unsetenv is defined
+    - unsetenv != ''
+
+- name: set common bootargs
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    # VMware mode by default
+    - bootarg.vm.run_vmtools="true"
+    - console="vidconsole,comconsole"
+    # set the node's unique identifiers
+    - SYS_SERIAL_NUM="{{sys_serial_number}}"
+    - bootarg.nvram.sysid="{{nvram_sysid}}"
+    # set automatic 4a
+    - bootarg.bootmenu.allow_opts="true"
+    - bootarg.bootmenu.args="4a"
+    # Old method for automating 4a
+    #- bootarg.init.initnextV2="true"
+    #- bootarg.init.wipeclean="true"
+    # make the node discoverable on the cluster network
+    - bootarg.init.auto_cluster_lif.disable="false"
+    # disable dhcp for node_mgmt to prevent mgmt_auto lif creation
+    - bootarg.init.dhcp.disable="true"
+    # Enable the setup.ngsh script
+    - bootarg.setup.auto.internal="true"
+    - bootarg.setup.auto.file="/cfcard/files/setup.ngsh"
+    - bootarg.setup.auto="true"
+    # Configure consule verbosity
+    - boot_verbose="{{(not console_muted)|lower}}"
+    - bootarg.init.console_muted="{{console_muted|lower}}"
+
+- name: set partner bootargs
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    # set the node's unique identifiers
+    - SYS_SERIAL_NUM="{{node2_serial}}"
+    - bootarg.nvram.sysid="{{node2_sysid}}"
+  when: 
+    - partner_name != ""
+    - node_name == partner_name
+
+- name: set pve bootargs
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    # Don't run VMware tool on PVE  
+    - bootarg.vm.run_vmtools="false"
+    # Use serial console on PVE
+    - console="comconsole,vidconsole"
+  when: 
+    - host_type == "pve"
+
+- name: Set VHA bootargs
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    # configure the simulated disk shelves
+    - bootarg.vm.sim.vdevinit="{{vdevinit}}"
+    - bootarg.sim.vdevinit="{{vdevinit}}"  
+  when:
+    - disk_model == "vha"
+
+- name: Set vSCSI bootargs
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    # Disable simulated disks
+    - bootarg.vm.sim.vdevinit=false
+    - bootarg.sim.vdevinit=false
+    - bootarg.srm.disk.simnames=false
+    - bootarg.srm.disk.simulated=false
+    # Enable virtual disks
+    - bootarg.srm.disk.config.pci=true
+    - bootarg.srm.virtual.adapter=true
+    - bootarg.vm.data_diskmodel=vscsi
+    # Set default raid type and checksum type
+    - bootarg.vm.raidtype=RAID-DP
+    - bootarg.vm.checksum_type={{checksum_type}}
+    # ADP Settings
+    - root-uses-shared-disks?={{adp_enabled|default('false')}}
+    - allow-root-data1-data2-partitions?={{adpv2_enabled|default('false')}}
+  when: 
+    - disk_model == "vscsi"
+
+- name: Set KVM bootargs
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    # Twist all the kvm knobs
+    - bootarg.vm=true
+    - bootarg.vm.kvm=true
+    - bootarg.vm.qemu=true
+    - bootarg.vm.virtio_load=true
+  when: 
+    - disk_model == "vscsi"
+    - host_type == "pve"
+
+- name: enable fake-ssd for block checksum
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    - wafl-idedupe-allow-lowend?=true
+    - allow-ssd-partitions?=true
+    # This formula works for block checksum
+    - fake-ssd={{ ((((fake_ssd_disk_size)-1/9)*8/9)|int)-6}}
+  when: 
+    - fake_ssd_disk_size|default(0) != 0
+    - checksum_type == "block"
+
+- name: enable fake-ssd for zoned checksum
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    - wafl-idedupe-allow-lowend?=true
+    - allow-ssd-partitions?=true
+    # This formula works for zoned checksum
+    - fake-ssd={{ (((fake_ssd_disk_size)-1/9)|int)-6}}
+  when: 
+    - fake_ssd_disk_size|default(0) != 0
+    - checksum_type == "zoned"
+
+- name: Configure HA on node 1
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    # Set HA bootargs
+    - bootarg.vm.ha=true
+    - bootarg.vm.ha_id=0
+    - bootarg.ic_mac="{{vm_num_nics+1}}:{{node2_icmac|default('00:50:56:3F:02:02')}}"
+  when: 
+    - partner_name != ""
+    - node_name == vm_name
+
+- name: Configure HA on node 2
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    # Set HA bootargs
+    - bootarg.vm.ha=true
+    - bootarg.vm.ha_id=1
+    - bootarg.ic_mac="{{vm_num_nics+1}}:{{node1_icmac|default('00:50:56:3F:02:02')}}"
+  when: 
+    - partner_name != ""
+    - node_name == partner_name
+
+- name: set extra bootargs
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items: "{{bootargs}}"
+  when: bootargs is defined

@@ -6,6 +6,10 @@
 
 - name: Remove staging directory
   file:
-    path: "{{ playbook_dir }}/files/{{vm_name}}"
+    path: "{{ playbook_dir }}/files/{{item}}"
     state: absent
   delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
