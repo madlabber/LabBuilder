@@ -311,7 +311,7 @@
 
 - name: Build ONTAP Simulator from OVA on VMware
   hosts: vsims
-  strategy: free # this strategy isn't working on PVE
+  #strategy: free # this strategy isn't working on PVE
   gather_facts: false
   vars_files:
     - defaults/main.yml
@@ -328,6 +328,8 @@
         data_network:    "{{ lab_lan1_portgroup }}"
         cluster_network: "{{ lab_lan2_portgroup | default(lab_lan1_portgroup) }}"
         # node setup vars
+        node_name:          "{{ inventory_hostname }}"
+        partner_node_name:  "{{ partner|default('') }}"
         ontap_node_mgmt_ip: "{{ ip_address }}"
         ontap_netmask:      "{{ lab_lan1_netmask }}"
         ontap_gateway:      "{{ lab_lan1_gateway }}"
