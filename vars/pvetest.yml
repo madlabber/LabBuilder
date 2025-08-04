@@ -1,52 +1,29 @@
-# If there is no vcenter, use the esxi host crendentials
-# to complete the vcenter variables
-# vcenter_address: 192.168.123.20
-# vcenter_username: administrator@vsphere.local
-# vcenter_password: P@ssw0rd
+# Configuration Variables for Proxmox Environments
 
-# # If there is no vcenter, use 'ha-datacenter'
-# vcenter_datacenter: Datacenter
-
-# Default cluster for new VM provisioning
-# if there is no cluster set it to ""
-# vcenter_cluster: "Cluster"
-# cluster_hosts:
-#   - 192.168.123.48
-
-# Credentials for a host with access to the datastore
-# Used when ISOs are missing from the ISO datastore
-# esxi_address: 192.168.123.48
-# esxi_username: root
-# esxi_password: P@ssw0rd
-
-# If there is a vcenter, this must match the host's name in vcenter inventory
-# if there is no vcenter, the name can be the IP address
-# esxi_hostname: "192.168.123.48"
+# In the current implementation deployments
+# target a specific proxmox node defined below:
 pve_node: pve51
 pve_address: 192.168.123.51
 pve_username: root
 pve_password: P@ssw0rd
 
-# Default datastore for new VMs
+# Default storage location for new VMs
 vm_datastore: "Local-LVM"
 
-# Default datastore for ISO files
-iso_datastore: local
-iso_path: /var/lib/vz/template/iso
+# Default iso location
+# iso_datastore: local
+# iso_path: /var/lib/vz/template/iso
+iso_datastore: pve_nfs01
+iso_path: /mnt/pve/pve_nfs01/template/iso
+
+# Default import location
+import_datastore: local
+import_path: /var/lib/vz/import
 
 # Default portgroup for new VMs
 vm_network: "vmbr0"
 
-# Default vswitch for new portgroups
-# esxi_vswitch: "vSwitch1"
-
-# uncomment to test ESX target mode
-# vcenter_address: 192.168.123.48
-# vcenter_username: root
-# vcenter_password: P@ssw0rd
-# vcenter_datacenter: 'ha-datacenter'
-# vcenter_cluster: ""
-
+# This section is not currently implementated:
 # VLAN Pool for building lab pod portgroups
 # vlan_start: 1000
 # vlan_count: 1000

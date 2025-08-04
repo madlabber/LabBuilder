@@ -62,7 +62,7 @@ all:
         sgws-storage2:
           ip_address: 192.168.123.172
           node_type: "VM_Storage_Node"
-        sgws-storage2:
+        sgws-storage3:
           ip_address: 192.168.123.173
           node_type: "VM_Storage_Node"
 

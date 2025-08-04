@@ -189,14 +189,14 @@ all:
             - node run vha-02 disk assign all
             - storage aggregate create -aggregate aggr1 -diskcount 8 -node vha-01
             - storage aggregate create -aggregate aggr2 -diskcount 8 -node vha-02
-          update_package: files/9171RC1_v_image.tgz
+          #update_package: files/9171RC1_v_image.tgz
           #add_nodes_by_serial: "408236-85-08,408236-85-09,408236-85-10"
         vha-02:
           state: force
           ovf_version: "9.16.1"
           ip_address:    192.168.0.142
           sys_serial_number: "408236-85-08"
-          update_package: files/9171RC1_v_image.tgz
+          #update_package: files/9171RC1_v_image.tgz
         # vha-03:
         #   ovf_version: "9.9.1"
         #   ip_address:    192.168.0.143
