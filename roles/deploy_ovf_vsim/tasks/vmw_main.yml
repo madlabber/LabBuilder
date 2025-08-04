@@ -2,8 +2,8 @@
 - name: parse vars
   include_tasks: parse_vars.yml
 
-- name: open OVA
-  include_tasks: open_ova.yml
+- name: extract OVA
+  include_tasks: extract_ova.yml
 
 - name: install update
   include_tasks: install_update.yml

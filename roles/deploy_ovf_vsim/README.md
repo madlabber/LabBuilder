@@ -103,7 +103,7 @@ Default Configuration(s)
 ------------------------  
 This role does some adjustments to the default config from NetApp:
   * Default storage config:
-    * Populating the first 2 shelfs, resulting in 28 total drives
+    * Populating the first 2 shelves, resulting in 28 total drives
     * Leveraging 4 GB FCAL style drives
   * Expanded `aggr0` & `vol0` 
 
