@@ -17,3 +17,8 @@ default_networks:
   - name: "{{ vm_network }}"
     device_type: vmxnet3
 serial_ports: false
+
+# blank host addresses
+pve_address: ""
+esxi_address: ""
+vcenter_address: ""

@@ -1,5 +1,0 @@
-- name: upload install iso
-  include_tasks: upload_install_iso.yml
-
-- name: Build VM
-  include_tasks: build_vm.yml

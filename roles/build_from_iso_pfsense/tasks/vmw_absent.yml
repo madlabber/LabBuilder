@@ -1,0 +1,38 @@
+---
+- name: map login variables
+  set_fact:
+    vcenter_address: "{{ esxi_address }}"
+    vcenter_username: "{{ esxi_username }}"
+    vcenter_password: "{{ esxi_password }}"
+    vcenter_datacenter: "ha-datacenter"
+  delegate_to: localhost
+  when: vcenter_address == ''
+  
+- name: remove if absent or forced
+  vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: '{{ partner_name }}'
+    state: absent
+    force: yes
+  delegate_to: localhost
+  when: 
+    - state == "absent" or state == "force"
+    - partner_name|default("") != ""
+
+- name: remove if absent or forced
+  vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: '{{ vm_name }}'
+    state: absent
+    force: yes
+  delegate_to: localhost
+  when: state == "absent" or state == "force"
+
+# - meta: end_host
+#   when: state == "absent"

@@ -7,9 +7,9 @@
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
     net:
-      net0: 'virtio,bridge={{ vm_network }}'
+      net0: 'virtio,bridge={{ pve_vm_network }}'
     sata:
-      sata0: '{{vm_datastore}}:{{ vm_disk_gb |int }}'
+      sata0: '{{pve_vm_datastore}}:{{ vm_disk_gb |int }}'
     ide:
       ide1: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
       ide2: "{{iso_datastore}}:iso/{{config_iso}},media=cdrom"

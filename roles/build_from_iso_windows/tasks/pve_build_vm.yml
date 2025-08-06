@@ -7,9 +7,9 @@
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
     net:
-      net0: 'e1000,bridge={{ vm_network }}'
+      net0: 'e1000,bridge={{ pve_vm_network }}'
     sata:
-      sata0: '{{vm_datastore}}:{{ vm_disk_gb |int }}'
+      sata0: '{{pve_vm_datastore}}:{{ vm_disk_gb |int }}'
     ide:
       ide1: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
       ide2: "{{iso_datastore}}:iso/{{config_iso}},media=cdrom"
@@ -32,6 +32,11 @@
     media: cdrom
     iso_image: "{{iso_datastore}}:iso/{{install_iso}}"
   delegate_to: localhost
+  retries: 3
+  delay: 10
+  register: attach_install_iso
+  until: attach_install_iso is succeeded
+  ignore_errors: true
 
 - name: Attach Config ISO
   community.general.proxmox_disk:
@@ -44,6 +49,11 @@
     media: cdrom
     iso_image: "{{iso_datastore}}:iso/{{config_iso}}"
   delegate_to: localhost
+  retries: 3
+  delay: 10
+  register: attach_config_iso
+  until: attach_config_iso is succeeded
+  ignore_errors: true
 
 - name: Start VM
   community.general.proxmox_kvm:

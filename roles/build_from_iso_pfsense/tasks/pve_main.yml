@@ -7,6 +7,12 @@
     ansible_password: '{{ pve_password }}'
     ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 
+- name: pve substitutions
+  set_fact:
+    pve_vm_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_vm_network_wan: "{{ network_substitutions[vm_network_wan]|default(vm_network_wan) }}"
+    pve_vm_network_lan: "{{ network_substitutions[vm_network_lan]|default(vm_network_lan) }}"
+
 - name: Upload install ISO
   include_tasks: pve_upload_install_iso.yml
 
@@ -19,10 +25,10 @@
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
     net:
-      net0: 'e1000,bridge={{vm_network_wan}}'
-      net1: 'e1000,bridge={{vm_network_lan}}'
+      net0: 'e1000,bridge={{pve_vm_network_wan}}'
+      net1: 'e1000,bridge={{pve_vm_network_lan}}'
     virtio:
-      virtio0: '{{vm_datastore}}:{{ vm_disk_gb |int }}'
+      virtio0: '{{pve_vm_datastore}}:{{ vm_disk_gb |int }}'
     ide:
       ide2: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
     cores: 1

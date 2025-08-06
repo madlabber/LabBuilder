@@ -7,10 +7,10 @@
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
     net: '{{ networks }}'
-      # net0: 'e1000,bridge={{ cluster_network }}'
-      # net1: 'e1000,bridge={{ cluster_network }}'
-      # net2: 'e1000,bridge={{ data_network }}'
-      # net3: 'e1000,bridge={{ data_network }}'
+      # net0: 'e1000,bridge={{ pve_cluster_network }}'
+      # net1: 'e1000,bridge={{ pve_cluster_network }}'
+      # net2: 'e1000,bridge={{ pve_data_network }}'
+      # net3: 'e1000,bridge={{ pve_data_network }}'
     serial:
       serial0: 'socket'
       serial1: 'socket'
@@ -42,7 +42,7 @@
 
 - name: import disks
   shell:  
-    cmd: "qm disk import {{ create_vm.vmid }} {{ import_path }}/{{ vm_name }}-{{item}}.vmdk {{vm_datastore}} --format raw"
+    cmd: "qm disk import {{ create_vm.vmid }} {{ import_path }}/{{ vm_name }}-{{item}}.vmdk {{pve_datastore}} --format raw"
   delegate_to: temp_host
   loop:
     - disk1
@@ -52,7 +52,7 @@
 
 - name: Attach disks
   shell:  
-    cmd: "qm set {{ create_vm.vmid }} --ide{{item}} file={{vm_datastore}}:vm-{{create_vm.vmid}}-disk-{{item}}"
+    cmd: "qm set {{ create_vm.vmid }} --ide{{item}} file={{pve_datastore}}:vm-{{create_vm.vmid}}-disk-{{item}}"
   delegate_to: temp_host
   loop:
    - 0
@@ -80,7 +80,7 @@
 #     vmid: "{{ create_vm.vmid }}"
 #     # name: '{{ vm_name|replace("_", "-") }}'
 #     disk: ide3
-#     storage: "{{vm_datastore}}"
+#     storage: "{{pve_datastore}}"
 #     size: 250
 #     create: forced
 #     state: present

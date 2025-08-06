@@ -12,3 +12,8 @@
     vm_password_new: "{{vm_password | default('P@ssw0rd') }}"
     config_iso:      "{{vm_name}}-ks.iso"
 
+- name: pve substitutions
+  set_fact:
+    pve_vm_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
+  when: pve_address != ''

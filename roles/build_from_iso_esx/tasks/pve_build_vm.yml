@@ -14,10 +14,10 @@
       efitype: 4m
       pre_enrolled_keys: 1
     net:
-      net0: 'vmxnet3,bridge={{ vm_network }}'
-      net1: 'vmxnet3,bridge={{ vm_network }}'
+      net0: 'vmxnet3,bridge={{ pve_vm_network }}'
+      net1: 'vmxnet3,bridge={{ pve_vm_network }}'
     sata:
-      sata0: '{{vm_datastore}}:{{ vm_disk_gb |int }}'
+      sata0: '{{pve_vm_datastore}}:{{ vm_disk_gb |int }}'
       # sata5: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
       # sata4: "{{iso_datastore}}:iso/{{config_iso}},media=cdrom"
     ide:

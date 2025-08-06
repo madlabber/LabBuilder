@@ -1,0 +1,48 @@
+- name: Remove staging directory
+  file:
+    path: "{{ playbook_dir }}/files/{{item}}"
+    state: absent
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+
+- name: Creating a new staging directory
+  file:
+    path: "{{ playbook_dir }}/files/{{item}}"
+    state: directory
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+
+- name: Extract OVA
+  ansible.builtin.unarchive:
+    src: "{{ovf_file}}"
+    dest: "{{ playbook_dir }}/files/{{item}}"
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+
+- name: Check file naming
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/{{disk_name}}.vmdk"
+  delegate_to: localhost
+  register: file_check
+
+- name: Convert boot disk to raw
+  shell:
+    cmd: "qemu-img convert -f vmdk -O raw  {{ playbook_dir }}/files/{{item}}/{{disk_name}}.vmdk {{ playbook_dir }}/files/{{item}}/{{disk_name}}.raw"
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+
+- name: Extract env file
+  shell:
+    cmd: "mcopy -n -i {{ playbook_dir }}/files/{{item}}/{{disk_name}}.raw@@66528s ::/env/env {{ playbook_dir }}/files/{{item}}/env"
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"

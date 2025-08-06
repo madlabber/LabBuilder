@@ -1,0 +1,27 @@
+
+- name: inject env file
+  shell:
+    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{item}}/{{disk_name}}.raw@@66528s {{ playbook_dir }}/files/{{item}}/env ::/env/env "
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+
+# - name: create fies directory on cfcard
+#   shell:
+#     cmd: "mmd -D s -i {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s ::/files"
+#   delegate_to: localhost
+#   ignore_errors: true
+#   when: item != ''
+#   with_items:
+#     - "{{vm_name}}"
+
+- name: Convert boot disk to vmdk
+  shell:
+    cmd: "qemu-img convert -f raw -o subformat=streamOptimized -O vmdk  {{ playbook_dir }}/files/{{item}}/{{disk_name}}.raw {{ playbook_dir }}/files/{{item}}/{{disk_name}}.vmdk"
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+
+

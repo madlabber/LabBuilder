@@ -1,0 +1,64 @@
+- debug: 
+    msg:
+      - "****************************************"
+      - "* This component is not yet functional *"
+      - "*          on Proxmox hosts            *"
+      - "****************************************"
+
+- name: Add PVE Host to Dynamic Inventory
+  add_host:
+    hostname: temp_host
+    group: "temp_hosts"
+    ansible_host: '{{ pve_address }}'
+    ansible_user: '{{ pve_username }}'
+    ansible_password: '{{ pve_password }}'
+    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+
+- name: set pve vars
+  set_fact:
+    host_type: "pve"
+    checksum_type: "zoned"
+
+- name: pve substitutions
+  set_fact:
+    pve_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
+#    pve_cluster_network: "{{ network_substitutions[cluster_network]|default(cluster_network) }}"
+
+# locate OVF File
+- name: locate ovf file - {{ovf_file}}
+  include_tasks: locate_ovf_file.yml
+
+# Extract OVF file
+- name: extract OVA
+  include_tasks: extract_ova.yml
+
+# Set KVM bootargs
+- name: set bootargs
+  include_tasks: pve_bootargs.yml
+
+# Update OVF files
+- name: update OVA
+  include_tasks: update_ova.yml
+
+# Generate sdot config
+- name: create config file
+  include_tasks: create_config_file.yml
+
+# create config ISO
+# upload config iso to host
+- name: create config iso
+  include_tasks: pve_create_config_iso.yml
+
+# upload raw image to host
+- name: upload disk
+  include_tasks: pve_upload_disk.yml
+
+# build VM
+
+# start VM
+
+# # Cleanup
+# - name: cleanup
+#   include_tasks: cleanup.yml
+

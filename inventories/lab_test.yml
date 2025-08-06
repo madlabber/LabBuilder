@@ -3,7 +3,6 @@ all:
   vars:
     lab_name: lab_test
     lab_prefix: "{{ lab_name }}_"
-    lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
     lab_vm_datastore: "{{ lab_name }}"
     lab_wan_portgroup: "{{ vm_network }}"
@@ -20,6 +19,7 @@ all:
     pfsense:
       hosts:
         gateway:
+          state: force
           #ip_address: 192.168.0.1
           vm_network_wan: "{{lab_wan_portgroup}}"
           vm_network_lan: "{{lab_lan1_portgroup}}"
@@ -38,6 +38,12 @@ all:
             - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
     winservers:
       hosts:
+        server2022:
+          ip_address: 192.168.0.22
+          version: "Server2019eval"
+          vm_memory_mb: 2048
+          vm_num_cpus: 2
+          vm_disk_gb: 40
         server2019:
           ip_address: 192.168.0.12
           version: "Server2019eval"
@@ -45,7 +51,7 @@ all:
           vm_num_cpus: 2
           vm_disk_gb: 40
         server2016:
-          ip_address: 192.168.0.22
+          ip_address: 192.168.0.23
           version: "Server2016eval"
           vm_memory_mb: 2048
           vm_num_cpus: 2
@@ -188,6 +194,28 @@ all:
           install_xrdp: true
           install_ansible: true
           nested_virtualization: true
+    esx:
+      hosts:
+        esx01:
+          ip_address: 192.168.0.51
+        esx02:
+          ip_address: 192.168.0.52
+          install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
+        esx03:
+          ip_address: 192.168.0.53
+          install_iso: "VMware-VMvisor-Installer-7.0U3n-21930508.x86_64.iso"
+        # esx04:
+        #   ip_address: 192.168.0.54
+      vars:
+          install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
+          vm_memory_mb: 10240
+          vm_num_cpus: 2
+          disk_controller: nvme
+          vm_disk1_size_gb: 6
+          vm_disk2_size_gb: 60
+          vm_disk3_size_gb: 80
+          create_local_vmfs: 'False'
+          enable_ssh: 'True'
     vsims:
       hosts:
         vha-01:

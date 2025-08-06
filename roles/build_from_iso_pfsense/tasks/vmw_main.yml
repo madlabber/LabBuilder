@@ -5,9 +5,10 @@
     vcenter_password: "{{ esxi_password }}"
     vcenter_datacenter: "ha-datacenter"
   delegate_to: localhost
+  when: vcenter_address == ''
 
 - name: upload install iso
-  include_tasks: upload_install_iso.yml
+  include_tasks: vmw_upload_install_iso.yml
 
 - name: Build VM
-  include_tasks: build_vm.yml
+  include_tasks: vmw_build_vm.yml

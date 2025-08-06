@@ -15,7 +15,7 @@
   delegate_to: temp_host
   loop_control:
     pause: 5
-  ignore_errors: yes
+  ignore_errors: true
   register: result
   loop: "{{extra_commands}}"
   when: extra_commands is defined

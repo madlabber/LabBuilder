@@ -1,0 +1,45 @@
+- name: unsetenv
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/env"
+    state: absent
+    regexp: '^setenv {{item}} .*$'
+  delegate_to: localhost
+  with_items: '{{unsetenv}}'
+  when: 
+    - unsetenv is defined
+    - unsetenv != ''
+
+- name: set common bootargs
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    # Disable VMware tools 
+    - bootarg.vm.run_vmtools="false"
+    # Use a serial console
+    - console="comconsole,vidconsole"
+
+- name: Set KVM bootargs
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    # Twist all the kvm knobs
+    - bootarg.vm=true
+    - bootarg.vm.esx=false
+    - bootarg.vm.kvm=true
+    - bootarg.vm.qemu=true
+    - bootarg.vm.virtio_load=true
+
+- name: set extra bootargs
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items: "{{bootargs}}"
+  when: bootargs is defined

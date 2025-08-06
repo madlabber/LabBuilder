@@ -15,7 +15,7 @@
   delegate_to: temp_host
   loop_control:
     pause: 5
-  ignore_errors: yes
+  ignore_errors: true
   register: checkdc
   loop: 
     - "$($osInfo = Get-WmiObject -Class Win32_OperatingSystem;$osInfo.ProductType)"
@@ -33,7 +33,7 @@
     delegate_to: temp_host
     loop_control:
       pause: 5
-    ignore_errors: yes
+    ignore_errors: true
     register: result
     loop: 
       # Install AD-Domain-Services
@@ -52,7 +52,7 @@
     delegate_to: temp_host
     loop_control:
       pause: 5
-    ignore_errors: yes
+    ignore_errors: true
     register: result
     loop:
       - "Import-module addsdeployment"
@@ -67,7 +67,7 @@
     delegate_to: temp_host
     loop_control:
       pause: 5
-    ignore_errors: yes
+    ignore_errors: true
     register: result
     loop:
       # Assign dns server to itself      

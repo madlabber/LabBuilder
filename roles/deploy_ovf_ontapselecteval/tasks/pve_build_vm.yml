@@ -29,52 +29,20 @@
 
 - debug: 
     msg: "{{ create_vm.vmid }}"
-    
-- name: Copy disks to temporary storage
-  copy:
-    src: "{{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-{{item}}.vmdk"
-    dest: "{{ iso_path }}/{{ vm_name }}-{{item}}.vmdk"
-  delegate_to: temp_host
-  loop:
-    - disk1
-    - disk2
-    - disk3
-
 
 - name: import disks
   shell:  
-    cmd: "qm disk import {{ create_vm.vmid }} {{ iso_path }}/{{ vm_name }}-{{item}}.vmdk {{pve_datastore}} --format raw"
+    cmd: "qm disk import {{ create_vm.vmid }} {{ import_path }}/{{ vm_name }}-{{disk_name}}.vmdk {{pve_datastore}} --format raw"
   delegate_to: temp_host
-  loop:
-    - disk1
-    - disk2
-    - disk3
-
 
 - name: Attach disks
   shell:  
-    cmd: "qm set {{ create_vm.vmid }} --ide{{item}} file={{pve_datastore}}:vm-{{create_vm.vmid}}-disk-{{item}}"
+    cmd: "qm set {{ create_vm.vmid }} --scsi0 file={{pve_datastore}}:vm-{{create_vm.vmid}}-disk-0"
   delegate_to: temp_host
-  loop:
-   - 0
-   - 1
-   - 2
-
-
-- name: Remove disks from temporary storage
-  ansible.builtin.file:
-    path: "{{ iso_path }}/{{ vm_name }}-{{item}}.vmdk"
-    state: absent
-  delegate_to: temp_host
-  loop:
-    - disk1
-    - disk2
-    - disk3
-
 
 - name: Set boot order
   shell:  
-    cmd: "qm set {{ create_vm.vmid }} --bootdisk ide0 --boot order=ide0"
+    cmd: "qm set {{ create_vm.vmid }} --bootdisk scsi0 --boot order=ide0"
   delegate_to: temp_host
 
 # On proxmox you canhave up to 31 virtio disks

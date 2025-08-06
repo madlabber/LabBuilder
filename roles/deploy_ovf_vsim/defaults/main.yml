@@ -12,7 +12,7 @@ checksum_type: "block" # block | zoned
 state: "present"
 force: no
 console_muted: true
-#add_nodes_by_serial: ""
+add_nodes_by_serial: ""
 
 # default delays
 node_setup_delay: 90      # seconds to wait after vmtools responds before starting node setup
@@ -33,6 +33,8 @@ esxi_address: ""
 
 # Proxmox Variables
 pve_address: ""
+pve_data_network: ""
+pve_cluster_network: ""
 
 # Virtual Machine configuration
 vm_name:         "SimulateONTAP"

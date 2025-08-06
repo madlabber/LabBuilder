@@ -15,6 +15,11 @@
     virtio_win_guest_tools_url: '{{ versions[version].virtio_win_guest_tools_url }}'
   when: version != ""
 
+- name: pve substitutions
+  set_fact:
+    pve_vm_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
+
 - name: upload install iso
   include_tasks: pve_upload_install_iso.yml
 

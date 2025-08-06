@@ -37,3 +37,23 @@ vm_network: "vmbr0"
 # ontap_vol_labs: "Labs"
 # ontap_vol_size_gb: 500
 # ontap_aggregate: "ots10_01_SSD_1"
+
+# Datastore Substitutions:
+# When an inventory calls for a datastore on VMware
+# Substitue with the PVE datastore in this table
+datastore_substitutions: {
+  'lab_test' : 'local-lvm',
+  'lab_test2': 'local-lvm',
+  'lab_vlan126' : 'local-lvm'
+}
+
+# Network substitutions
+# PVE has a very short limit on bridge names
+# This table maps VMW portgroup names to corresponding linux bridge names
+network_substitutions: {
+  'vm_network'    : 'vmbr0',
+  'lab_test_net1' : 'vmbr1000',
+  'lab_test_net2' : 'vmbr1001',
+  'VLAN126'       : 'vlan126',
+  'lab_vlan126_net2' : 'vmbr2126'
+}

@@ -13,3 +13,21 @@
   retries: 3
   delay: 10
   until: make_absent is succeeded
+
+- name: remove if absent or forced
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: absent
+    force: true
+    name: '{{ partner_name|replace("_", "-") }}'
+    node: "{{ pve_node }}"
+  delegate_to: localhost
+  register: make_absent
+  retries: 3
+  delay: 10
+  until: make_absent is succeeded
+  when: 
+    - state == "absent" or state == "force"
+    - partner_name|default("") != ""

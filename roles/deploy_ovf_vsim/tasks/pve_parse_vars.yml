@@ -3,58 +3,64 @@
     host_type: "pve"
     checksum_type: "zoned"
 
+- name: pve substitutions
+  set_fact:
+    pve_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_data_network: "{{ network_substitutions[data_network]|default(data_network) }}"
+    pve_cluster_network: "{{ network_substitutions[cluster_network]|default(cluster_network) }}"
+
 # Well this is awkward
 - name: Add Network Adapters
   set_fact:
     networks:
-      net0: 'e1000,bridge={{ cluster_network }}'
-      net1: 'e1000,bridge={{ cluster_network }}'
-      net2: 'e1000,bridge={{ data_network }}'
-      net3: 'e1000,bridge={{ data_network }}'
+      net0: 'e1000,bridge={{ pve_cluster_network }}'
+      net1: 'e1000,bridge={{ pve_cluster_network }}'
+      net2: 'e1000,bridge={{ pve_data_network }}'
+      net3: 'e1000,bridge={{ pve_data_network }}'
   when: vm_num_nics|int <= 4
 
 - name: Add Network Adapters
   set_fact:
     networks:
-      net0: 'e1000,bridge={{ cluster_network }}'
-      net1: 'e1000,bridge={{ cluster_network }}'
-      net2: 'e1000,bridge={{ data_network }}'
-      net3: 'e1000,bridge={{ data_network }}'
-      net4: 'e1000,bridge={{ data_network }}'
+      net0: 'e1000,bridge={{ pve_cluster_network }}'
+      net1: 'e1000,bridge={{ pve_cluster_network }}'
+      net2: 'e1000,bridge={{ pve_data_network }}'
+      net3: 'e1000,bridge={{ pve_data_network }}'
+      net4: 'e1000,bridge={{ pve_data_network }}'
   when: vm_num_nics|int == 5
 
 - name: Add Network Adapters
   set_fact:
     networks:
-      net0: 'e1000,bridge={{ cluster_network }}'
-      net1: 'e1000,bridge={{ cluster_network }}'
-      net2: 'e1000,bridge={{ data_network }}'
-      net3: 'e1000,bridge={{ data_network }}'
-      net4: 'e1000,bridge={{ data_network }}'
-      net5: 'e1000,bridge={{ data_network }}'
+      net0: 'e1000,bridge={{ pve_cluster_network }}'
+      net1: 'e1000,bridge={{ pve_cluster_network }}'
+      net2: 'e1000,bridge={{ pve_data_network }}'
+      net3: 'e1000,bridge={{ pve_data_network }}'
+      net4: 'e1000,bridge={{ pve_data_network }}'
+      net5: 'e1000,bridge={{ pve_data_network }}'
   when: vm_num_nics|int == 6
 
 - name: Add Network Adapters
   set_fact:
     networks:
-      net0: 'e1000,bridge={{ cluster_network }}'
-      net1: 'e1000,bridge={{ cluster_network }}'
-      net2: 'e1000,bridge={{ data_network }}'
-      net3: 'e1000,bridge={{ data_network }}'
-      net4: 'e1000,bridge={{ data_network }}'
-      net5: 'e1000,bridge={{ data_network }}'
-      net6: 'e1000,bridge={{ data_network }}'
+      net0: 'e1000,bridge={{ pve_cluster_network }}'
+      net1: 'e1000,bridge={{ pve_cluster_network }}'
+      net2: 'e1000,bridge={{ pve_data_network }}'
+      net3: 'e1000,bridge={{ pve_data_network }}'
+      net4: 'e1000,bridge={{ pve_data_network }}'
+      net5: 'e1000,bridge={{ pve_data_network }}'
+      net6: 'e1000,bridge={{ pve_data_network }}'
   when: vm_num_nics|int == 7
 
 - name: Add Network Adapters
   set_fact:
     networks:
-      net0: 'e1000,bridge={{ cluster_network }}'
-      net1: 'e1000,bridge={{ cluster_network }}'
-      net2: 'e1000,bridge={{ data_network }}'
-      net3: 'e1000,bridge={{ data_network }}'
-      net4: 'e1000,bridge={{ data_network }}'
-      net5: 'e1000,bridge={{ data_network }}'
-      net6: 'e1000,bridge={{ data_network }}'
-      net7: 'e1000,bridge={{ data_network }}'
+      net0: 'e1000,bridge={{ pve_cluster_network }}'
+      net1: 'e1000,bridge={{ pve_cluster_network }}'
+      net2: 'e1000,bridge={{ pve_data_network }}'
+      net3: 'e1000,bridge={{ pve_data_network }}'
+      net4: 'e1000,bridge={{ pve_data_network }}'
+      net5: 'e1000,bridge={{ pve_data_network }}'
+      net6: 'e1000,bridge={{ pve_data_network }}'
+      net7: 'e1000,bridge={{ pve_data_network }}'
   when: vm_num_nics|int >= 8

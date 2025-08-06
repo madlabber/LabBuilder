@@ -1,3 +1,4 @@
+state: "present"
 #2.7.0
 #install_iso: "pfSense-CE-2.7.0-RELEASE-amd64.iso"
 #install_iso_url: "https://atxfiles.netgate.com/mirror/downloads/pfSense-CE-2.7.0-RELEASE-amd64.iso.gz"
@@ -20,3 +21,11 @@ vm_disk_gb: 10
 vm_memory_mb: 1024
 vm_num_cpus: 1
 config_xml_file: ""
+
+# empty host addresses
+pve_address: ""
+esxi_address: ""
+vcenter_address: ""
+
+pve_vm_network_wan: ""
+pve_vm_network_lan: ""

@@ -76,11 +76,11 @@
 
 - name: notify add nodes by serial
   ansible.builtin.lineinfile:
-    path: "{{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"
-    line: "ngsh -c  echo Adding nodes by serial {{add_nodes_by_serial|default('')}}"
+    path: "{{ playbook_dir }}/files/{{ vm_name }}/setup.ngsh"
+    line: "ngsh -c  echo Adding nodes by serial {{ add_nodes_by_serial }}"
   delegate_to: localhost
   when:
-    - add_nodes_by_serial|default("") != ""
+    - add_nodes_by_serial != ""
 
 - name: Add nodes by serial
   ansible.builtin.lineinfile:
@@ -88,7 +88,7 @@
     line: "ngsh -c add-node -cluster-ips $(ngsh -c 'show-discovered -fields serial-number,address' | grep {{item}}| tr -s ' ' | cut -d' ' -f3)"
   delegate_to: localhost
   when:
-    - add_nodes_by_serial|default("") != ""
+    - add_nodes_by_serial != ""
   with_items: "{{ add_nodes_by_serial.split(',') }}"
 
 - name: Add extra commands to setup.ngsh

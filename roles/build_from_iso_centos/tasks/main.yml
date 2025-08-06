@@ -2,13 +2,13 @@
 - name: build vm on VMware
   include_tasks: vmw_main.yml
   when: 
-    - vcenter_address|default(esxi_address|default('')) != ''
-    - pve_address|default('') == ''
+    - vcenter_address ~ esxi_address != ''
+    - pve_address == ''
 
 - name: build vm on PVE
   include_tasks: pve_main.yml
   when:
-    - pve_address|default('') != ''
+    - pve_address != ''
 
 
     

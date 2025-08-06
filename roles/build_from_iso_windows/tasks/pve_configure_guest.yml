@@ -7,7 +7,7 @@
   loop: 
     - "net user Administrator {{ vm_password_new }}"
   register: setpassword
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: check PSVersion
   command:
@@ -18,13 +18,13 @@
   loop: 
     - "$result=$(if($PSVersionTable.PSVersion.Major -lt 3){throw})"
   register: checkpsversion
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Set static IP address
   command:
     cmd: 'qm guest exec {{ create_vm.vmid }} -- "c:\windows\system32\windowspowershell\v1.0\powershell.exe" -command "({{item}})"'
   delegate_to: temp_host
-  ignore_errors: yes
+  ignore_errors: true
   loop_control:
     pause: 5
   loop: 
@@ -35,7 +35,7 @@
   command:
     cmd: 'qm guest exec {{ create_vm.vmid }} -- "c:\windows\system32\windowspowershell\v1.0\powershell.exe" -command "({{item}})"'
   delegate_to: temp_host
-  ignore_errors: yes
+  ignore_errors: true
   loop_control:
     pause: 5
   loop: 
@@ -46,7 +46,7 @@
   command:
     cmd: 'qm guest exec {{ create_vm.vmid }} -- "c:\windows\system32\windowspowershell\v1.0\powershell.exe" -command "({{item}})"'
   delegate_to: temp_host
-  ignore_errors: yes
+  ignore_errors: true
   loop_control:
     pause: 5
   loop: 
@@ -63,7 +63,7 @@
   command:
     cmd: 'qm guest exec {{ create_vm.vmid }} -- "c:\windows\system32\windowspowershell\v1.0\powershell.exe" -command "({{item}})"'
   delegate_to: temp_host
-  ignore_errors: yes
+  ignore_errors: true
   loop_control:
     pause: 5
   loop: 

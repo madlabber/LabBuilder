@@ -1,6 +1,9 @@
+state: "present"
 # Path to the default ONTAP Select Standalone Evaluation OVA
-ontap_version: "9.9.1"
+ontap_version: "9.16.1"
 ovf_file:    "{{role_path}}/files/{{ontap_version}}_DataONTAPv-esx-standalone-eval-nodar.ova"
+
+disk_name: "DataONTAPv"
 
 # The ovf deployment option changed at 9.6
 # <=9.5 use 'ONTAPSelectEVAL', 
@@ -37,3 +40,20 @@ ontap_gateway: ""
 ontap_password: "Changeme!"
 # ontap_dns_domain: "lab.local"
 # ontap_dns_server: ""
+
+# Some additional defaults
+vm_name: "ONTAPSelect"
+vm_num_cpus: "4"
+vm_memory_mb: "16384"
+vm_cpu_reservation_mhz: "2000"
+ontap_deployment_option: "ONTAPSelectEVALSmall"
+vm_disk_provisioning: "thin"
+vm_data_disk_gb: "500"
+
+# blank host addresses
+vcenter_address: ""
+esxi_address: ""
+pve_address: ""
+
+# Network
+vm_network: "VM Network"

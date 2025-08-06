@@ -73,6 +73,7 @@ iso_datastore:
 # This host can be used to delegate iso downloads
 esxi_hostname:   
 esxi_address:
+pve_address:
 
 # VM Defaults
 vm_hostname:
