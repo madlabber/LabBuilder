@@ -7,8 +7,15 @@
   with_items:
     - "{{vm_name}}"
 
+- name: delete config ISO
+  ansible.builtin.file:
+    path: "{{ role_path }}/files/sdotconfig-{{vm_name}}.iso"
+    state: absent
+  delegate_to: localhost
+  
 - name: Remove disks from temporary storage
   ansible.builtin.file:
     path: "{{ import_path }}/{{ vm_name }}-{{disk_name}}.vmdk"
     state: absent
   delegate_to: temp_host
+

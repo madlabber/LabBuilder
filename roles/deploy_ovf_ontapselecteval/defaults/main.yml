@@ -5,6 +5,8 @@ ovf_file:    "{{role_path}}/files/{{ontap_version}}_DataONTAPv-esx-standalone-ev
 
 disk_name: "DataONTAPv"
 
+enable_sidl: true
+node_serial_number: 99887766554433221177
 # The ovf deployment option changed at 9.6
 # <=9.5 use 'ONTAPSelectEVAL', 
 # 9.6+ use 'ONTAPSelectEVALSmall'

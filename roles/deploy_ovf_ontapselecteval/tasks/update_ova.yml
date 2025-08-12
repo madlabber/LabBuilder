@@ -7,9 +7,19 @@
   with_items:
     - "{{vm_name}}"
 
-# - name: create fies directory on cfcard
+# This folder should always exist on SELECT
+# - name: create files folder
 #   shell:
-#     cmd: "mmd -D s -i {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s ::/files"
+#     cmd: "mmd -D s -i {{ playbook_dir }}/files/{{item}}/{{disk_name}}.raw@@66528s ::/files"
+#   delegate_to: localhost
+#   ignore_errors: true
+#   when: item != ''
+#   with_items:
+#     - "{{vm_name}}"
+
+# - name: inject sdot_config 
+#   shell:
+#     cmd: "mcopy -o -i {{ playbook_dir }}/files/{{item}}/{{disk_name}}.raw@@66528s {{ playbook_dir }}/files/{{vm_name}}/sdotconf ::/files/sdot_config"
 #   delegate_to: localhost
 #   ignore_errors: true
 #   when: item != ''

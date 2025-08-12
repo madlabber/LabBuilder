@@ -46,3 +46,23 @@
   when: item != ''
   with_items:
     - "{{vm_name}}"
+
+- name: parse ovf defaults
+  shell:
+    cmd: cat {{ playbook_dir }}/files/{{item}}/{{disk_name}}.ovf | grep builtin_license | cut -d= -f5 | cut -d'"' -f 2 
+  delegate_to: localhost
+  register: builtin_licenses_cmd
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"  
+
+- set_fact:
+    builtin_licenses: '{{ builtin_licenses_cmd.results[0].stdout }}'
+
+- debug:
+    msg: 
+      - '{{ builtin_licenses_cmd.results[0].stdout }}'
+      - '{{ builtin_licenses }}'
+
+     # - "BUILTIN_LICENSES: {{ builtin_licenses.results.stdout|quote }}"
+

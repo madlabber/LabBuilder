@@ -6,14 +6,15 @@
     state: present
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
-    net: '{{ networks }}'
-      # net0: 'e1000,bridge={{ pve_cluster_network }}'
-      # net1: 'e1000,bridge={{ pve_cluster_network }}'
-      # net2: 'e1000,bridge={{ pve_data_network }}'
-      # net3: 'e1000,bridge={{ pve_data_network }}'
+    net: #'{{ networks }}'
+      net0: 'virtio,bridge={{ pve_vm_network }}'
+      net1: 'virtio,bridge={{ pve_vm_network }}'
+      net2: 'virtio,bridge={{ pve_vm_network }}'
     serial:
       serial0: 'socket'
       serial1: 'socket'
+    ide:
+      ide2: "{{iso_datastore}}:iso/sdotconfig-{{vm_name}}.iso,media=cdrom"
     vga: serial0
     cpu: host
     sockets: '{{ vm_num_cpus|int }}'
@@ -28,7 +29,7 @@
   until: create_vm is succeeded
 
 - debug: 
-    msg: "{{ create_vm.vmid }}"
+    msg: "VMID: {{ create_vm.vmid }}"
 
 - name: import disks
   shell:  
@@ -42,191 +43,23 @@
 
 - name: Set boot order
   shell:  
-    cmd: "qm set {{ create_vm.vmid }} --bootdisk scsi0 --boot order=ide0"
+    cmd: "qm set {{ create_vm.vmid }} --bootdisk scsi0 --boot order=scsi0"
   delegate_to: temp_host
 
-# On proxmox you canhave up to 31 virtio disks
-# They can all be declared on shelf 0 or can span over to shelf1
-- name: Build Disk Shelf 0 
+- name: Create core disk 
   shell:  
-    cmd: "qm set {{ create_vm.vmid }} --scsi{{item-1}} {{pve_datastore}}:{{shelf0_disk_size / 1024}}"
+    cmd: "qm set {{ create_vm.vmid }} --scsi1 {{pve_datastore}}:120"
   delegate_to: temp_host
-  when:
-    - shelf0_disk_size|default("") != ""
-    - item <= shelf0_disk_count|default(shelf0_qty)|int
-  with_items:
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-    - 8
-    - 9
-    - 10
-    - 11
-    - 12
-    - 13
-    - 14
-    - 15
-    - 16
-    - 17
-    - 18
-    - 19
-    - 20
-    - 21
-    - 22
-    - 23
-    - 24
-    - 25
-    - 26
-    - 27
-    - 28
-    - 29
-    - 30
-    - 31
-  ignore_errors: true
 
-# on Proxmox all of these lab on the 0b adapter anyway
-# but the shelf construct is maintained for consistency with the
-# VMware based version's 4 controllers / 15 drives each topology
-- name: Build Disk Shelf 1
+- name: Create root disk 
   shell:  
-    cmd: "qm set {{ create_vm.vmid }} --scsi{{ item - 1 + shelf0_disk_count }} {{pve_datastore}}:{{shelf1_disk_size / 1024}}"
+    cmd: "qm set {{ create_vm.vmid }} --scsi2 {{pve_datastore}}:70"
   delegate_to: temp_host
-  when:
-    - shelf1_disk_size|default("") != ""
-    - item <= shelf1_disk_count|default(shelf1_qty)|int
-  with_items:
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-    - 8
-    - 9
-    - 10
-    - 11
-    - 12
-    - 13
-    - 14
-    - 15
-    - 16
-    - 17
-    - 18
-    - 19
-    - 20
-    - 21
-    - 22
-    - 23
-    - 24
-    - 25
-    - 26
-    - 27
-    - 28
-    - 29
-    - 30
-    - 31
-  ignore_errors: true
 
-# Spanning the disks accross shelf definitions allows for different disk sizes
-- name: Build Disk Shelf 2
+- name: Create data disk 
   shell:  
-    cmd: "qm set {{ create_vm.vmid }} --scsi{{ item - 1 + shelf0_disk_count + shelf1_disk_count }} {{pve_datastore}}:{{shelf2_disk_size / 1024}}"
+    cmd: "qm set {{ create_vm.vmid }} --scsi3 {{pve_datastore}}:{{vm_data_disk_gb}}"
   delegate_to: temp_host
-  when:
-    - shelf2_disk_size|default("") != ""
-    - item <= shelf2_disk_count|default(shelf2_qty)|int
-  with_items:
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-    - 8
-    - 9
-    - 10
-    - 11
-    - 12
-    - 13
-    - 14
-    - 15
-    - 16
-    - 17
-    - 18
-    - 19
-    - 20
-    - 21
-    - 22
-    - 23
-    - 24
-    - 25
-    - 26
-    - 27
-    - 28
-    - 29
-    - 30
-    - 31
-  ignore_errors: true
 
-# Spanning the disks accross shelf definitions allows for different disk sizes
-- name: Build Disk Shelf 3
-  shell:  
-    cmd: "qm set {{ create_vm.vmid }} --scsi{{ item - 1 + shelf0_disk_count + shelf1_disk_count + shelf2_disk_count }} {{pve_datastore}}:{{shelf3_disk_size / 1024}}"
-  delegate_to: temp_host
-  when:
-    - shelf3_disk_size|default("") != ""
-    - item <= shelf3_disk_count|default(shelf3_qty)|int
-  with_items:
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-    - 8
-    - 9
-    - 10
-    - 11
-    - 12
-    - 13
-    - 14
-    - 15
-    - 16
-    - 17
-    - 18
-    - 19
-    - 20
-    - 21
-    - 22
-    - 23
-    - 24
-    - 25
-    - 26
-    - 27
-    - 28
-    - 29
-    - 30
-    - 31
-  ignore_errors: true
 
-- name: Start VM
-  community.proxmox.proxmox_kvm:
-    api_user: '{{ pve_username }}@pam'
-    api_password: '{{ pve_password }}'
-    api_host: '{{ pve_address }}'
-    state: started
-    name: '{{ vm_name|replace("_", "-") }}'
-  delegate_to: localhost
-  retries: 3
-  delay: 10
-  register: result
-  until: result is succeeded
-  ignore_errors: true
   

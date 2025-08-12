@@ -9,18 +9,6 @@
     - unsetenv is defined
     - unsetenv != ''
 
-- name: set common bootargs
-  ansible.builtin.lineinfile:
-    path: "{{ playbook_dir }}/files/{{vm_name}}/env"
-    regexp: "^setenv {{item.split('=')[0]}} .*$"
-    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
-  delegate_to: localhost
-  with_items:
-    # Disable VMware tools 
-    - bootarg.vm.run_vmtools="false"
-    # Use a serial console
-    - console="comconsole,vidconsole"
-
 - name: Set KVM bootargs
   ansible.builtin.lineinfile:
     path: "{{ playbook_dir }}/files/{{vm_name}}/env"
@@ -34,6 +22,48 @@
     - bootarg.vm.kvm=true
     - bootarg.vm.qemu=true
     - bootarg.vm.virtio_load=true
+    - bootarg.vm.run_vmtools="false"
+    - bootarg.vm.qemu.write_invalidate_disable=true
+    - bootarg.vm.xen.smbios_ignore=true
+    - console="comconsole,vidconsole"
+
+- name: Set more KVM bootargs
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    # device location hints
+    - hint.scbus.0.at="vtscsi0"
+    - hint.da.1.at=scbus0
+    - hint.da.1.lun=1
+    - hint.da.1.target=0
+    - hint.da.2.at=scbus0
+    - hint.da.2.lun=2
+    - hint.da.2.target=0
+    # device paths for kvm
+    - bootarg.init.cfdevice="/dev/da0s2"
+    - ntap.init.cfdevice="/dev/da0s2"
+    - bootarg.vm.vardevice="/dev/da0s3"
+    - bootarg.vm.swapdevice="/dev/da0s5"
+    - bootarg.vm.nvramdevice="/dev/da0s6"
+    - bootarg.vm.dumpdevice="/dev/da0s7"
+    - bootarg.vm.coredisk="/dev/da1"
+    # IC configuration
+    - bootarg.ic_local_ip=1.2.3.4
+    - bootarg.ic_local_netmask=255.255.255.0
+    - bootarg.ic_local_port=7
+    - bootarg.ic_partner_ip=1.2.3.5
+    # misc
+    - hw.nvme.queue_completion_num=8
+    - ic.rlib.mvrd_max_xfer_size=131072
+    - rlib_sq_size=2048
+    - bootarg.init.max_cpu=64
+    - bootarg.jumbo.nics="e0a,e0b,e0c,e0d,e0e,e0f"
+    - bootarg.setup_template_location="/var/sdot_config"
+    - bootarg.template.disable.auto_iscsi_setup=true
+    
 
 - name: set extra bootargs
   ansible.builtin.lineinfile:

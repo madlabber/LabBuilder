@@ -1,9 +1,9 @@
-- debug: 
-    msg:
-      - "****************************************"
-      - "* This component is not yet functional *"
-      - "*          on Proxmox hosts            *"
-      - "****************************************"
+# - debug: 
+#     msg:
+#       - "****************************************"
+#       - "* This component is not yet functional *"
+#       - "*          on Proxmox hosts            *"
+#       - "****************************************"
 
 - name: Add PVE Host to Dynamic Inventory
   add_host:
@@ -37,28 +37,35 @@
 - name: set bootargs
   include_tasks: pve_bootargs.yml
 
-# Update OVF files
-- name: update OVA
-  include_tasks: update_ova.yml
-
 # Generate sdot config
 - name: create config file
   include_tasks: create_config_file.yml
 
 # create config ISO
+- name: create config iso
+  include_tasks: create_config_iso.yml
+
+# Update OVF files
+- name: update OVA
+  include_tasks: update_ova.yml
+
 # upload config iso to host
 - name: create config iso
-  include_tasks: pve_create_config_iso.yml
-
-# upload raw image to host
+  include_tasks: pve_upload_iso.yml
+  
+# upload disk image to host
 - name: upload disk
   include_tasks: pve_upload_disk.yml
 
 # build VM
-
+- name: build vm
+  include_tasks: pve_build_vm.yml
+  
 # start VM
+- name: start vm
+  include_tasks: pve_start_vm.yml
 
-# # Cleanup
-# - name: cleanup
-#   include_tasks: cleanup.yml
+# Cleanup
+- name: cleanup
+  include_tasks: cleanup.yml
 

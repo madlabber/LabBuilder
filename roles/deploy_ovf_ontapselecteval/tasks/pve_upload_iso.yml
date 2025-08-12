@@ -1,0 +1,6 @@
+- name: Copy config iso to datastore
+  copy:
+    src: "{{ role_path }}/files/sdotconfig-{{vm_name}}.iso"
+    dest: "{{ iso_path }}/sdotconfig-{{vm_name}}.iso"
+  delegate_to: temp_host
+
