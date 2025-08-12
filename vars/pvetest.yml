@@ -42,9 +42,9 @@ vm_network: "vmbr0"
 # When an inventory calls for a datastore on VMware
 # Substitue with the PVE datastore in this table
 datastore_substitutions: {
-  'lab_test' : 'local-lvm',
-  'lab_test2': 'local-lvm',
-  'lab_vlan126' : 'local-lvm'
+  'lab_test' : 'local-lvm1',
+  'lab_test2': 'local-lvm1',
+  'lab_vlan126' : 'local-lvm1'
 }
 
 # Network substitutions

@@ -162,7 +162,8 @@ all:
     ontapselecteval:
       hosts:
         lab126ots60:  
-          ontap_version: "9.11.1"           
+          state: force
+          ontap_version: "9.15.1"           
           ontap_node_mgmt_ip:    192.168.126.61
           ontap_cluster_name:    "lab126ots60"
           ontap_cluster_mgmt_ip: 192.168.126.60

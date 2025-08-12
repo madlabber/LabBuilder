@@ -45,3 +45,6 @@ roles/build_from_iso_windows/files/Server2022eval/virtio_win_gt_x64.msi
 roles/build_from_iso_windows/files/Server2022eval/virtio_win_guest_tools.exe
 snippets
 .vscode/settings.json
+roles/deploy_ovf_ontapselecteval/env-esx
+roles/deploy_ovf_ontapselecteval/env-kvm
+roles/deploy_ovf_ontapselecteval/sample-env
