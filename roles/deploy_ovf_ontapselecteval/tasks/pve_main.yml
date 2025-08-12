@@ -50,7 +50,7 @@
   include_tasks: update_ova.yml
 
 # upload config iso to host
-- name: create config iso
+- name: upload config iso
   include_tasks: pve_upload_iso.yml
   
 # upload disk image to host

@@ -4,6 +4,15 @@
     state: absent
     regexp: '^setenv {{item}} .*$'
   delegate_to: localhost
+  with_items: 
+    - bootarg.vm.mpt_load
+
+- name: unsetenv
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/env"
+    state: absent
+    regexp: '^setenv {{item}} .*$'
+  delegate_to: localhost
   with_items: '{{unsetenv}}'
   when: 
     - unsetenv is defined
@@ -20,7 +29,7 @@
     - bootarg.vm=true
     - bootarg.vm.esx=false
     - bootarg.vm.kvm=true
-    - bootarg.vm.qemu=true
+  #  - bootarg.vm.qemu=true # this one causes a boot panic starting around 9.14.1
     - bootarg.vm.virtio_load=true
     - bootarg.vm.run_vmtools="false"
     - bootarg.vm.qemu.write_invalidate_disable=true
@@ -36,6 +45,10 @@
   with_items:
     # device location hints
     - hint.scbus.0.at="vtscsi0"
+    - hint.scbus.0.bus=0
+    - hint.da.0.at=scbus0
+    - hint.da.0.lun=0
+    - hint.da.0.target=0
     - hint.da.1.at=scbus0
     - hint.da.1.lun=1
     - hint.da.1.target=0
@@ -50,11 +63,11 @@
     - bootarg.vm.nvramdevice="/dev/da0s6"
     - bootarg.vm.dumpdevice="/dev/da0s7"
     - bootarg.vm.coredisk="/dev/da1"
-    # IC configuration
-    - bootarg.ic_local_ip=1.2.3.4
-    - bootarg.ic_local_netmask=255.255.255.0
-    - bootarg.ic_local_port=7
-    - bootarg.ic_partner_ip=1.2.3.5
+    # IC configuration - not needed for single node
+    # - bootarg.ic_local_ip=1.2.3.4
+    # - bootarg.ic_local_netmask=255.255.255.0
+    # - bootarg.ic_local_port=7
+    # - bootarg.ic_partner_ip=1.2.3.5
     # misc
     - hw.nvme.queue_completion_num=8
     - ic.rlib.mvrd_max_xfer_size=131072
@@ -63,7 +76,7 @@
     - bootarg.jumbo.nics="e0a,e0b,e0c,e0d,e0e,e0f"
     - bootarg.setup_template_location="/var/sdot_config"
     - bootarg.template.disable.auto_iscsi_setup=true
-    
+    - bootarg.pha.max.cmds=128 #default changed in recent bsd 
 
 - name: set extra bootargs
   ansible.builtin.lineinfile:
