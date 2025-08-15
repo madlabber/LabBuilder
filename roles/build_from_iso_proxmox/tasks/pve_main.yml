@@ -1,0 +1,45 @@
+# - debug: 
+#     msg:
+#       - "****************************************"
+#       - "* This component is not yet functional *"
+#       - "*          on Proxmox hosts            *"
+#       - "****************************************"
+
+- name: Add PVE Host to Dynamic Inventory
+  add_host:
+    hostname: temp_host
+    group: "temp_hosts"
+    ansible_host: '{{ pve_address }}'
+    ansible_user: '{{ pve_username }}'
+    ansible_password: '{{ pve_password }}'
+    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+
+- name: set pve vars
+  set_fact:
+    host_type: "pve"
+    checksum_type: "zoned"
+
+- name: pve substitutions
+  set_fact:
+    pve_vm_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
+#    pve_cluster_network: "{{ network_substitutions[cluster_network]|default(cluster_network) }}"
+
+- name: upload install iso
+  include_tasks: pve_upload_install_iso.yml
+
+- name: create answer file
+  include_tasks: create_answer_file.yml
+
+- name: create autoinstall disk 
+  include_tasks: create_autoinstall_disk.yml
+
+- name: upload autoinstall disk 
+  include_tasks: pve_upload_disk.yml
+
+- name: build vm 
+  include_tasks: pve_build_vm.yml 
+
+
+
+

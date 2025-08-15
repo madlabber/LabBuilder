@@ -1,0 +1,81 @@
+---
+- name: Create VM
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}' 
+    validate_certs: no 
+    datacenter: "{{vcenter_datacenter}}"
+    cluster: '{{vcenter_cluster}}'    
+    folder: /
+    name: '{{ vm_name }}'
+    state: present
+    guest_id: ubuntu64Guest
+    cdrom:
+        - controller_number: 0
+          unit_number: 0
+          state: present
+          type: iso
+          iso_path: '[{{ iso_datastore }}] {{ autoinstall_iso }}'
+    disk:
+    - size_gb: '{{ vm_disk_gb | default(40) | string }}'
+      type: thin
+      datastore: '{{ vm_datastore }}'
+    hardware:
+      memory_mb: '{{ vm_memory_mb | default(2048) | string }}'
+      num_cpus: '{{ vm_num_cpus | default(2) | string }}'
+      nested_virt: '{{ nested_virtualization|default(true) }}'
+      scsi: lsilogicsas
+    networks:
+    - name: "{{ vm_network | default('VM Network') }}"
+      device_type: e1000
+    wait_for_ip_address: no
+  delegate_to: localhost
+  register: deploy_vm
+
+- name: attach config disk
+  community.vmware.vmware_guest_disk:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}' 
+    validate_certs: no 
+    datacenter: "{{vcenter_datacenter}}"
+    name: '{{ vm_name }}'
+    disk:
+    - filename: '[{{ vm_datastore }}] {{ vm_name }}/autoinstall.vmdk'
+      scsi_controller: 0
+      unit_number: 1
+  delegate_to: localhost
+
+- name: Set boot order
+  community.vmware.vmware_guest_boot_manager:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no  
+    name: '{{ vm_name }}'
+    boot_delay: 1000
+    enter_bios_setup: False
+    boot_retry_enabled: True
+    boot_retry_delay: 20000
+    boot_firmware: bios
+    secure_boot_enabled: False
+    boot_order:
+      - disk
+      - cdrom
+      - ethernet
+      - floppy
+  delegate_to: localhost
+  register: vm_boot_order
+
+- name: Power-On the virtual machine
+  community.vmware.vmware_guest_powerstate:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
+    validate_certs: no 
+    name: '{{ vm_name }}'
+    state: powered-on
+  delegate_to: localhost
+  register: powerstate
+

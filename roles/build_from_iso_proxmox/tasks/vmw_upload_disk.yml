@@ -1,0 +1,16 @@
+
+- name: Copy disk files to datastore
+  community.vmware.vsphere_copy:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    src: "{{ playbook_dir }}/files/{{ vm_name }}/{{item}}"
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ vm_datastore }}"
+    path: "{{ vm_name }}/{{item}}"
+  delegate_to: localhost
+  ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
+  with_items: 
+    - "autoinstall.vmdk"
+    - "autoinstall-flat.vmdk"

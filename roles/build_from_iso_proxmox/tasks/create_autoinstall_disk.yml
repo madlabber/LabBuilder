@@ -1,0 +1,14 @@
+- name: copy vmdk files to staging area 
+  copy:
+    src: "{{item}}"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/"
+  delegate_to: localhost
+  with_items: 
+    - "{{role_path}}/files/autoinstall.vmdk"
+    - "{{role_path}}/files/autoinstall-flat.vmdk"
+
+- name: inject answer file
+  shell:
+    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{vm_name}}/autoinstall-flat.vmdk@@32s {{ playbook_dir }}/files/{{vm_name}}/answer.toml ::/answer.toml"
+  delegate_to: localhost
+

@@ -1,0 +1,51 @@
+  - name: Set Answer file
+    set_fact:
+      answer_file:  "{{ playbook_dir }}/files/{{vm_name}}/answer.toml"
+    delegate_to: localhost
+
+  - name: Creating a new answer file directory
+    file:
+      path: "{{ playbook_dir }}/files/{{vm_name}}"
+      state: directory
+    delegate_to: localhost
+
+  - name: Remove old answer file
+    file:
+      path: "{{ playbook_dir }}/files/{{vm_name}}/answer.toml"
+      state: absent
+    delegate_to: localhost
+
+  - name: Creating a new answer file
+    file:
+      path: "{{ playbook_dir }}/files/{{vm_name}}/answer.toml"
+      state: touch
+    delegate_to: localhost
+
+  - name: create answer file
+    copy:
+      dest: "{{ playbook_dir }}/files/{{vm_name}}/answer.toml"
+      content: |
+        # See https://pve.proxmox.com/wiki/Automated_Installation#Overview
+        [global]
+        keyboard = "en-us"
+        country = "us"
+        fqdn = "{{ vm_hostname }}.{{ vm_domain }}"
+        mailto = "root@localhost"
+        timezone = "America/Los_Angeles"
+        root_password = "{{ vm_password }}"
+
+        [network]
+        #source = "from-dhcp"
+        source = "from-answer"
+        cidr = "{{vm_address}}/{{vm_netmask_cidr}}"
+        dns = "{{ vm_dns_server}}"
+        gateway = "{{ vm_gateway }}"
+        filter.ID_NET_NAME_MAC = "*"
+
+        [disk-setup]
+        filesystem = "ext4"
+        #disk-list = ["sdb"]
+        filter.ID_MODEL = "*"
+
+    delegate_to: localhost
+

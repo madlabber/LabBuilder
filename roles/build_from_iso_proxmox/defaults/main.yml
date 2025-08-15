@@ -1,6 +1,10 @@
-install_iso: "proxmox-ve_8.1-1.iso"
-install_iso_url: "https://enterprise.proxmox.com/iso/proxmox-ve_8.1-1.iso"
+#install_iso: "proxmox-ve_8.1-1.iso"
+#install_iso_url: "https://enterprise.proxmox.com/iso/proxmox-ve_8.1-1.iso"
 
+pve_version: "8.4-1"
+autoinstall_iso: "proxmox-ve_{{pve_version}}-auto-from-partition.iso"
+install_iso: "proxmox-ve_{{pve_version}}.iso"
+install_iso_url: "https://enterprise.proxmox.com/iso/proxmox-ve_{{pve_version}}.iso"
 
 vm_address:      
 vm_netmask_cidr: 
@@ -10,3 +14,8 @@ vm_domain:
 vm_hostname:     "proxmoxvm"
 vm_name:         "proxmoxvm"
 vm_password:     "P@ssw0rd"
+
+state: present
+vcenter_address: ""
+esxi_address: ""
+pve_address: ""

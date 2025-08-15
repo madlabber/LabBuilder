@@ -1,0 +1,5 @@
+- name: Copy disks to temporary storage
+  copy:
+    src: "{{ playbook_dir }}/files/{{vm_name}}/autoinstall-flat.vmdk"
+    dest: "{{ import_path }}/{{ vm_name }}-autoinstall.raw"
+  delegate_to: temp_host

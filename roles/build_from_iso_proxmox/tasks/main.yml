@@ -1,4 +1,26 @@
 ---
-- name: Build VM 
-  include_tasks: build_vm.yml
-  
+- name: remove vm if state is absent or forced (vmw)
+  include_tasks: vmw_absent.yml
+  when: 
+    - state == "absent" or state == "force"
+    - vcenter_address ~ esxi_address != ''
+    - pve_address == ''
+
+- name: remove vm if state is absent or forced (pve)
+  include_tasks: pve_absent.yml
+  when:
+    - state == "absent" or state == "force"
+    - pve_address != ''
+
+- name: build vm on VMware
+  include_tasks: vmw_main.yml
+  when: 
+    - state != "absent"
+    - vcenter_address ~ esxi_address != ''
+    - pve_address == ''
+
+- name: build vm on PVE
+  include_tasks: pve_main.yml
+  when:
+    - state != "absent"
+    - pve_address != ''

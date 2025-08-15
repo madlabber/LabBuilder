@@ -1,0 +1,26 @@
+---
+# Until the new workflow has been ported to VMware force it to use 8.1.1
+# - name: lock VMware deployments to 8.1.1
+#   set_fact:
+#     install_iso: "proxmox-ve_8.1-1.iso"
+#     install_iso_url: "https://enterprise.proxmox.com/iso/proxmox-ve_8.1-1.iso"
+
+- name: upload install iso
+  include_tasks: vmw_upload_install_iso.yml
+
+- name: create answer file
+  include_tasks: create_answer_file.yml
+
+- name: create autoinstall disk 
+  include_tasks: create_autoinstall_disk.yml
+
+- name: upload autoinstall disk 
+  include_tasks: vmw_upload_disk.yml
+
+- name: Build VM 
+  include_tasks: vmw_build_vm.yml
+  when: not autoinstall_iso_exists.failed
+
+- name: Build VM the hard way
+  include_tasks: vmw_build_vm_alt.yml
+  when: autoinstall_iso_exists.failed
