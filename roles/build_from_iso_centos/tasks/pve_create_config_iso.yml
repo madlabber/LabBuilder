@@ -1,8 +1,24 @@
 ---
+- name: Creating files directory
+  file:
+    path: "{{ role_path }}/files/{{vm_name}}/files"
+    state: directory
+  delegate_to: localhost
+
+- name: include additional files
+  copy:
+    src: "{{item}}"
+    dest: "{{ role_path }}/files/{{vm_name}}/files/"
+  delegate_to: localhost
+  with_items: "{{include_files}}"
+  when: include_files|default('') != ''
+  ignore_errors: true
+
 - name: Create Config ISO
   community.general.iso_create:
     src_files:
       - "{{kickstart_file}}"
+      - "{{ role_path }}/files/{{vm_name}}/files/"
     dest_iso: "{{ role_path }}/files/{{config_iso}}"
     interchange_level: 3
     joliet: 3
