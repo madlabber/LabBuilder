@@ -44,7 +44,8 @@ vm_network: "vmbr0"
 datastore_substitutions: {
   'lab_test' : 'local-lvm1',
   'lab_test2': 'local-lvm1',
-  'lab_vlan126' : 'local-lvm1'
+  'lab_vlan126' : 'local-lvm1',
+  'lab_proxmox84' : 'local-lvm1'
 }
 
 # Network substitutions
@@ -55,5 +56,7 @@ network_substitutions: {
   'lab_test_net1' : 'vmbr1000',
   'lab_test_net2' : 'vmbr1001',
   'VLAN126'       : 'vlan126',
+  'lab_proxmox84_net1' : 'vmbr1002',
+  'lab_proxmox84_net2' : 'vmbr1003',
   'lab_vlan126_net2' : 'vmbr2126'
 }
