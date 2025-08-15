@@ -1,7 +1,7 @@
 all:
   hosts:
   vars:
-    lab_name: lab_proxmox81
+    lab_name: lab_proxmox84
     lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
@@ -40,9 +40,14 @@ all:
       hosts:
         ansible:
           ip_address: 192.168.0.15
+          distro: "rocky"
+          version: "9.4"
           install_ansible: true
+          install_xrdp: true
+          
     proxmox:
       vars:
+        pve_version: "8.4-01"
         vm_memory_mb: 16384
         vm_num_cpus: 2
         vm_disk_gb: 250 
@@ -56,7 +61,7 @@ all:
     ontapselecteval:
       hosts:
         ots-01:  
-          ontap_version: "9.14.1RC1"           
+          ontap_version: "9.15.1"           
           ontap_node_mgmt_ip:    192.168.0.91
           ontap_cluster_name:    "demo"
           ontap_cluster_mgmt_ip: 192.168.0.90

@@ -13,7 +13,7 @@ all:
     lab_lan1_dns_ip: "192.168.126.11"
     lab_lan2_portgroup: "lab_vlan126_net2"
     lab_domain_name: "lab126.madlabber.com"
-    lab_domain_controller: "dc01"
+    # lab_domain_controller: "dc01"
   children:
     dc:
       hosts:
@@ -56,6 +56,8 @@ all:
           install_xrdp: true
           install_ansible: true
           nested_virtualization: false
+          include_files:
+            - files/9171RC1_v_image.tgz
 
     vsims:
       hosts:
@@ -168,3 +170,43 @@ all:
           ontap_cluster_name:    "lab126ots60"
           ontap_cluster_mgmt_ip: 192.168.126.60
           vm_data_disk_gb:       200
+
+    proxmox:
+      vars:
+        pve_version: "8.4-1"
+        vm_memory_mb: 16384
+        vm_num_cpus: 2
+        vm_disk_gb: 250 
+      hosts:
+        pve01:
+          state: force
+          ip_address: 192.168.126.51
+        pve02:
+          state: force
+          ip_address: 192.168.126.52
+
+    ubuntu:
+      vars:
+        vm_memory_mb: 4096
+        vm_num_cpus: 2
+        vm_disk_gb: 40 
+        install_xrdp: true
+        install_ansible: true
+      hosts:
+        ubuntu1:
+          state: force
+          ip_address: 192.168.126.201
+          version: "20.04"
+        ubuntu2204:
+          state: force
+          ip_address: 192.168.126.202
+          version: "22.04"
+        ubuntu2404:
+          state: force
+          ip_address: 192.168.126.203
+          version: "24.04"
+        ubuntud2404:
+          state: force
+          ip_address: 192.168.126.204
+          edition: desktop
+          version: "24.04"
