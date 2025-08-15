@@ -5,7 +5,7 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'    
     validate_certs: no 
-    name: '{{ partner_name }}'
+    name: '{{ vm_name }}'
     state: absent
     force: yes
   delegate_to: localhost
