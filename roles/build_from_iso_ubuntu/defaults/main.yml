@@ -1,31 +1,45 @@
 
+state: present 
 edition: "server"
-version: "22.04"
+version: "24.04"
 
 versions:
   server:
     "20.04":
       install_iso:        "ubuntu-20.04.6-live-server-amd64.iso"
       install_iso_url:    "http://releases.ubuntu.com/20.04/ubuntu-20.04.6-live-server-amd64.iso"
-      cloudinit_userdata: "{{role_path}}/files/20.04/user-data"
-      cloudinit_metadata: "{{role_path}}/files/20.04/meta-data"
-      cloudinit_password: "Changeme!"
     "22.04":
-      install_iso:        "ubuntu-22.04.3-live-server-amd64.iso"
-      install_iso_url:    "http://releases.ubuntu.com/22.04/ubuntu-22.04.3-live-server-amd64.iso"
-      cloudinit_userdata: "{{role_path}}/files/22.04/user-data"
-      cloudinit_metadata: "{{role_path}}/files/22.04/meta-data"
-      cloudinit_password: "Changeme!"
+      install_iso:        "ubuntu-22.04.5-live-server-amd64.iso"
+      install_iso_url:    "http://releases.ubuntu.com/22.04/ubuntu-22.04.5-live-server-amd64.iso"
+    "24.04":
+      install_iso:        "ubuntu-24.04.3-live-server-amd64.iso"
+      install_iso_url:    "http://releases.ubuntu.com/24.04/ubuntu-24.04.3-live-server-amd64.iso"
+  desktop:
+    "20.04":  # use server image because desktop does not support autoinstall until 23.04
+      install_iso:        "ubuntu-20.04.6-live-server-amd64.iso"
+      install_iso_url:    "http://releases.ubuntu.com/20.04/ubuntu-20.04.6-live-server-amd64.iso"
+    "22.04":  # use server image because desktop does not support autoinstall until 23.04
+      install_iso:        "ubuntu-22.04.5-live-server-amd64.iso"
+      install_iso_url:    "http://releases.ubuntu.com/22.04/ubuntu-22.04.5-live-server-amd64.iso"
+    "24.04":
+      install_iso:        "ubuntu-24.04.3-desktop-amd64.iso"
+      install_iso_url:    "https://releases.ubuntu.com/24.04/ubuntu-24.04.3-desktop-amd64.iso"     
+
 
 #File name of the config iso
 config_iso:      "{{ vm_name }}-seed.iso"
 
 #Host Vars
-vcenter_address:
+vcenter_address: ""
 vcenter_username:
 vcenter_password:
 vcenter_datacenter:
 vcenter_cluster:
+esxi_address: ""
+pve_node:
+pve_address: ""
+pve_username:
+pve_password:
 vm_datastore:
 iso_datastore:
 # This host can be used to delegate iso downloads
@@ -52,7 +66,28 @@ vm_network: "VM Network"
 vm_disk_gb: 40
 vm_num_cpus: 2
 
+install_desktop_commands:
+  - "apt update"
+  - "apt install -y ubuntu-desktop"
 
+install_xrdp_commands:
+  - "apt install -y xrdp"
+  - "xrdp-keygen xrdp auto"
+  - "adduser xrdp ssl-cert"
+  - "systemctl enable xrdp --now"
+  - "ufw allow 3389/tcp"
 
-
+install_ansible_commands:
+  - "echo {{ vm_password }} | sudo -S apt install -y ansible"
+  - "echo {{ vm_password }} | sudo -S apt install -y python3-pip"
+  - "echo {{ vm_password }} | sudo -S apt install -y python3-dev"
+  # savage but whatever
+  - "python3 -m pip config set global.break-system-packages true"
+  # - "pip3 install --upgrade pip"
+  - "pip3 install netapp-lib"
+  - "pip3 install pyvmomi"
+  - "pip3 install pywinrm"
+  - "pip3 install pycdlib" 
+  # but lets not leave it like that
+  - "python3 -m pip config set global.break-system-packages false"
 

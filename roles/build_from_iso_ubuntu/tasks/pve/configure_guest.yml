@@ -1,0 +1,86 @@
+
+- name: Get VMID 
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: current
+    name: '{{ vm_name|replace("_", "-") }}'
+    node: "{{ pve_node }}"
+  delegate_to: localhost
+  register: create_vm
+
+# including this in the autoinstall is fraught with peril
+# longer timeout because this can take a long time
+- name: Install ubuntu-desktop
+  shell:
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 1200 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
+  delegate_to: temp_host
+  retries: 3
+  delay: 5
+  register: result           
+  until: result is succeeded
+  ignore_errors: true 
+  loop_control:
+    pause: 5
+  loop: "{{ install_desktop_commands }}"
+    # - "apt update"
+    # - "apt install -y ubuntu-desktop"
+  when: install_xrdp|default(false)
+
+- name: Install xRDP
+  shell:
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
+  delegate_to: temp_host
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop_control:
+    pause: 5
+  loop: "{{ install_xrdp_commands }}"
+    # - "apt install -y xrdp"
+    # - "xrdp-keygen xrdp auto"
+    # - "adduser xrdp ssl-cert"
+    # - "systemctl enable xrdp --now"
+    # - "ufw allow 3389/tcp"
+  when: install_xrdp|default(false)
+
+- name: Install Ansible and related components
+  shell:
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
+  delegate_to: temp_host
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop_control:
+    pause: 5
+  loop: "{{ install_ansible_commands }}"
+    # - "echo {{ vm_password }} | sudo -S apt install -y ansible"
+    # - "echo {{ vm_password }} | sudo -S apt install -y python3-pip"
+    # - "echo {{ vm_password }} | sudo -S apt install -y python3-dev"
+    # - "pip3 install --upgrade pip"
+    # - "pip3 install netapp-lib"
+    # - "pip3 install pyvmomi"
+    # - "pip3 install pywinrm"
+    # - "pip3 install pycdlib" 
+  when: install_ansible|default(false)
+
+- name: Run extra shell command via vm_shell
+  shell:
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
+  delegate_to: temp_host
+  retries: 3
+  delay: 5
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop_control:
+    pause: 5
+  loop: "{{ extra_commands }}"
+  when:
+    - extra_commands is defined
+

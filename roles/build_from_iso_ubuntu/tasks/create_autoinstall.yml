@@ -1,0 +1,81 @@
+  - name: hash passwords
+    set_fact: 
+      root_password_hash:  '{{ vm_password_new | password_hash }}'
+      user_password_hash:  '{{ vm_password_new | password_hash }}'
+
+  - name: Creating a new staging directory
+    file:
+      path: "{{ playbook_dir }}/files/{{vm_name}}"
+      state: directory
+    delegate_to: localhost
+
+  - name: Remove old user-data file
+    file:
+      path: "{{ playbook_dir }}/files/{{vm_name}}/user-data"
+      state: absent
+    delegate_to: localhost
+
+  - name: Creating a new meta-data file
+    file:
+      path: "{{ playbook_dir }}/files/{{vm_name}}/meta-data"
+      state: touch
+    delegate_to: localhost
+
+  - name: Creating a new user-data file
+    file:
+      path: "{{ playbook_dir }}/files/{{vm_name}}/user-data"
+      state: touch
+    delegate_to: localhost
+
+  - name: Write user-data file
+    copy:
+      dest: "{{ playbook_dir }}/files/{{vm_name}}/user-data"
+      content: |
+        #cloud-config
+        autoinstall:
+          version: 1
+          user-data:
+            hostname: {{ vm_hostname }}
+            fqdn: {{vm_hostname}}.{{ vm_domain }}
+            disable_root: false
+            users:
+            - name: ubuntu
+              passwd: "{{ user_password_hash }}"
+              shell: /bin/bash
+              lock-passwd: false
+              sudo: ALL=(ALL) NOPASSWD:ALL
+              groups: [users,admin] 
+          ssh:
+              install-server: yes
+              allow-pw: yes
+          network: 
+            network:
+              version: 2
+              ethernets:
+                eth0:
+                  match:
+                    name: ens*
+                  addresses:
+                    - {{vm_address}}/{{vm_netmask_cidr}}
+                  nameservers:
+                    addresses:
+                      - {{ vm_dns_server }}
+                    search:
+                      - {{ vm_domain }}
+                  routes:
+                  - to: default
+                    via: {{ vm_gateway }}
+
+          packages:
+          - net-tools
+          - open-vm-tools
+          - qemu-guest-agent
+          runcmd:
+          - echo "{{ vm_address}} {{vm_hostname}}.{{vm_domain}} {{vm_hostname}}" >> /etc/hosts
+          - sudo systemctl enable qemu-guest-agent
+          - sudo systemctl start qemu-guest-agent
+
+        
+
+    delegate_to: localhost
+

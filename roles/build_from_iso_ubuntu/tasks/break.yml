@@ -1,0 +1,7 @@
+# - name: Break
+#   debug:  
+#     msg: "This error is deliberate"
+
+- name: this creates a deliberate error
+  debug:
+    msg: "{{ break_here }}"

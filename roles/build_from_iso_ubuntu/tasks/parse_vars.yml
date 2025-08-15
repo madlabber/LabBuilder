@@ -1,0 +1,33 @@
+- name: set version defaults 
+  set_fact:
+    install_iso:        '{{ versions[edition][version].install_iso }}'
+    install_iso_url:    '{{ versions[edition][version].install_iso_url }}'
+  when: version != ""
+
+- name: set vmw vars
+  set_fact:
+    host_type: "vmw"
+  when:
+    - vcenter_address ~ esxi_address != ''
+    - pve_address == ''    
+
+- name: set pve vars
+  set_fact:
+    host_type: "pve"
+    checksum_type: "zoned"
+    pve_vm_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
+  when:
+    - pve_address != ''    
+
+- name: Add PVE Host to Dynamic Inventory
+  add_host:
+    hostname: temp_host
+    group: "temp_hosts"
+    ansible_host: '{{ pve_address }}'
+    ansible_user: '{{ pve_username }}'
+    ansible_password: '{{ pve_password }}'
+    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+  when: 
+    - host_type == 'pve'
+

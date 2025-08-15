@@ -1,0 +1,8 @@
+- name: reboot guest
+  shell:
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
+  delegate_to: temp_host
+  register: result
+  ignore_errors: true
+  loop: 
+    - sudo reboot

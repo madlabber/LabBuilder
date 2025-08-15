@@ -1,0 +1,102 @@
+---
+# including this in the autoinstall is fraught with peril
+- name: Install ubuntu-desktop
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "{{ vm_username }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"echo {{ vm_password }} | sudo -S {{item}}\""
+    wait_for_process: true
+  delegate_to: localhost  
+  retries: 3
+  delay: 5
+  register: result           
+  until: result is succeeded
+  ignore_errors: true 
+  loop: "{{ install_desktop_commands }}"
+    # - "apt update"
+    # - "apt install -y ubuntu-desktop"
+  when: install_xrdp|default(false)
+
+- name: Install xRDP
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "{{ vm_username }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"echo {{ vm_password }} | sudo -S {{item}}\""
+    wait_for_process: true
+  delegate_to: localhost  
+  retries: 5
+  delay: 60
+  register: result           
+  until: result is succeeded
+  ignore_errors: true 
+  loop: "{{ install_xrdp_commands }}"
+    # - "apt install -y xrdp"
+    # - "xrdp-keygen xrdp auto"
+    # - "adduser xrdp ssl-cert"
+    # - "systemctl enable xrdp --now"
+    # - "ufw allow 3389/tcp"
+  when: install_xrdp|default(false)
+
+- name: Install Ansible and related components
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
+    validate_certs: no 
+    vm_username: "{{ vm_username }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: '{{ vm_name }}'
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"{{item}}\""
+    wait_for_process: true
+  delegate_to: localhost  
+  retries: 5
+  delay: 60
+  register: result           
+  until: result is succeeded
+  ignore_errors: true 
+  loop: "{{ install_ansible_commands }}"
+    # - "echo {{ vm_password }} | sudo -S apt install -y ansible"
+    # - "echo {{ vm_password }} | sudo -S apt install -y python3-pip"
+    # - "echo {{ vm_password }} | sudo -S apt install -y python3-dev"
+    # - "pip3 install --upgrade pip"
+    # - "pip3 install netapp-lib"
+    # - "pip3 install pyvmomi"
+    # - "pip3 install pywinrm"
+    # - "pip3 install pycdlib" 
+  when: install_ansible|default(false)
+
+- name: Run extra shell command via vm_shell
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: "{{ vm_username }}"
+    vm_password: '{{ vm_password }}'
+    vm_id: "{{ vm_name }}"
+    vm_shell: '/usr/bin/sh'
+    vm_shell_args: " -c \"echo {{ vm_password }} | sudo -S {{item}}\""
+    wait_for_process: true
+    timeout: 3600
+  delegate_to: localhost
+  retries: 3
+  delay: 60
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  loop: "{{ extra_commands }}"
+  when:
+    - extra_commands is defined

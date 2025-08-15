@@ -1,16 +1,34 @@
 ---
-# - name: Build CentOS Linux VMs
-#   hosts: centos
-#   gather_facts: false
-#   vars_files:
-#     - vars/main.yml
-#   tasks:
-- name: Build Ubuntu VM - ansible
-  include_tasks: build_vm.yml
+- name: parse variables
+  include_tasks: parse_vars.yml
 
-# - name: install awx - ansible
-#   block:
-#   - include_tasks: tasks/install_AWX_in_CentOS7_with_vm_shell.yml
-#     when: install_awx|default(false)
-#   when: version|lower == "centos7"
+- name: remove vm if state is absent or forced
+  include_tasks: "{{host_type}}/absent.yml"
 
+- name: upload install iso
+  include_tasks: "{{host_type}}/upload_install_iso.yml"
+
+- name: create autoinstall file
+  include_tasks: create_autoinstall.yml
+
+- name: create config iso
+  include_tasks: create_config_iso.yml
+
+- name: upload config iso
+  include_tasks: "{{host_type}}/upload_config_iso.yml"
+
+- name: build vm 
+  include_tasks: "{{host_type}}/build_vm.yml"
+
+- name: wait for guest os to accept logins 
+  include_tasks: "{{host_type}}/retry_logins.yml"
+
+- name: configure guest 
+  include_tasks: "{{host_type}}/configure_guest.yml"
+
+- name: reboot guest 
+  include_tasks: "{{host_type}}/reboot_guest.yml"
+
+- name: cleanup staging files
+  include_tasks: cleanup.yml
+  

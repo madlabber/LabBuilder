@@ -1,0 +1,15 @@
+---
+- name: test login
+  shell:
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
+  register: test_vm_password
+  delegate_to: temp_host 
+  retries: 60
+  delay: 60
+  until: test_vm_password is succeeded
+  loop:
+    - ls
+  
+
+
+    
