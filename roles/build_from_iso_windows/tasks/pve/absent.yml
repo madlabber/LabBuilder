@@ -1,0 +1,19 @@
+- name: remove if absent or forced
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: absent
+    force: true
+    name: '{{ vm_name|replace("_", "-") }}'
+    node: "{{ pve_node }}"
+  delegate_to: localhost
+  when: state == "absent" or state == "force"
+  register: make_absent
+  retries: 3
+  delay: 10
+  until: make_absent is succeeded
+
+- name: end play for this host if state is absent
+  ansible.builtin.meta: end_host
+  when: state == "absent"

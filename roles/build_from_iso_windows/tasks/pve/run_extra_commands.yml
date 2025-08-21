@@ -11,11 +11,14 @@
 
 - name: run extra commands
   command:
-    cmd: 'qm guest exec {{ create_vm.vmid }} --timeout 600 -- powershell.exe -command "({{item}})"'
+    cmd: 'qm guest exec {{ create_vm.vmid }} --timeout 3600 -- powershell.exe -command "({{item}})" |grep exitcode|grep 0'
   delegate_to: temp_host
-  loop_control:
-    pause: 5
   ignore_errors: true
+  retries: 3
+  delay: 10
   register: result
+  until: result is succeeded
+  loop_control:
+    pause: 10
   loop: "{{extra_commands}}"
   when: extra_commands is defined

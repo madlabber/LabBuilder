@@ -1,0 +1,5 @@
+- name: remove staging directory
+  file:
+    path: "{{ playbook_dir }}/files/{{vm_name}}"
+    state: absent
+  delegate_to: localhost

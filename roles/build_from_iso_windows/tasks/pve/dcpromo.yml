@@ -11,7 +11,7 @@
 
 - name: Check OS ProductType
   command:
-    cmd: 'qm guest exec {{ create_vm.vmid }} -- powershell.exe -command "({{item}})"'
+    cmd: 'qm guest exec {{ create_vm.vmid }} --timeout 1200 -- powershell.exe -command "({{item}})" |grep exitcode|grep 0'
   delegate_to: temp_host
   loop_control:
     pause: 5
@@ -29,12 +29,15 @@
   block:  
   - name: Prepare for DCPromo
     command:
-      cmd: 'qm guest exec {{ create_vm.vmid }} -- powershell.exe -command "({{item}})"'
+      cmd: 'qm guest exec {{ create_vm.vmid }} --timeout 3600 -- powershell.exe -command "({{item}})" |grep exitcode|grep 0'
     delegate_to: temp_host
     loop_control:
       pause: 5
     ignore_errors: true
+    retries: 3
+    delay: 10
     register: result
+    until: result is succeeded
     loop: 
       # Install AD-Domain-Services
       - "Install-windowsfeature AD-Domain-Services -IncludeAllSubFeature -IncludeManagementTools"
@@ -44,31 +47,37 @@
       - "Set-ExecutionPolicy unrestricted"
 
   - name: reboot guest
-    include_tasks: pve_reboot_guest.yml
+    include_tasks: reboot_guest.yml
 
   - name: Create Domain
     command:
-      cmd: 'qm guest exec {{ create_vm.vmid }} --timeout 600 -- powershell.exe -command "({{item}})"'
+      cmd: 'qm guest exec {{ create_vm.vmid }} --timeout 3600 -- powershell.exe -command "({{item}})" |grep exitcode|grep 0'
     delegate_to: temp_host
     loop_control:
       pause: 5
     ignore_errors: true
+    retries: 3
+    delay: 10
     register: result
+    until: result is succeeded
     loop:
       - "Import-module addsdeployment"
-      - "Install-ADDSForest -DomainName {{vm_domain}} -CreateDnsDelegation:$false -InstallDNS:$true -NoRebootOnCompletion:$true -DatabasePath C:\\Windows\\NTDS -LogPath C:\\Windows\\NTDS -SysvolPath C:\\Windows\\SYSVOL -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password }} -AsPlainText -Force:$true) -Force:$true -WarningAction silentlyContinue"
+      - "Install-ADDSForest -DomainName {{vm_domain}} -CreateDnsDelegation:$false -InstallDNS:$true -NoRebootOnCompletion:$true -DatabasePath C:\\Windows\\NTDS -LogPath C:\\Windows\\NTDS -SysvolPath C:\\Windows\\SYSVOL -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password_new }} -AsPlainText -Force:$true) -Force:$true -WarningAction silentlyContinue"
 
   - name: reboot guest
-    include_tasks: pve_reboot_guest.yml
+    include_tasks: reboot_guest.yml
 
   - name: Perform additional configuration steps
     command:
-      cmd: 'qm guest exec {{ create_vm.vmid }} -- powershell.exe -command "({{item}})"'
+      cmd: 'qm guest exec {{ create_vm.vmid }} --timeout 3600 -- powershell.exe -command "({{item}})" |grep exitcode|grep 0'
     delegate_to: temp_host
     loop_control:
       pause: 5
     ignore_errors: true
+    retries: 3
+    delay: 10
     register: result
+    until: result is succeeded
     loop:
       # Assign dns server to itself      
       - "Set-DnsClientServerAddress -InterfaceAlias Ethernet -ServerAddresses 127.0.0.1"

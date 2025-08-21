@@ -3,19 +3,22 @@
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'
-    validate_certs: no
+    validate_certs: false
     vm_username: '{{ vm_username }}'
     vm_password: '{{ vm_password_new }}'
     vm_id:       '{{ vm_name }}'
-    vm_shell:    'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-    vm_shell_args: " -command \"({{item}})\""
+    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+    vm_shell_args: ' -command "{{item}}"'
     wait_for_process: true
+    timeout: 600
   delegate_to: localhost
+  loop: "{{extra_commands}}"
   retries: 3
   delay: 10
   register: result
   until: result is succeeded
   ignore_errors: true
-  loop: "{{extra_commands}}"
+  loop_control:
+    pause: 10
   when: extra_commands is defined
   

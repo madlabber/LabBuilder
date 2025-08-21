@@ -1,0 +1,61 @@
+- name: set version defaults 
+  set_fact:
+    install_iso: '{{ versions[version].install_iso }}'
+    image_name:  '{{ versions[version].image_name }}'
+    install_iso_url: '{{ versions[version].install_iso_url }}'
+    virtio_win_gt_x64_url: '{{ versions[version].virtio_win_gt_x64_url }}'
+    virtio_win_guest_tools_url: '{{ versions[version].virtio_win_guest_tools_url }}'
+    vmware_tools_url: '{{ versions[version].vmware_tools_url }}'
+
+- name: set vmw vars
+  set_fact:
+    host_type: "vmw"
+    vm_eth0_name: "Ethernet0"
+  when:
+    - vcenter_address ~ esxi_address != ''
+
+- name: Map ESXi login variables
+  set_fact:
+    vcenter_address: "{{ esxi_address }}"
+    vcenter_username: "{{ esxi_username }}"
+    vcenter_password: "{{ esxi_password }}"
+    vcenter_datacenter: "ha-datacenter"
+  delegate_to: localhost
+  when: 
+    - host_type == "vmw"
+    - vcenter_address|default('') == ''
+
+- name: set pve vars
+  set_fact:
+    host_type: "pve"
+    vm_eth0_name: "Ethernet"
+    pve_vm_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
+  when:
+    - pve_address != ''    
+
+- name: Add PVE Host to Dynamic Inventory
+  add_host:
+    hostname: temp_host
+    group: "temp_hosts"
+    ansible_host: '{{ pve_address }}'
+    ansible_user: '{{ pve_username }}'
+    ansible_password: '{{ pve_password }}'
+    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+  when: 
+    - host_type == 'pve'
+
+# Domain Join Vars
+- name: select vm_domain
+  set_fact:
+    domain: "{{vm_domain}}"
+  when: join_domain|default(false)|string|lower == "true"
+
+- name: select join_domain 
+  set_fact:
+    domain: "{{join_domain}}"
+  when: join_domain|default(false)|string|lower != "true"
+
+- name: map vm_password 
+  set_fact:
+    vm_password: "{{ vm_password | default(vm_password_new| default('') ) }}"

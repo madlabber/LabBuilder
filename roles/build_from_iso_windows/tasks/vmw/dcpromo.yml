@@ -1,19 +1,12 @@
 ---
-- name: set vcenter login
-  set_fact:
-    vclogin: &vclogin
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}' 
-      validate_certs: false
-    vmlogin: &vmlogin
-      vm_username: "{{ vm_username }}"
-      vm_password: "{{ vm_password }}"    
-
-- name: Prepare for DCPromo
+- name: Test to see if DC Promo has already been done
   community.vmware.vmware_vm_shell:
-    <<: *vclogin
-    <<: *vmlogin
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}' 
+    validate_certs: false
+    vm_username: "{{ vm_username }}"
+    vm_password: '{{ vm_password_new }}'
     vm_id: "{{ vm_name }}"
     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
     vm_shell_args: " -command \"({{item}})\""
@@ -28,8 +21,12 @@
   block:   
   - name: Prepare for DCPromo
     community.vmware.vmware_vm_shell:
-      <<: *vclogin
-      <<: *vmlogin
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}' 
+      validate_certs: false
+      vm_username: "{{ vm_username }}"
+      vm_password: '{{ vm_password_new }}'
       vm_id: "{{ vm_name }}"
       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
       vm_shell_args: " -command \"({{item}})\""
@@ -49,8 +46,12 @@
 
   - name: Create Domain
     community.vmware.vmware_vm_shell:
-      <<: *vclogin
-      <<: *vmlogin
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}' 
+      validate_certs: false
+      vm_username: "{{ vm_username }}"
+      vm_password: '{{ vm_password_new }}'
       vm_id: "{{ vm_name }}"
       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
       vm_shell_args: " -command \"({{item}})\""
@@ -58,16 +59,19 @@
     delegate_to: localhost
     loop:
       - "Import-module addsdeployment"
-      - "Install-ADDSForest -DomainName {{vm_domain}} -CreateDnsDelegation:$false -InstallDNS:$true -NoRebootOnCompletion:$true -DatabasePath C:\\Windows\\NTDS -LogPath C:\\Windows\\NTDS -SysvolPath C:\\Windows\\SYSVOL -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password }} -AsPlainText -Force:$true) -Force:$true -WarningAction silentlyContinue"
+      - "Install-ADDSForest -DomainName {{vm_domain}} -CreateDnsDelegation:$false -InstallDNS:$true -NoRebootOnCompletion:$true -DatabasePath C:\\Windows\\NTDS -LogPath C:\\Windows\\NTDS -SysvolPath C:\\Windows\\SYSVOL -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password_new }} -AsPlainText -Force:$true) -Force:$true -WarningAction silentlyContinue"
     retries: 6
     delay: 60
     register: result           
     until: result is succeeded    
-    ignore_errors: yes #This step always returns a vix error
+    ignore_errors: true #This step always returns a vix error
 
   - name: Reboot-Guest
     vmware_guest_powerstate:
-      <<: *vclogin
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}' 
+      validate_certs: false
       name: '{{ vm_name }}'
       state: reboot-guest
     delegate_to: localhost
@@ -82,7 +86,12 @@
 
   - name: Wait for VMware tools to become available by name
     vmware_guest_tools_wait:
-      <<: *vclogin
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}' 
+      validate_certs: false
+      # vm_username: "{{ vm_username }}"
+      # vm_password: '{{ vm_password_new }}'
       name: '{{ vm_name }}'
     delegate_to: localhost
     retries: 3
@@ -96,8 +105,12 @@
 
   - name: Perform additional configuration steps
     community.vmware.vmware_vm_shell:
-      <<: *vclogin
-      <<: *vmlogin
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}' 
+      validate_certs: false
+      vm_username: "{{ vm_username }}"
+      vm_password: '{{ vm_password_new }}'
       vm_id: "{{ vm_name }}"
       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
       vm_shell_args: " -command \"({{item}})\""
@@ -107,6 +120,7 @@
     delay: 15 
     register: result           
     until: result is succeeded     
+    ignore_errors: true
     loop:
       # Assign dns server to itself      
       - "Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses 127.0.0.1"
@@ -118,6 +132,7 @@
       - "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False"
 
   when: checkdc is failed
+  
 # scriptlet for adding dns records
 #Add-DnsServerResourceRecordA -Name "host23" -ZoneName "contoso.com" -AllowUpdateAny -IPv4Address "172.18.99.23" -TimeToLive 01:00:00
 

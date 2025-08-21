@@ -1,0 +1,32 @@
+- name: Creating version directory
+  file:
+    path: "{{ role_path }}/files/{{ version }}"
+    state: directory
+  delegate_to: localhost
+
+- name: download virtio_win_gt_x64
+  get_url:
+    url:  "{{ virtio_win_gt_x64_url }}"
+    dest: "{{ role_path }}/files/{{ version }}/virtio_win_gt_x64.msi"
+  delegate_to: localhost
+  when: host_type == 'pve'
+
+- name: download virtio_win_guest_tools
+  get_url:
+    url:  "{{ virtio_win_guest_tools_url }}"
+    dest: "{{ role_path }}/files/{{ version }}/virtio_win_guest_tools.exe"
+  delegate_to: localhost
+  when: host_type == 'pve'
+
+- name: download ConfigureRemotingForAnsible.ps1
+  get_url:
+    url: "{{ winrm_script_url }}"
+    dest: "{{ role_path }}/files/{{ version }}/ConfigureRemotingForAnsible.ps1"
+  delegate_to: localhost
+
+- name: download VMware Tools
+  get_url:
+    url:  "{{ vmware_tools_url }}"
+    dest: "{{ role_path }}/files/{{ version }}/VMware_tools.exe"
+  delegate_to: localhost
+  when: host_type == 'vmw'

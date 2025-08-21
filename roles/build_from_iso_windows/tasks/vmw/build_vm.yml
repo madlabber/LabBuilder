@@ -114,22 +114,9 @@
   register: result
   until: result is succeeded
 
-- name: Set password via vmware_vm_shell
-  community.vmware.vmware_vm_shell:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no
-    vm_username: "{{vm_username}}"
-    vm_id: '{{ vm_name }}'
-    vm_password: '{{ vm_password_old }}'
-    vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-    vm_shell_args: '-command "(net user Administrator {{ vm_password_new }})"'
-    wait_for_process: true
+- name: Pause for first boot commands (120 sec)
+  wait_for: timeout=120
   delegate_to: localhost
-  register: setpassword
-  ignore_errors: true
-
 
 
 

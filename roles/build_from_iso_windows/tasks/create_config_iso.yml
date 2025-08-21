@@ -1,0 +1,67 @@
+---
+- name: Creating files directory
+  file:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/files"
+    state: directory
+  delegate_to: localhost
+
+- name: include virtio tools
+  copy:
+    src: "{{item}}"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/files/"
+  delegate_to: localhost
+  with_items: 
+    - "{{ role_path }}/files/{{ version }}/virtio_win_gt_x64.msi"
+    - "{{ role_path }}/files/{{ version }}/virtio_win_guest_tools.exe"
+    - "{{ role_path }}/files/{{ version }}/ConfigureRemotingForAnsible.ps1"
+  ignore_errors: true
+  when: host_type == "pve"
+
+- name: include vmware tools 
+  copy:
+    src: "{{item}}"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/files/"
+  delegate_to: localhost
+  with_items: 
+    - "{{ role_path }}/files/{{ version }}/VMware_tools.exe"
+    - "{{ role_path }}/files/{{ version }}/ConfigureRemotingForAnsible.ps1"
+  ignore_errors: true
+  when: host_type == "vmw"
+
+- name: download additional files
+  ansible.builtin.get_url:
+    url: "{{ item }}"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/files/"
+  delegate_to: localhost 
+  when: extra_files_urls|default('') != ''
+  ignore_errors: true
+  with_items: "{{ extra_files_urls }}"
+
+- name: include additional files
+  copy:
+    src: "{{item}}"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/files/"
+  delegate_to: localhost
+  with_items: "{{include_files}}"
+  when: include_files|default('') != ''
+  ignore_errors: true
+
+- name: include additional files
+  copy:
+    src: "{{item}}"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/files/"
+  delegate_to: localhost
+  with_items: "{{extra_files}}"
+  when: extra_files|default('') != ''
+  ignore_errors: true
+
+- name: Create Config ISO
+  community.general.iso_create:
+    src_files:
+      - "{{ playbook_dir }}/files/{{vm_name}}/autounattend.xml"
+      - "{{ playbook_dir }}/files/{{vm_name}}/files/"
+    dest_iso: "{{ playbook_dir }}/files/{{vm_name}}/{{config_iso}}"
+    interchange_level: 4
+    joliet: 3
+    vol_ident: OEMDRV
+  delegate_to: localhost

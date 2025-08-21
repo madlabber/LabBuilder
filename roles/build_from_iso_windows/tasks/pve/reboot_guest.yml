@@ -27,7 +27,7 @@
     network: True
   delegate_to: localhost
   retries: 60
-  delay: 10
+  delay: 60
   register: vminfo
   until: vminfo is succeeded
   ignore_errors: true

@@ -1,0 +1,19 @@
+- name: join Domain
+  command:
+    cmd: 'qm guest exec {{ create_vm.vmid }} --timeout 3600 -- powershell.exe -command "({{item}})" |grep exitcode|grep 0'
+  delegate_to: temp_host
+  loop_control:
+    pause: 5
+  ignore_errors: true
+  retries: 3
+  delay: 10
+  register: result
+  until: result is succeeded
+  loop:
+    - "Add-Computer -DomainName {{domain}} -credential (New-Object System.Management.Automation.PSCredential 'administrator@{{domain}}', (convertto-securestring {{ vm_password_new }} -AsPlainText -Force))"
+  when: join_domain|default(false)|string|lower != "false"
+
+# - name: reboot guest
+#   include_tasks: reboot_guest.yml
+#   when: join_domain|default(false)|string|lower != "false"
+

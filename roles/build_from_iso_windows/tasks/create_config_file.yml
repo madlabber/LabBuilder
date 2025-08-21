@@ -1,0 +1,26 @@
+- name: Creating staging directory
+  file:
+    path: "{{ playbook_dir }}/files/{{ vm_name }}"
+    state: directory
+  delegate_to: localhost
+
+- name: create autounattend from template
+  ansible.builtin.template:
+    src: "{{role_path}}/templates/autounattend.j2"
+    dest: "{{ playbook_dir }}/files/{{ vm_name }}/autounattend.xml"
+  delegate_to: localhost 
+
+- name: create autounattend from version template
+  ansible.builtin.template:
+    src: "{{role_path}}/templates/{{ version }}.j2"
+    dest: "{{ playbook_dir }}/files/{{ vm_name }}/autounattend.xml"
+  delegate_to: localhost 
+  ignore_errors: true
+
+# - name: copy files to staging directory
+#   copy:
+#     src: "{{ role_path }}/files/{{ version }}/{{host_type}}/autounattend.xml"
+#     dest: "{{ playbook_dir }}/files/{{vm_name}}/autounattend.xml"
+#   delegate_to: localhost
+
+

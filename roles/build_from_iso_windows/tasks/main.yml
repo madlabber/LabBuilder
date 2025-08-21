@@ -1,13 +1,68 @@
 ---
-- name: build vm on VMware
-  include_tasks: vmw_main.yml
-  when: 
-    - vcenter_address|default(esxi_address) != ''
-    - pve_address|default('') == ''
+- name: parse variables
+  include_tasks: parse_vars.yml
 
-- name: build vm on PVE
-  include_tasks: pve_main.yml
+- name: remove vm if state is absent or forced
+  include_tasks: "{{host_type}}/absent.yml"
   when:
-    - pve_address|default('') != ''
+    - debug_windows|default('') == '' 
 
+- name: upload install iso
+  include_tasks: "{{host_type}}/upload_install_iso.yml"
+  when:
+    - debug_windows|default('') == '' 
 
+- name: download tools 
+  include_tasks: download_tools.yml 
+  when:
+    - debug_windows|default('') == '' 
+
+- name: create config file
+  include_tasks: "create_config_file.yml"
+  when:
+    - debug_windows|default('') == '' 
+
+- name: create config iso
+  include_tasks: "create_config_iso.yml"
+  when:
+    - debug_windows|default('') == '' 
+
+- name: upload config iso
+  include_tasks: "{{host_type}}/upload_config_iso.yml"
+  when:
+    - debug_windows|default('') == '' 
+
+- name: build VM
+  include_tasks: "{{host_type}}/build_vm.yml"
+  when:
+    - debug_windows|default('') == '' 
+
+# - name: configure guest
+#   include_tasks: "{{host_type}}/configure_guest.yml"
+
+- name: join domain
+  include_tasks: "{{host_type}}/join_domain.yml"
+  when: 
+    - join_domain|default(false)
+    - debug_windows|default('') == '' 
+
+- name: reboot guest
+  include_tasks: "{{host_type}}/reboot_guest.yml"
+  when:
+    - debug_windows|default('') == '' 
+
+- name: dcpromo
+  include_tasks: "{{host_type}}/dcpromo.yml"
+  when: 
+    - dcpromo|default(false)
+    - debug_windows|default('') == '' 
+
+- name: Run extra commands
+  include_tasks: "{{host_type}}/run_extra_commands.yml"
+  when:
+    - debug_windows == "" or debug_windows == 'extra_commands' 
+
+- name: clean up staging files
+  include_tasks: cleanup.yml
+  when:
+    - debug_windows|default('') == ''

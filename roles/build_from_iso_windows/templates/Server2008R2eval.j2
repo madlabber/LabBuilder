@@ -1,24 +1,3 @@
-<!--*************************************************
-Windows Server 2016 Answer File Generator
-Created using Windows AFG found at:
-;http://www.windowsafg.com
-
-Installation Notes
-Location:
-Notes: Enter your comments here...
-Hand edits by Sean Hatfield
-madlabber.com
-
-Modified to work with the 180day EVAL ISO:
--Added <InstallFrom>...</InstallFrom>
--removed the <productkey> section
-
-Modified to enable WinRM for Ansible
--Added <logoncount>1</logoncount>
--Added <FirstLogonCommands>...</FirstLogonCommands>
-
-**************************************************-->
-
 <?xml version="1.0" encoding="utf-8"?>
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
 <settings pass="windowsPE">
@@ -33,60 +12,76 @@ Modified to enable WinRM for Ansible
 <UserLocale>en-US</UserLocale>
 </component>
 <component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-<ImageInstall>
-<OSImage>
-<InstallTo>
-<DiskID>0</DiskID>
-<PartitionID>2</PartitionID>
-</InstallTo>
-	<InstallFrom>
-    <MetaData wcm:action="add">
-    <Key>/IMAGE/NAME</Key>
-    <Value>Windows Server 2019 SERVERSTANDARD</Value>
-    </MetaData>
-	</InstallFrom>
-</OSImage>
-</ImageInstall>
+
 <UserData>
 <AcceptEula>true</AcceptEula>
 <FullName>Administrator</FullName>
 <Organization>Organization</Organization>
 </UserData>
-<EnableFirewall>true</EnableFirewall>
+<EnableFirewall>false</EnableFirewall>
+
 <DiskConfiguration>
-<Disk wcm:action="add">
-<CreatePartitions>
-<CreatePartition wcm:action="add">
-<Order>1</Order>
-<Size>350</Size>
-<Type>Primary</Type>
-</CreatePartition>
-<CreatePartition wcm:action="add">
-<Extend>true</Extend>
-<Order>2</Order>
-<Type>Primary</Type>
-</CreatePartition>
-</CreatePartitions>
+
+  <Disk wcm:action="add">
+  <DiskID>0</DiskID>
+  <WillWipeDisk>true</WillWipeDisk>
+  <CreatePartitions>
+    <!-- System partition -->
+    <CreatePartition wcm:action="add">
+      <Order>1</Order>
+      <Type>Primary</Type>
+      <Size>350</Size>
+    </CreatePartition>
+
+    <!-- Windows partition -->
+    <CreatePartition wcm:action="add">
+      <Order>2</Order>
+      <Type>Primary</Type>
+      <Extend>true</Extend>
+    </CreatePartition>
+  </CreatePartitions>
+
 <ModifyPartitions>
-<ModifyPartition wcm:action="add">
-<Format>NTFS</Format>
-<Label>System</Label>
-<Order>1</Order>
-<PartitionID>1</PartitionID>
-<TypeID>0x27</TypeID>
-</ModifyPartition>
-<ModifyPartition wcm:action="add">
-<Order>2</Order>
-<PartitionID>2</PartitionID>
-<Letter>C</Letter>
-<Label>System</Label>
-<Format>NTFS</Format>
-</ModifyPartition>
-</ModifyPartitions>
-<DiskID>0</DiskID>
-<WillWipeDisk>true</WillWipeDisk>
-</Disk>
+      <!-- System partition -->
+      <ModifyPartition wcm:action="add">
+        <Order>1</Order>
+        <PartitionID>1</PartitionID>
+        <Label>System</Label>
+        <TypeID>0x27</TypeID>
+        <Format>NTFS</Format>
+      </ModifyPartition>
+
+      <!-- Windows partition -->
+      <ModifyPartition wcm:action="add">
+        <Order>2</Order>
+        <PartitionID>2</PartitionID>
+        <Label>Windows</Label>
+        <Letter>C</Letter>
+        <Format>NTFS</Format>
+      </ModifyPartition>
+    </ModifyPartitions>
+  </Disk>
 </DiskConfiguration>
+
+<ImageInstall>
+<OSImage>
+
+    <!-- Target Partition -->
+<InstallTo>
+<DiskID>0</DiskID>
+<PartitionID>2</PartitionID>
+</InstallTo>
+
+    <!-- Install Source -->
+	<InstallFrom>
+      <MetaData wcm:action="add">
+        <Key>/IMAGE/NAME</Key>
+        <Value>{{ image_name }}</Value>
+      </MetaData>
+	</InstallFrom>
+</OSImage>
+</ImageInstall>
+
 </component>
 </settings>
 <settings pass="offlineServicing">
@@ -114,14 +109,29 @@ Modified to enable WinRM for Ansible
 <CEIPEnabled>0</CEIPEnabled>
 </component>
 <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-<ComputerName></ComputerName>
+<ComputerName>{{ vm_hostname|upper|truncate( 15, true, "", 0) }}</ComputerName>
 </component>
+  <component name="Microsoft-Windows-TerminalServices-LocalSessionManager" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <fDenyTSConnections>false</fDenyTSConnections>
+  </component>
+  <component name="Microsoft-Windows-TerminalServices-RDP-WinStationExtensions" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <UserAuthentication>0</UserAuthentication>
+  </component>
+  <component name="Networking-MPSSVC-Svc" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <FirewallGroups>
+      <FirewallGroup wcm:action="add" wcm:keyValue="rd1">
+        <Active>true</Active>
+        <Group>Remote Desktop</Group>
+        <Profile>all</Profile>
+      </FirewallGroup>
+    </FirewallGroups>
+  </component>
 </settings>
 <settings pass="oobeSystem">
 <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <AutoLogon>
 <Password>
-<Value>Changeme!</Value>
+<Value>{{ vm_password }}</Value>
 <PlainText>true</PlainText>
 </Password>
 <Enabled>true</Enabled>
@@ -135,27 +145,36 @@ Modified to enable WinRM for Ansible
     </SynchronousCommand>              
     <SynchronousCommand wcm:action="add">
     <Order>2</Order>
-    <CommandLine>msiexec /I e:\virtio-win-gt-x64.msi /qn /passive /log ".." ADDLOCAL=ALL</CommandLine>
+    <CommandLine>msiexec /I e:\files\virtio-win-gt-x64.msi /qn /passive /log ".." ADDLOCAL=ALL</CommandLine>
     </SynchronousCommand>
     <SynchronousCommand wcm:action="add">
     <Order>3</Order>
-    <CommandLine>e:\virtio_win_guest_tools.exe /S</CommandLine>
+    <CommandLine>e:\files\virtio_win_guest_tools.exe /S</CommandLine>
+    </SynchronousCommand>
+    <SynchronousCommand wcm:action="add">
+    <Order>4</Order>
+    <CommandLine>E:\files\VMware_tools.exe /S /v"/qn REBOOT=R"</CommandLine>
+    </SynchronousCommand>
+    <SynchronousCommand wcm:action="add">
+    <Order>5</Order>
+    <CommandLine>netsh interface ipv4 set address "Local Area Connection" static {{ vm_address }} {{vm_netmask}} {{ vm_gateway }} 1</CommandLine>
+    </SynchronousCommand>
+    <SynchronousCommand wcm:action="add">
+    <Order>6</Order>
+    <CommandLine>netsh interface ipv4 set dns "Local Area Connection" static {{ vm_dns_server }}</CommandLine>
     </SynchronousCommand>
 </FirstLogonCommands>
 <OOBE>
-<HideEULAPage>true</HideEULAPage>
-<HideLocalAccountScreen>true</HideLocalAccountScreen>
-<HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
-<HideOnlineAccountScreens>true</HideOnlineAccountScreens>
-<HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
-<NetworkLocation>Work</NetworkLocation>
-<ProtectYourPC>3</ProtectYourPC>
-<SkipMachineOOBE>true</SkipMachineOOBE>
-<SkipUserOOBE>true</SkipUserOOBE>
+    <HideEULAPage>true</HideEULAPage>
+    <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+    <NetworkLocation>Work</NetworkLocation>
+    <ProtectYourPC>1</ProtectYourPC>
+    <SkipMachineOOBE>true</SkipMachineOOBE>
+    <SkipUserOOBE>true</SkipUserOOBE>
 </OOBE>
 <UserAccounts>
 <AdministratorPassword>
-<Value>Changeme!</Value>
+<Value>{{ vm_password }}</Value>
 <PlainText>true</PlainText>
 </AdministratorPassword>
 <LocalAccounts>

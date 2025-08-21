@@ -135,7 +135,7 @@ Modified to enable WinRM for Ansible
     </SynchronousCommand>              
     <SynchronousCommand wcm:action="add">
     <Order>2</Order>
-    <CommandLine>E:\VMware_tools.exe /S /v"/qn REBOOT=R"</CommandLine>
+    <CommandLine>E:\files\VMware_tools.exe /S /v"/qn REBOOT=R"</CommandLine>
     </SynchronousCommand>
     </FirstLogonCommands>  
 <OOBE>
