@@ -9,3 +9,7 @@
   include_tasks: deploy_to_esxi.yml
   when: vcenter_address|default('') == '' or vcenter_address == esxi_address
 
+- name: deploy to proxmox
+  include_tasks: deploy_to_pve.yml 
+  when: pve_address|default('') != ''
+  
