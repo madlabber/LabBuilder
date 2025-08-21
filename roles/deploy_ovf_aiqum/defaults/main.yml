@@ -9,7 +9,7 @@
 
 ## ovf_file information
 ovf_version: "9.16RC1"
-ovf_file: "{{role_path}}/files/ActiveIQUnifiedManager-{{ovf_version}}.ova"
+ovf_file: "{{ playbook_dir }}/files/ActiveIQUnifiedManager-{{ovf_version}}.ova"
 
 ## VM configuration
 vm_name: "aiqum"
@@ -39,3 +39,19 @@ vm_username: "admin"
 vm_password: "ChangeMe2!"
 vm_timezone_geo:  "11" #11 = US, was 12 in older versions
 vm_timezone_region: "10" #10 = Pacific
+
+#Host Vars
+vcenter_address: ""
+vcenter_username:
+vcenter_password:
+vcenter_datacenter:
+vcenter_cluster:
+esxi_address: ""
+pve_node:
+pve_address: ""
+pve_username:
+pve_password:
+iso_datastore:
+esxi_hostname:   
+esxi_username:
+esxi_password:
