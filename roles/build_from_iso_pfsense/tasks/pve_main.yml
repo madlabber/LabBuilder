@@ -46,6 +46,11 @@
     state: started
     name: '{{ vm_name|replace("_", "-") }}'
   delegate_to: localhost
+  retries: 3
+  delay: 10
+  register: result
+  until: result is succeeded
+  ignore_errors: true
 
 - name: 'Wait {{install_timer|default(90)}} seconds for boot'
   wait_for: 
