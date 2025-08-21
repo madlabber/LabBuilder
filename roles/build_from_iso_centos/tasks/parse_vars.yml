@@ -1,0 +1,51 @@
+- name: set version defaults 
+  set_fact:
+    install_iso:        '{{ versions[distro][version].install_iso }}'
+    install_iso_url:    '{{ versions[distro][version].install_iso_url }}'
+  when: 
+    # allow for user specified ISO file
+    - install_iso == ""
+
+- name: map values
+  set_fact:
+    config_iso:      "{{vm_name}}-ks.iso"
+    vm_password_new: "{{vm_password | default('P@ssw0rd') }}"
+
+- name: set vmw vars
+  set_fact:
+    host_type: "vmw"
+    vm_nic0_name: "Ethernet0"
+  when:
+    - vcenter_address ~ esxi_address != ''
+
+- name: Map ESXi login variables
+  set_fact:
+    vcenter_address: "{{ esxi_address }}"
+    vcenter_username: "{{ esxi_username }}"
+    vcenter_password: "{{ esxi_password }}"
+    vcenter_datacenter: "ha-datacenter"
+  delegate_to: localhost
+  when: 
+    - vcenter_address ~ esxi_address != ''
+    - vcenter_address ~ esxi_address == esxi_address
+
+- name: set pve vars
+  set_fact:
+    host_type: "pve"
+    vm_nic0_name: "Ethernet"
+    pve_vm_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
+  when:
+    - pve_address != ''    
+
+- name: Add PVE Host to Dynamic Inventory
+  add_host:
+    hostname: temp_host
+    group: "temp_hosts"
+    ansible_host: '{{ pve_address }}'
+    ansible_user: '{{ pve_username }}'
+    ansible_password: '{{ pve_password }}'
+    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+  when: 
+    - host_type == 'pve'
+

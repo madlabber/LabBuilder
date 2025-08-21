@@ -1,12 +1,12 @@
   - name: Remove old kickstart file
     file:
-      path: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      path: "{{ playbook_dir }}/files/{{vm_name}}/KS.CFG"
       state: absent
     delegate_to: localhost
 
   - name: Remove kickstart directory
     file:
-      path: "{{ role_path }}/files/{{vm_name}}"
+      path: "{{ playbook_dir }}/files/{{vm_name}}"
       state: absent
     delegate_to: localhost
 

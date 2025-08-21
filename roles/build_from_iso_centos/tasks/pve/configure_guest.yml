@@ -111,7 +111,7 @@
 
 - name: Run extra shell command via vm_shell
   shell:
-    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
+    cmd: "qm guest exec {{ create_vm.vmid }} --timeout 3600 -- /bin/bash -c \"{{item}}\" |grep exitcode|grep 0"
   delegate_to: temp_host
   retries: 3
   delay: 5

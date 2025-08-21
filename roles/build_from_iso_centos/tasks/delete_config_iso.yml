@@ -1,0 +1,12 @@
+---
+- name: remove files directory
+  file:
+    path: "{{ role_path }}/files/{{vm_name}}/files"
+    state: absent
+  delegate_to: localhost
+
+- name: delete config ISO
+  ansible.builtin.file:
+    path: "{{ role_path }}/files/{{config_iso}}"
+    state: absent
+  delegate_to: localhost

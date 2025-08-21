@@ -1,6 +1,6 @@
   - name: Set kickstart_file
     set_fact:
-      kickstart_file:  "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      kickstart_file:  "{{ playbook_dir }}/files/{{vm_name}}/KS.CFG"
     delegate_to: localhost
 
   - name: hash passwords
@@ -10,25 +10,25 @@
 
   - name: Creating a new kickstart directory
     file:
-      path: "{{ role_path }}/files/{{vm_name}}"
+      path: "{{ playbook_dir }}/files/{{vm_name}}"
       state: directory
     delegate_to: localhost
 
   - name: Remove old kickstart file
     file:
-      path: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      path: "{{ playbook_dir }}/files/{{vm_name}}/KS.CFG"
       state: absent
     delegate_to: localhost
 
   - name: Creating a new kickstart file
     file:
-      path: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      path: "{{ playbook_dir }}/files/{{vm_name}}/KS.CFG"
       state: touch
     delegate_to: localhost
 
   - name: Write kickstart file
     copy:
-      dest: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
+      dest: "{{ playbook_dir }}/files/{{vm_name}}/KS.CFG"
       content: |
         #version=RHEL8
         # Use graphical install

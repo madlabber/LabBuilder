@@ -1,14 +1,34 @@
 ---
-- name: build vm on VMware
-  include_tasks: vmw_main.yml
-  when: 
-    - vcenter_address ~ esxi_address != ''
-    - pve_address == ''
+- name: parse variables
+  include_tasks: parse_vars.yml
 
-- name: build vm on PVE
-  include_tasks: pve_main.yml
-  when:
-    - pve_address != ''
+- name: remove vm if state is absent or forced
+  include_tasks: "{{host_type}}/absent.yml"
+
+- name: upload install iso
+  include_tasks: "{{host_type}}/upload_install_iso.yml"
+
+- name: create kickstart file
+  include_tasks: create_kickstart.yml
+
+- name: create config iso
+  include_tasks: create_config_iso.yml
+
+- name: upload config iso
+  include_tasks: "{{host_type}}/upload_config_iso.yml"
+
+- name: delete config iso
+  include_tasks: delete_config_iso.yml
+
+- name: delete kickstart file
+  include_tasks: delete_kickstart.yml
+
+- name: build vm
+  include_tasks: "{{host_type}}/build_vm.yml"
+
+- name: configure guest
+  include_tasks: "{{host_type}}/configure_guest.yml"
+
 
 
     
