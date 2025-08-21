@@ -1,7 +1,44 @@
-esxi_7.0_file: "Nested_ESXi7.0_Appliance_Template_v1.ova"
-esxi_7.0_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi7.0_Appliance_Template_v1.ova"
+state: present
+distro: esxi
+version: "8.0u3"
+files_dir: "{{playbook_dir}}/files"
+
+versions:
+  esxi: 
+    "7.0":
+      ovf_file: "{{files_dir}}/Nested_ESXi7.0_Appliance_Template_v1.ova"
+    "8.0u1a":
+      ovf_file: "{{files_dir}}/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
+    "8.0u2":
+      ovf_file: "{{files_dir}}/Nested_ESXi8.0u2_Appliance_Template_v1.ova"
+    "8.0u3":
+      ovf_file: "{{files_dir}}/Nested_ESXi8.0u3_Appliance_Template_v1.ova"
 
 # default to false to accept the default adapters from the OVA file
 network_adapters: false
 
+# defaults
+ovf_file: ""
+ovf_url: ""
+vm_name: "esxi"
+vm_network: "VM Network"
+vm_num_cpus: "2"
 vm_memory_mb: 8192
+ovf_ssh: "true"
+ovf_createvmfs: "false"
+
+#Host Vars
+vcenter_address: ""
+vcenter_username:
+vcenter_password:
+vcenter_datacenter:
+vcenter_cluster:
+esxi_address: ""
+pve_node:
+pve_address: ""
+pve_username:
+pve_password:
+iso_datastore:
+esxi_hostname:   
+esxi_username:
+esxi_password:

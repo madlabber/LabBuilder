@@ -1,0 +1,12 @@
+- name: Warning
+  debug:
+    msg:
+      - "***************************"
+      - "** This Component is Not **"
+      - "** Supported On Proxmox  **"
+      - "***************************"
+      - "role/deploy_ovf_esxi/tasks/pve/build_vm.yml"
+      - ""
+
+- name: end play for this host 
+  ansible.builtin.meta: end_host
