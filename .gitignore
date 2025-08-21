@@ -49,3 +49,8 @@ roles/deploy_ovf_ontapselecteval/env-esx
 roles/deploy_ovf_ontapselecteval/env-kvm
 roles/deploy_ovf_ontapselecteval/sample-env
 files/ActiveIQUnifiedManager-9.16P2-el8.zip
+roles/build_from_iso_windows/files/Server2008R2eval/*
+roles/build_from_iso_windows/files/Server2012R2eval/*
+roles/build_from_iso_windows/files/Server2016eval/*
+roles/build_from_iso_windows/files/Server2019eval/*
+roles/build_from_iso_windows/files/Server2025eval/*

@@ -1,3 +1,5 @@
+state: present 
+debug_windows: ''
 # default version
 version: "Server2022eval"
 
@@ -9,36 +11,55 @@ config_iso: "{{ vm_name }}-{{ version }}.iso"
 winrm_script_url: "https://raw.githubusercontent.com/ansible/ansible-documentation/devel/examples/scripts/ConfigureRemotingForAnsible.ps1"
 
 # This is the location of the autounattend.xml files
-unattend_file: "{{ role_path }}/files/{{ version }}/autounattend.xml"
-unattend_file_pve: "{{ role_path }}/files/{{ version }}/pve/autounattend.xml"
+#unattend_file: "{{ role_path }}/files/{{ version }}/autounattend.xml"
+#unattend_file_pve: "{{ role_path }}/files/{{ version }}/pve/autounattend.xml"
 
 versions:
   Windows7eval:
     vm_guest_id: "windows7_64Guest"
+    image_name: "Windows 7 ENTERPRISE"
     install_iso: "7600.16385.090713-1255_x64fre_enterprise_en-us_EVAL_Eval_Enterprise-GRMCENXEVAL_EN_DVD.iso"
     install_iso_url: "http://care.dlservice.microsoft.com/dl/download/evalx/win7/x64/EN/7600.16385.090713-1255_x64fre_enterprise_en-us_EVAL_Eval_Enterprise-GRMCENXEVAL_EN_DVD.iso"
     vmware_tools_url: "http://packages.vmware.com/tools/esx/6.5u2/windows/x64/VMware-tools-10.2.1-8267844-x86_64.exe"
     
   Windows10eval:
     vm_guest_id: "windows9_64Guest"
+    image_name: "Windows 10 Enterprise Evaluation"
     install_iso: "14393.0.160715-1616.RS1_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
     install_iso_url: "http://care.dlservice.microsoft.com/dl/download/2/5/4/254230E8-AEA5-43C5-94F6-88CE222A5846/14393.0.160715-1616.RS1_RELEASE_CLIENTENTERPRISEEVAL_OEMRET_X64FRE_EN-US.ISO"
     vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
 
   Server2008R2eval:
-    vm_guest_id: "windows7Server64Guest"
+    vm_guest_id: "windows8Server64Guest"
+    image_name: "Windows Server 2008 R2 SERVERSTANDARD"
     install_iso: "WS2008R2.iso"
     install_iso_url: "https://archive.org/download/windowsserver2008r2evaluationcopy/WS2008R2.iso"
-    vmware_tools_url: "http://packages.vmware.com/tools/esx/6.5u2/windows/x64/VMware-tools-10.2.1-8267844-x86_64.exe"
+    #vmware_tools_url: "http://packages.vmware.com/tools/esx/6.5u2/windows/x64/VMware-tools-10.2.1-8267844-x86_64.exe"
+    vmware_tools_url: "https://packages.vmware.com/tools/esx/7.0u3/windows/x64/VMware-tools-11.3.0-18090558-x86_64.exe"
+    virtio_win_gt_x64_url: "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.189-1/virtio-win-gt-x64.msi"
+    virtio_win_guest_tools_url: "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.189-1/virtio-win-guest-tools.exe"
 
-  Server2012R2eval:
+  Server2012eval:  # This is really 2012R2
     vm_guest_id: "windows8Server64Guest"
+    image_name: "Windows Server 2012 R2 SERVERSTANDARD"
     install_iso: "9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
     install_iso_url: "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
     vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
+    virtio_win_gt_x64_url: "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.189-1/virtio-win-gt-x64.msi"
+    virtio_win_guest_tools_url: "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.189-1/virtio-win-guest-tools.exe"
+
+  Server2012R2eval:
+    vm_guest_id: "windows8Server64Guest"
+    image_name: "Windows Server 2012 R2 SERVERSTANDARD"
+    install_iso: "9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
+    install_iso_url: "http://download.microsoft.com/download/6/2/A/62A76ABB-9990-4EFC-A4FE-C7D698DAEB96/9600.17050.WINBLUE_REFRESH.140317-1640_X64FRE_SERVER_EVAL_EN-US-IR3_SSS_X64FREE_EN-US_DV9.ISO"
+    vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
+    virtio_win_gt_x64_url: "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.189-1/virtio-win-gt-x64.msi"
+    virtio_win_guest_tools_url: "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.189-1/virtio-win-guest-tools.exe"
 
   Server2016eval:
     vm_guest_id: "windows9Server64Guest"
+    image_name: "Windows Server 2016 SERVERSTANDARD"
     install_iso: "Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
     install_iso_url: "https://software-static.download.prss.microsoft.com/pr/download/Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
     vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
@@ -47,6 +68,7 @@ versions:
 
   Server2019eval:
     vm_guest_id: "windows9Server64Guest"
+    image_name: "Windows Server 2019 SERVERSTANDARD"
     install_iso: "17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
     #install_iso_url: "https://software-download.microsoft.com/download/pr/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
     install_iso_url: "https://archive.org/download/17763.737.190906-2324.rs-5-release-svc-refresh-server-eval-x-64-fre-en-us-1/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
@@ -57,23 +79,21 @@ versions:
   Server2022eval:
     vm_guest_id: "windows9Server64Guest"   
     install_iso: "SERVER_EVAL_x64FRE_en-us.iso"
+    image_name: "Windows Server 2022 SERVERSTANDARD"
     install_iso_url: "https://software-static.download.prss.microsoft.com/sg/download/888969d5-f34g-4e03-ac9d-1f9786c66749/SERVER_EVAL_x64FRE_en-us.iso"
     vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
     virtio_win_gt_x64_url: "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.266-1/virtio-win-gt-x64.msi"
     virtio_win_guest_tools_url: "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.266-1/virtio-win-guest-tools.exe"
 
-#Host Vars
-# vcenter_address: ""
-# vcenter_username:
-# vcenter_password:
-vcenter_datacenter: ha-datacenter
-vcenter_cluster:
-vm_datastore:
-iso_datastore:
-# This host can be used to delegate iso downloads
-esxi_hostname:   
-esxi_address:
-pve_address:
+  Server2025eval:
+    vm_guest_id: "windows9Server64Guest"
+    install_iso: "26100.1742.240906-0331.ge_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso"
+    image_name: "Windows Server 2025 SERVERSTANDARD"
+    install_iso_url: "https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/26100.1742.240906-0331.ge_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso"
+    vmware_tools_url: "http://packages.vmware.com/tools/esx/6.7u2/windows/x64/VMware-tools-10.3.5-10430147-x86_64.exe"
+    virtio_win_gt_x64_url: "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.266-1/virtio-win-gt-x64.msi"
+    virtio_win_guest_tools_url: "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.266-1/virtio-win-guest-tools.exe"
+  
 
 # VM Defaults
 vm_hostname:
@@ -94,6 +114,8 @@ vm_password_old: "Changeme!" # must match password set by autounattend.xml
 vm_password_new: "P@ssw0rd"
 nested_virtualization: false
 serial_ports: false
+join_domain: false
+domain:
 # Serial port definition
 # Valid values are false (no serial ports) 
 # or a serial_port definition per community.vmware.vmware_guest_serial_port
@@ -120,3 +142,20 @@ serial_ports: false
 
 
 
+#Host Vars
+host_type:
+vcenter_address: ""
+vcenter_username:
+vcenter_password:
+vcenter_datacenter:
+vcenter_cluster:
+esxi_address: ""
+pve_node:
+pve_address: ""
+pve_username:
+pve_password:
+vm_datastore:
+iso_datastore:
+esxi_hostname:   
+esxi_username:
+esxi_password:
