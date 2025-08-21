@@ -35,15 +35,14 @@ iso_datastore: "datastore1"
 # Default portgroup for new VMs
 vm_network: "VM Network"
 
+#########################################
+#  This section is used by prep.yml
+#  To create portgroups and datastores
+#  as defined in the inventory files
+#  -----------------------------------
+
 # Default vswitch for new portgroups
 esxi_vswitch: "vSwitch0"
-
-# uncomment to test ESX target mode
-# vcenter_address: 192.168.123.49
-# vcenter_username: root
-# vcenter_password: P@ssw0rd
-# vcenter_datacenter: 'ha-datacenter'
-# vcenter_cluster: ""
 
 # VLAN Pool for building lab pod portgroups
 vlan_start: 1000
