@@ -12,6 +12,11 @@
 #     admin_role:        "{{ admin_role | default('Primary') }}"  # Primary, Non-Primary
 #     storage_disk_size: "{{ storage_disk_size | default(200) }}"
 
+# PVE isn't supported so exit now for this host
+- name: deploy to proxmox
+  include_tasks: deploy_to_pve.yml 
+  when: pve_address|default('') != ''
+
 - name: Check ovf_location1
   stat:
     path: "{{ovf_location | default('')}}"
