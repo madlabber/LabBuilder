@@ -48,3 +48,4 @@ snippets
 roles/deploy_ovf_ontapselecteval/env-esx
 roles/deploy_ovf_ontapselecteval/env-kvm
 roles/deploy_ovf_ontapselecteval/sample-env
+files/ActiveIQUnifiedManager-9.16P2-el8.zip

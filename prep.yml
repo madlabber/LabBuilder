@@ -84,8 +84,8 @@
   - name: Mount NFS labs datastore to ESXi
     vmware_host_datastore:
       hostname: '{{ item }}'
-      username: '{{ esxi_username }}'
-      password: '{{ esxi_password }}'
+      username: "{{ esxi_username|default('root') }}"
+      password: '{{ esxi_password|default(vcenter_password) }}'
       esxi_hostname: '{{ esxi_hostname }}'
       validate_certs: no
       datastore_name: "{{ lab_vm_datastore }}"

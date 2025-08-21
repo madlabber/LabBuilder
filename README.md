@@ -58,5 +58,15 @@ Vendor OVA files need to be staged in the LabBuilder "files" folder.
  - NetApp StorageGrid OVA files
  - NetApp AIQUM OVA files
 
+## PVE Notes
+Most components can now build on PVE hosts, with the following general exceptions:
+  - Interconnected Serial ports are not configured on PVE hosts
+  - Shared virtual disks are not build on PVE hosts
+
+## Proxmox Compatibility Status
+| Component | VMware | Proxmox | Notes 
+|-----------|--------|---------|-------
+| centos    | YES    | YES     | 
+| windows   | YES    | YES     |
 
 

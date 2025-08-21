@@ -23,7 +23,7 @@ all:
     dc:
       hosts:
         dc01:
-          version: "Server2016eval"
+          version: "Server2022eval"
           ip_address: 192.168.0.11
           extra_commands:
             # Install Chrome
@@ -36,7 +36,7 @@ all:
       hosts:
         win1:
           ip_address: 192.168.0.12
-          version: "Server2016eval"
+          version: "Server2022eval"
           vm_memory_mb: 2048
           vm_num_cpus: 2
           vm_disk_gb: 40
@@ -44,15 +44,15 @@ all:
       hosts:
         ansible:
           ip_address: 192.168.0.15
-          version: "7"
+          version: "9.4"
           install_ansible: true
           install_awx: true
         centos1:
           ip_address: 192.168.0.14
-          version: "7"
+          version: "9.4"
       vars:
           install_xrdp: true
-          distro: "centos"
+          distro: "rocky"
     vsims:
       hosts:
         vsim1-01:
@@ -70,4 +70,4 @@ all:
           sys_serial_number: "4034389-06-2"
           cluster_setup: false
       vars:
-          ovf_version: "9.7"
+          ovf_version: "9.16.1"

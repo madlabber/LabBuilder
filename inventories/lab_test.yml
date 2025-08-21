@@ -24,38 +24,57 @@ all:
           vm_network_wan: "{{lab_wan_portgroup}}"
           vm_network_lan: "{{lab_lan1_portgroup}}"
           config_xml_file: "files/pfsense/config.xml"
+
     dc:
       hosts:
         dc01:
           version: "Server2022eval"
           ip_address: 192.168.0.11
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+            - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
+          # extra_files:
+          #   - "{{ playbook_dir }}/files/googlechromestandaloneenterprise64.msi"
+          #   - "{{ playbook_dir }}/files/putty-64bit-0.83-installer.msi"
           extra_commands:
-            # Install Chrome
-            - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
-            - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+            # Install Chrome from CDrom on E:\
+            - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
             # Install Putty
-            - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
-            - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+            - "MsiExec.exe /i E:\\files\\putty-64bit-0.83-installer.msi /qn"
     winservers:
       hosts:
+        server2025:
+          ip_address: 192.168.0.25
+          version: "Server2025eval"
+          vm_disk_gb: 80
         server2022:
           ip_address: 192.168.0.22
-          version: "Server2019eval"
-          vm_memory_mb: 2048
-          vm_num_cpus: 2
-          vm_disk_gb: 40
+          version: "Server2022eval"
         server2019:
           ip_address: 192.168.0.12
           version: "Server2019eval"
-          vm_memory_mb: 2048
-          vm_num_cpus: 2
-          vm_disk_gb: 40
         server2016:
           ip_address: 192.168.0.23
           version: "Server2016eval"
-          vm_memory_mb: 2048
+        server2012R2:
+          ip_address: 192.168.0.26
+          version: "Server2012R2eval"
+        server2008R2:
+          ip_address: 192.168.0.27
+          version: "Server2008R2eval"
+          join_domain: false
+      vars:
+          vm_memory_mb: 4096
           vm_num_cpus: 2
           vm_disk_gb: 40
+          join_domain: true
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+            - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
+          extra_commands:
+            - "MsiExec.exe /i E:\\files\\putty-64bit-0.83-installer.msi /qn"
+            - "MsiExec.exe /i E:\\files\\googlechromestandaloneenterprise64.msi /qn"
+
     ovf:
       vars:
         ovf_file: files/isilon/9.1.0.0/9.1.0.0.ova
@@ -68,6 +87,7 @@ all:
         onefs-1:
         onefs-2:
         onefs-3:
+
     centos:
       vars:
         vm_memory_mb: 4096
@@ -194,6 +214,7 @@ all:
           install_xrdp: true
           install_ansible: true
           nested_virtualization: true
+
     esx:
       hosts:
         esx01:
@@ -216,6 +237,7 @@ all:
           vm_disk3_size_gb: 80
           create_local_vmfs: 'False'
           enable_ssh: 'True'
+
     vsims:
       hosts:
         vha-01:
@@ -297,3 +319,5 @@ all:
           partner_serial: "4034389-06-2"
           # extra_commands:
           #   - cluster ha modify -configured true
+
+          

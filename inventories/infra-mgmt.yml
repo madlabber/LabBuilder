@@ -15,12 +15,6 @@ all:
     lab_domain_name: "schlab.pri"
     lab_domain_controller: "labdc01"
   children:
-    # pfsense:
-    #   hosts:
-    #     gateway:
-    #       vm_network_wan: "{{lab_wan_portgroup}}"
-    #       vm_network_lan: "{{lab_lan1_portgroup}}"
-    #       config_xml_file: "files/pfsense/config.xml"
     dc:
       hosts:
         labdc01:

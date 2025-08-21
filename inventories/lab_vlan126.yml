@@ -58,6 +58,34 @@ all:
           nested_virtualization: false
           include_files:
             - files/9171RC1_v_image.tgz
+        aiqum1:
+          state: force
+          ip_address: 192.168.126.27
+          distro: "rocky"
+          version: "9.4"
+          vm_memory_mb: 16384
+          vm_num_cpus: 4
+          vm_disk_gb: 200
+          install_xrdp: true
+          install_ansible: false
+          nested_virtualization: false
+          extra_files:
+            - files/ActiveIQUnifiedManager-9.16P2-el8.zip
+          extra_commands:
+            # copy the install from the cdrom
+            - "mkdir /mnt/cdrom"
+            - "mount /dev/sr1 /mnt/cdrom"
+            - "cp /mnt/cdrom/files/* /home/admin/"
+            - "umount /mnt/cdrom"
+            - "rm -rf /mnt/cdrom"
+            - unzip /home/admin/ActiveIQUnifiedManager-*.zip -d /home/admin
+            - "dnf install -y epel-release"
+            - wget  http://repo.mysql.com/yum/mysql-8.4-community/el/8/x86_64/mysql84-community-release-el8-1.noarch.rpm
+            - "dnf install -y mysql84-community-release-el8-1.noarch.rpm"
+            - "dnf install -y /home/admin/*.rpm"
+            - "firewall-cmd --permanent --add-port=443/tcp"
+            - "firewall-cmd --reload"
+
 
     vsims:
       hosts:
@@ -210,3 +238,28 @@ all:
           ip_address: 192.168.126.204
           edition: desktop
           version: "24.04"
+
+    nestedesx:
+      hosts:
+        esx41:
+          ip_address: 192.168.126.41
+        # esx02:
+        #   ip_address: 192.168.0.42
+        # esx03:
+        #   ip_address: 192.168.0.43
+        # esx04:
+        #   ip_address: 192.168.0.44
+      vars:
+          esx_version: "8.0u3"
+          vm_memory_mb: 10240
+          vm_num_cpus: 2
+          vm_disk1_size_gb: 4
+          vm_disk2_size_gb: 40
+          create_local_vmfs: 'False'
+          enable_ssh: 'True'
+
+    aiqum:
+      hosts:
+        aiqum:
+          state: force
+          ip_address: 192.168.126.28

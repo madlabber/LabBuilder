@@ -24,7 +24,7 @@ all:
     dc:
       hosts:
         dc01:
-          version: "Server2019eval"
+          version: "Server2022eval"
           ip_address: 192.168.0.11
           extra_commands:
             # Install Chrome
@@ -37,7 +37,7 @@ all:
       hosts:
         win1:
           ip_address: 192.168.0.12
-          version: "Server2019eval"
+          version: "Server2022eval"
           vm_memory_mb: 4096
           vm_num_cpus: 2
           vm_disk_gb: 60
@@ -49,8 +49,8 @@ all:
         linux1:
           ip_address: 192.168.0.14
       vars:
-        distro: "alma"
-        version: "8"
+        distro: "rocky"
+        version: "9"
         install_xrdp: true
     vsims:
       hosts:
@@ -69,4 +69,4 @@ all:
           ip_address: 192.168.0.82
           sys_serial_number: "4034389-06-2"
       vars:
-          ovf_version: "9.12.1"
+          ovf_version: "9.16.1"
