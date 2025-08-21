@@ -9,4 +9,3 @@
   include_tasks: pve_main.yml
   when:
     - pve_address|default('') != ''
-
