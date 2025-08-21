@@ -1,4 +1,14 @@
 ---
+- name: parse variables
+  include_tasks: parse_vars.yml
+
+- name: remove vm if state is absent or forced
+  include_tasks: "{{host_type}}/absent.yml"
+
+- name: upload install iso
+  include_tasks: "{{host_type}}/upload_install_iso.yml"
+
 - name: Build VM 
-  include_tasks: build_vm.yml
+  include_tasks: "{{host_type}}/build_vm.yml"
+
   

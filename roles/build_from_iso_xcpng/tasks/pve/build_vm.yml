@@ -1,0 +1,9 @@
+- name: Warning
+  debug:
+    msg:
+      - "***************************"
+      - "** This Component is Not **"
+      - "** Supported On Proxmox  **"
+      - "***************************"
+      - "role/build_from_iso_xcpng/tasks/pve/build_vm.yml"
+      - ""

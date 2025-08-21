@@ -1,6 +1,15 @@
-install_iso: "xcp-ng-8.2.1-20231130.iso"
-install_iso_url: "https://mirrors.xcp-ng.org/isos/8.2/xcp-ng-8.2.1-20231130.iso"
+state: present 
+distro: "xcp-ng"
+version: "24.04"
 
+versions:
+  xcp-ng:
+    "8.2.1":
+      install_iso:        "xcp-ng-8.2.1-20231130.iso"
+      install_iso_url:    "https://mirrors.xcp-ng.org/isos/8.2/xcp-ng-8.2.1-20231130.iso"
+
+install_iso: ""
+install_iso_url: ""
 
 vm_address:      
 vm_netmask_cidr: 
@@ -10,3 +19,20 @@ vm_domain:
 vm_hostname:     "xcphost"
 vm_name:         "xcphost"
 vm_password:     "P@ssw0rd"
+
+#Host Vars
+vcenter_address: ""
+vcenter_username:
+vcenter_password:
+vcenter_datacenter:
+vcenter_cluster:
+esxi_address: ""
+pve_node:
+pve_address: ""
+pve_username:
+pve_password:
+vm_datastore:
+iso_datastore:
+esxi_hostname:   
+esxi_username:
+esxi_password:
