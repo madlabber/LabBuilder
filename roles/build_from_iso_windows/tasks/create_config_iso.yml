@@ -28,15 +28,6 @@
   ignore_errors: true
   when: host_type == "vmw"
 
-- name: download additional files
-  ansible.builtin.get_url:
-    url: "{{ item }}"
-    dest: "{{ playbook_dir }}/files/{{vm_name}}/files/"
-  delegate_to: localhost 
-  when: extra_files_urls|default('') != ''
-  ignore_errors: true
-  with_items: "{{ extra_files_urls }}"
-
 - name: include additional files
   copy:
     src: "{{item}}"
@@ -45,6 +36,15 @@
   with_items: "{{include_files}}"
   when: include_files|default('') != ''
   ignore_errors: true
+  
+- name: download additional files
+  ansible.builtin.get_url:
+    url: "{{ item }}"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/files/"
+  delegate_to: localhost 
+  when: extra_files_urls|default('') != ''
+  ignore_errors: true
+  with_items: "{{ extra_files_urls }}"
 
 - name: include additional files
   copy:

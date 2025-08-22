@@ -10,9 +10,32 @@
 - name: set vmw vars
   set_fact:
     host_type: "vmw"
-    vm_eth0_name: "Ethernet0"
-  when:
+    first_logon_commands:
+      - powershell -ExecutionPolicy ByPass -File E:\ConfigureRemotingForAnsible.ps1
+      - E:\files\VMware_tools.exe /S /v"/qn REBOOT=R"
+      - powershell -command "new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ vm_address }} -prefixlength {{vm_netmask_cidr}} -defaultgateway {{ vm_gateway }}"
+      - powershell -command "Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }}"
+    when:
     - vcenter_address ~ esxi_address != ''
+
+- name: set pve vars
+  set_fact:
+    host_type: "pve"
+    include_files:
+      - '{{ role_path }}/files/redhat-cert-old.cer'
+      - '{{ role_path }}/files/redhat-cert.cer'
+    first_logon_commands:
+      - certutil -addstore -f "TrustedPublisher" E:\files\redhat-cert-old.cer
+      - certutil -addstore -f "TrustedPublisher" E:\files\redhat-cert.cer
+      - powershell -ExecutionPolicy ByPass -File E:\ConfigureRemotingForAnsible.ps1
+      - msiexec /I E:\files\virtio-win-gt-x64.msi /qn /passive /log ".." ADDLOCAL=ALL
+      - E:\files\virtio_win_guest_tools.exe /S
+      - powershell -command "new-netipaddress -InterfaceAlias Ethernet -IPAddress {{ vm_address }} -prefixlength {{vm_netmask_cidr}} -defaultgateway {{ vm_gateway }}"
+      - powershell -command "Set-DnsClientServerAddress -InterfaceAlias Ethernet -ServerAddresses {{ vm_dns_server }}"
+    pve_vm_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
+  when:
+    - pve_address != ''   
 
 - name: Map ESXi login variables
   set_fact:
@@ -23,16 +46,7 @@
   delegate_to: localhost
   when: 
     - host_type == "vmw"
-    - vcenter_address|default('') == ''
-
-- name: set pve vars
-  set_fact:
-    host_type: "pve"
-    vm_eth0_name: "Ethernet"
-    pve_vm_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
-    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
-  when:
-    - pve_address != ''    
+    - vcenter_address|default('') == '' 
 
 - name: Add PVE Host to Dynamic Inventory
   add_host:

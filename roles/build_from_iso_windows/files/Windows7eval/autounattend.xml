@@ -247,7 +247,7 @@ Notes: Enter your comments here...
 <FirstLogonCommands>
         <SynchronousCommand wcm:action="add">
         <Order>1</Order>
-         <CommandLine>powershell -File E:\ConfigureRemotingForAnsible.ps1</CommandLine>
+         <CommandLine>powershell -File E:\files\ConfigureRemotingForAnsible.ps1</CommandLine>
         </SynchronousCommand>
         <SynchronousCommand wcm:action="add">
         <Order>2</Order>

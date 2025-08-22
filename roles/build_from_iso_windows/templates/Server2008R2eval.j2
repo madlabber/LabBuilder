@@ -141,26 +141,50 @@
 <FirstLogonCommands>
     <SynchronousCommand wcm:action="add">
     <Order>1</Order>
-    <CommandLine>powershell -ExecutionPolicy ByPass -File E:\ConfigureRemotingForAnsible.ps1</CommandLine>
+    <CommandLine>{{ first_logon_commands[0]|default('') }}</CommandLine>
     </SynchronousCommand>              
     <SynchronousCommand wcm:action="add">
     <Order>2</Order>
-    <CommandLine>msiexec /I e:\files\virtio-win-gt-x64.msi /qn /passive /log ".." ADDLOCAL=ALL</CommandLine>
+    <CommandLine>{{ first_logon_commands[1]|default('') }}</CommandLine>
     </SynchronousCommand>
     <SynchronousCommand wcm:action="add">
     <Order>3</Order>
-    <CommandLine>e:\files\virtio_win_guest_tools.exe /S</CommandLine>
+    <CommandLine>{{ first_logon_commands[2]|default('') }}</CommandLine>
     </SynchronousCommand>
     <SynchronousCommand wcm:action="add">
     <Order>4</Order>
-    <CommandLine>E:\files\VMware_tools.exe /S /v"/qn REBOOT=R"</CommandLine>
+    <CommandLine>{{ first_logon_commands[3]|default('') }}</CommandLine>
     </SynchronousCommand>
     <SynchronousCommand wcm:action="add">
     <Order>5</Order>
-    <CommandLine>netsh interface ipv4 set address "Local Area Connection" static {{ vm_address }} {{vm_netmask}} {{ vm_gateway }} 1</CommandLine>
+    <CommandLine>{{ first_logon_commands[4]|default('') }}</CommandLine>
     </SynchronousCommand>
     <SynchronousCommand wcm:action="add">
     <Order>6</Order>
+    <CommandLine>{{ first_logon_commands[5]|default('') }}</CommandLine>
+    </SynchronousCommand>
+    <SynchronousCommand wcm:action="add">
+    <Order>7</Order>
+    <CommandLine>{{ first_logon_commands[6]|default('') }}</CommandLine>
+    </SynchronousCommand>
+    <SynchronousCommand wcm:action="add">
+    <Order>8</Order>
+    <CommandLine>{{ first_logon_commands[7]|default('') }}</CommandLine>
+    </SynchronousCommand>
+    <SynchronousCommand wcm:action="add">
+    <Order>9</Order>
+    <CommandLine>{{ first_logon_commands[8]|default('') }}</CommandLine>
+    </SynchronousCommand>
+    <SynchronousCommand wcm:action="add">
+    <Order>10</Order>
+    <CommandLine>{{ first_logon_commands[9]|default('') }}</CommandLine>
+    </SynchronousCommand>
+    <SynchronousCommand wcm:action="add">
+    <Order>11</Order>
+    <CommandLine>netsh interface ipv4 set address "Local Area Connection" static {{ vm_address }} {{vm_netmask}} {{ vm_gateway }} 1</CommandLine>
+    </SynchronousCommand>
+    <SynchronousCommand wcm:action="add">
+    <Order>12</Order>
     <CommandLine>netsh interface ipv4 set dns "Local Area Connection" static {{ vm_dns_server }}</CommandLine>
     </SynchronousCommand>
 </FirstLogonCommands>

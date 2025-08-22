@@ -20,6 +20,10 @@
     agent: true
   delegate_to: localhost
   register: create_vm
+  # if the host is busy we may see duplicate vmid errors
+  retries: 10
+  delay: 10
+  until: create_vm is succeeded
 
 - name: Attach Install ISO
   community.general.proxmox_disk:
