@@ -62,7 +62,9 @@ all:
         server2008R2:
           ip_address: 192.168.0.27
           version: "Server2008R2eval"
-          join_domain: false
+        windows10:
+          ip_address: 192.168.0.27
+          version: "Windows10eval"
       vars:
           vm_memory_mb: 4096
           vm_num_cpus: 2
