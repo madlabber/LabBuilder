@@ -1,0 +1,19 @@
+state: present
+
+#Host Vars
+vcenter_address: ""
+vcenter_username:
+vcenter_password:
+vcenter_datacenter:
+vcenter_cluster:
+esxi_address: ""
+pve_node:
+pve_address: ""
+pve_username:
+pve_password:
+vm_datastore:
+vm_network:
+iso_datastore:
+esxi_hostname:   
+esxi_username:
+esxi_password:

@@ -1,0 +1,6 @@
+---
+- name: parse variables
+  include_tasks: parse_vars.yml
+
+- name: remove vm if state is absent or forced
+  include_tasks: "{{host_type}}/absent.yml"

@@ -1,0 +1,5 @@
+# meta/main.yml
+galaxy_info:
+  role_name: build_ots_deploy
+  description: Build ONTAP Select Deploy VMs from OVA or disk image
+  # company: 
