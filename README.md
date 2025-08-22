@@ -64,9 +64,21 @@ Most components can now build on PVE hosts, with the following general exception
   - Shared virtual disks are not build on PVE hosts
 
 ## Proxmox Compatibility Status
-| Component | VMware | Proxmox | Notes 
-|-----------|--------|---------|-------
-| centos    | YES    | YES     | 
-| windows   | YES    | YES     |
+| Component   | VMware | Proxmox | Notes 
+|-------------|--------|---------|-------
+| centos      | YES    | YES     | 
+| windows     | YES    | YES     |
+| pfsense     | YES    | YES     |
+| ESX         | YES    | YES     | 7.x or 8.x ISO sources
+| Proxmox     | YES    | YES     | 
+| Ubuntu      | YES    | YES     |
+| XCP-NG      | YES*   | NO      | *experimental: only 8.2.1 on vmware*
+| Nested ESXi | YES    | NO*     | PVE: use ESX instead
+| AIQUM       | YES    | NO*     | PVE: use Linux + install automation
+| OTS Eval    | YES    | YES     |
+| SGWS        | YES    | NO      | 
+| VCENTER     | YES    | NO*     | PVE: install nested on an ESX VM
+| VSIM        | YES    | YES     |
+
 
 

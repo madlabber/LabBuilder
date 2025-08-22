@@ -1,6 +1,6 @@
 state: present 
 distro: "xcp-ng"
-version: "24.04"
+version: "8.2.1"
 
 versions:
   xcp-ng:
