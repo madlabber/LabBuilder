@@ -18,6 +18,22 @@
   when:
     - vcenter_address ~ esxi_address != ''
 
+- name: set pve vars
+  set_fact:
+    host_type: "pve"
+    vm_nic0_name: "Ethernet"
+    pve_vm_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
+  when:
+    - pve_address != ''    
+    
+- name: map virtio to vmxnet3
+  set_fact:
+    network_device_type: "vmxnet3"
+  when: 
+    - network_device_type == "virtio"
+    - host_type == "vmw"
+
 - name: Map ESXi login variables
   set_fact:
     vcenter_address: "{{ esxi_address }}"

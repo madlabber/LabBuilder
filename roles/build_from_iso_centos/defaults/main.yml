@@ -135,6 +135,7 @@ vm_num_cpus: 2
 vm_memory_mb: 4096
 vm_disk_gb: 40
 vm_network: "VM Network"
+vm_num_nics: 1
 network_device_type: "e1000"
 default_disks:
   - size_gb: '{{ vm_disk_gb }}'
@@ -143,6 +144,8 @@ default_networks:
   - name: "{{ vm_network }}"
     device_type: "{{ network_device_type }}"
 serial_ports: false
+
+disks: "{{default_disks}}"
 
 #Host Vars
 vcenter_address: ""

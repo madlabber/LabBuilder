@@ -5,6 +5,9 @@
 - name: remove vm if state is absent or forced
   include_tasks: "{{host_type}}/absent.yml"
 
+- name: parse networks
+  include_tasks: "{{host_type}}/parse_networks.yml"
+
 - name: upload install iso
   include_tasks: "{{host_type}}/upload_install_iso.yml"
 

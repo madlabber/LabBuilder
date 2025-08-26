@@ -1,0 +1,116 @@
+
+- name: Add Network Adapter eth0
+  set_fact:
+    networks:
+      net0: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth0|default(vm_network)] }}'
+
+- name: Add Network Adapter eth1
+  set_fact:
+    networks:
+      net0: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth0|default(vm_network)] }}'
+      net1: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth1|default(vm_network)] }}'
+  when: >
+    vm_num_nics|int >= 2 or 
+    ethernet_ports.eth1|default('') != '' or
+    ethernet_ports.eth2|default('') != '' or
+    ethernet_ports.eth3|default('') != '' or 
+    ethernet_ports.eth4|default('') != '' or 
+    ethernet_ports.eth5|default('') != '' or 
+    ethernet_ports.eth6|default('') != '' or 
+    ethernet_ports.eth7|default('') != ''
+
+- name: Add Network Adapter eth2
+  set_fact:
+    networks:
+      net0: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth0|default(vm_network)] }}'
+      net1: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth1|default(vm_network)] }}'
+      net2: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth2|default(vm_network)] }}'
+  when: >
+    vm_num_nics|int >= 3 or 
+    ethernet_ports.eth2|default('') != '' or
+    ethernet_ports.eth3|default('') != '' or 
+    ethernet_ports.eth4|default('') != '' or 
+    ethernet_ports.eth5|default('') != '' or 
+    ethernet_ports.eth6|default('') != '' or 
+    ethernet_ports.eth7|default('') != ''
+
+- name: Add Network Adapter eth3
+  set_fact:
+    networks:
+      net0: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth0|default(vm_network)] }}'
+      net1: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth1|default(vm_network)] }}'
+      net2: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth2|default(vm_network)] }}'
+      net3: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth3|default(vm_network)] }}'
+  when: >
+    vm_num_nics|int >= 4 or 
+    ethernet_ports.eth3|default('') != '' or 
+    ethernet_ports.eth4|default('') != '' or 
+    ethernet_ports.eth5|default('') != '' or 
+    ethernet_ports.eth6|default('') != '' or 
+    ethernet_ports.eth7|default('') != ''
+
+- name: Add Network Adapter eth4
+  set_fact:
+    networks:
+      net0: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth0|default(vm_network)] }}'
+      net1: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth1|default(vm_network)] }}'
+      net2: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth2|default(vm_network)] }}'
+      net3: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth3|default(vm_network)] }}'
+      net4: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth4|default(vm_network)] }}'
+  when: >
+    vm_num_nics|int >= 5 or 
+    ethernet_ports.eth4|default('') != '' or 
+    ethernet_ports.eth5|default('') != '' or 
+    ethernet_ports.eth6|default('') != '' or 
+    ethernet_ports.eth7|default('') != ''
+
+- name: Add Network Adapter eth5
+  set_fact:
+    networks:
+      net0: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth0|default(vm_network)] }}'
+      net1: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth1|default(vm_network)] }}'
+      net2: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth2|default(vm_network)] }}'
+      net3: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth3|default(vm_network)] }}'
+      net4: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth4|default(vm_network)] }}'
+      net5: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth5|default(vm_network)] }}'
+  when: >
+    vm_num_nics|int >= 6 or 
+    ethernet_ports.eth5|default('') != '' or 
+    ethernet_ports.eth6|default('') != '' or 
+    ethernet_ports.eth7|default('') != ''
+
+- name: Add Network Adapter eth6
+  set_fact:
+    networks:
+      net0: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth0|default(vm_network)] }}'
+      net1: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth1|default(vm_network)] }}'
+      net2: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth2|default(vm_network)] }}'
+      net3: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth3|default(vm_network)] }}'
+      net4: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth4|default(vm_network)] }}'
+      net5: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth5|default(vm_network)] }}'
+      net6: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth6|default(vm_network)] }}'
+  when: >
+    vm_num_nics|int >= 7 or 
+    ethernet_ports.eth6|default('') != '' or 
+    ethernet_ports.eth7|default('') != ''
+
+- name: Add Network Adapter eth7
+  set_fact:
+    networks:
+      net0: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth0|default(vm_network)] }}'
+      net1: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth1|default(vm_network)] }}'
+      net2: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth2|default(vm_network)] }}'
+      net3: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth3|default(vm_network)] }}'
+      net4: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth4|default(vm_network)] }}'
+      net5: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth5|default(vm_network)] }}'
+      net6: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth6|default(vm_network)] }}'
+      net7: '{{ network_device_type }},bridge={{ network_substitutions[ethernet_ports.eth7|default(vm_network)] }}'
+  when: >
+    vm_num_nics|int >= 8 or 
+    ethernet_ports.eth7|default('') != ''
+
+- name: debug
+  debug:
+    msg:
+      - "{{ networks }}"
+

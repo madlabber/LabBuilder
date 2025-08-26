@@ -6,10 +6,17 @@
     state: present
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
-    net:
-      net0: 'virtio,bridge={{ pve_vm_network }}'
-    sata:
-      sata0: '{{pve_vm_datastore}}:{{ vm_disk_gb |int }}'
+    net: "{{ networks }}"
+      # net0: 'virtio,bridge={{ pve_vm_network }}'
+    scsihw: 'virtio-scsi-pci'
+    scsi:
+      scsi0: "{{ (disks[0].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[0].size_gb|default(omit) , omit ) }}"
+      scsi1: "{{ (disks[1].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[1].size_gb|default(omit) , omit ) }}"
+      scsi2: "{{ (disks[2].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[2].size_gb|default(omit) , omit ) }}"
+      scsi3: "{{ (disks[3].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[3].size_gb|default(omit) , omit ) }}"
+      scsi4: "{{ (disks[4].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[4].size_gb|default(omit) , omit ) }}"
+      scsi5: "{{ (disks[5].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[5].size_gb|default(omit) , omit ) }}"
+      scsi6: "{{ (disks[6].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[6].size_gb|default(omit) , omit ) }}"
     ide:
       ide1: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
       ide2: "{{iso_datastore}}:iso/{{config_iso}},media=cdrom"
