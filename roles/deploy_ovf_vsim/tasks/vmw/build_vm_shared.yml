@@ -6,19 +6,14 @@
 ## run cluster setup on node1
 
 ---
-- name: set credentials
-  set_fact:
-    esxi_login: &esxi_login
-      hostname: '{{ vcenter_address }}'
-      username: '{{ vcenter_username }}'
-      password: '{{ vcenter_password }}'
-      validate_certs: no
-
 # Now we can deploy the VM
 # use this version if the target is a cluster
 - name: '{{item}}: Deploy ovf file: {{ovf_file}}'
   community.vmware.vmware_deploy_ovf:
-    <<: *esxi_login
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     datacenter: '{{ vcenter_datacenter }}'
     cluster: '{{ vcenter_cluster }}'
     datastore: "{{ vm_datastore }}"
@@ -41,7 +36,10 @@
 # use this version if the target is a host that is not in a cluster
 - name: '{{item}}: Deploy ovf file: {{ovf_file}}'
   community.vmware.vmware_deploy_ovf:
-    <<: *esxi_login
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     datacenter: '{{ vcenter_datacenter }}'
     esxi_hostname: '{{esxi_hostname}}'
     datastore: "{{ vm_datastore }}"
@@ -63,7 +61,10 @@
 
 - name: '{{item}}: Adjust VM Sizing'
   community.vmware.vmware_guest:
-    <<: *esxi_login
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ item }}'
     state: present
     hardware:
@@ -82,7 +83,10 @@
 # Remove the VHA disk on IDE1:1
 - name: remove vha disk on IDE1:1
   community.vmware.vmware_guest_disk:
-    <<: *esxi_login
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     datacenter: '{{ vcenter_datacenter }}'
     name: '{{ item }}'
     disk:
@@ -98,23 +102,74 @@
     - "{{node1_name}}"
     - "{{node2_name}}"
 
-# This wierdness is because with_sequence evaluates and fails even when this task is not executed
-# bug closed as a wont_fix by ansible
-- name: '{{node_name}}: add nics'
-  include_tasks: vmw_add_nics.yml
-  vars:
-    vm_name: "{{ node_name }}"
-  when: vm_num_nics|int > 4
-  loop:
-    - "{{node1_name}}"
-    - "{{node2_name}}"
-  loop_control:
-    loop_var: node_name
+
+# Tear down and rebuild the VM's Network Interfaces
+- name: Tag each network adapter 
+  community.vmware.vmware_guest_network:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: '{{ vcenter_datacenter }}'
+    name: "{{ vm_name }}"
+    label: "Network adapter {{ item }}"
+    mac_address: "00:50:56:99:99:0{{ item }}"
+    network_name: "{{cluster_network}}"
+    device_type: e1000
+    state: present
+  with_items: 
+   - 1
+   - 2
+   - 3
+   - 4
+  delegate_to: localhost 
+  ignore_errors: true
+
+- name: remove each network adapter 
+  community.vmware.vmware_guest_network:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: '{{ vcenter_datacenter }}'
+    name: "{{ vm_name }}"
+    mac_address: "00:50:56:99:99:0{{ item }}"
+    state: absent
+  with_items: 
+   - 1
+   - 2
+   - 3
+   - 4
+  delegate_to: localhost 
+  ignore_errors: true
+
+- name: add nics
+  block:
+    - community.vmware.vmware_guest_network:
+        hostname: "{{ vcenter_address }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: no
+        # datacenter: "{{ vcenter_datacenter }}"
+        name: '{{ vm_name }}'
+        state: present
+        force: yes
+        device_type:  "e1000"
+        network_name: "{{ item.name }}"
+        connected: true
+        start_connected: true
+      delegate_to: localhost
+      with_items: "{{networks}}"
+      ignore_errors: true
+
 
 # Add scsi controllers
 - name: '{{ item }}: Add SCSI controllers'
   community.vmware.vmware_guest_controller:
-    <<: *esxi_login
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     datacenter: "{{ vcenter_datacenter }}"
     name: '{{ item }}'
     controllers:
@@ -143,7 +198,10 @@
 # Set IC MAC
 - name: '{{node1_name}}: Set IC MAC'
   community.vmware.vmware_guest_network:
-    <<: *esxi_login
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     datacenter: '{{ vcenter_datacenter }}'
     label: "Network adapter {{vm_num_nics}}"
     network_name: "{{cluster_network}}"
@@ -156,7 +214,10 @@
 # Set IC MAC
 - name: '{{node2_name}}: Set IC MAC'
   community.vmware.vmware_guest_network:
-    <<: *esxi_login
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     datacenter: '{{ vcenter_datacenter }}'
     label: "Network adapter {{vm_num_nics}}"
     network_name: "{{cluster_network}}"
@@ -219,7 +280,7 @@
     - partner_serial_ports is not false
 
 - name: create shared disk shelf 0
-  include_tasks: vmw_share_disk.yml
+  include_tasks: share_disk.yml
   vars:
     disk_size_mb: "{{shelf0_size}}"
     node1_scsi_controller: 0
@@ -246,7 +307,7 @@
       - { disk: 15, unit_number: 15 }
 
 - name: create shared disk shelf 1
-  include_tasks: vmw_share_disk.yml
+  include_tasks: share_disk.yml
   vars:
     disk_size_mb: "{{shelf1_size}}"
     node1_scsi_controller: 1
@@ -273,7 +334,7 @@
       - { disk: 15, unit_number: 15 }
 
 - name: create shared disk shelf 2
-  include_tasks: vmw_share_disk.yml
+  include_tasks: share_disk.yml
   vars:
     disk_size_mb: "{{shelf2_size}}"
     node1_scsi_controller: 2
@@ -300,7 +361,7 @@
       - { disk: 15, unit_number: 15 }
 
 - name: create shared disk shelf 3
-  include_tasks: vmw_share_disk.yml
+  include_tasks: share_disk.yml
   vars:
     disk_size_mb: "{{shelf3_size}}"
     node1_scsi_controller: 3
@@ -328,7 +389,10 @@
 
 - name: Start Node 2
   community.vmware.vmware_guest:
-    <<: *esxi_login
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ node2_name }}'
     state: poweredon
     wait_for_ip_address: false
@@ -336,7 +400,10 @@
 
 - name: Start Node 1
   community.vmware.vmware_guest:
-    <<: *esxi_login
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ node1_name }}'
     state: poweredon
     wait_for_ip_address: false
@@ -344,7 +411,10 @@
 
 - name: Wait for VMware tools to become available
   community.vmware.vmware_guest_tools_wait:
-    <<: *esxi_login
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
     name: '{{ node2_name }}'
   delegate_to: localhost
   retries: 3

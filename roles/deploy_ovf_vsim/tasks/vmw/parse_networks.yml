@@ -1,0 +1,42 @@
+- name: Add Network Adapters
+  set_fact:
+    networks:
+      - name: "{{ethernet_ports.e0a|default(cluster_network)}}"
+      - name: "{{ethernet_ports.e0b|default(cluster_network)}}"
+      - name: "{{ethernet_ports.e0c|default(cluster_network)}}"
+      - name: "{{ethernet_ports.e0d|default(cluster_network)}}"
+  when: vm_num_nics|int <= 4
+
+- name: Add Network Adapters
+  set_fact:
+    networks:  "{{ networks + [ item ] }}"
+  with_items:
+      - name: "{{ethernet_ports.e0e|default(data_network)}}"
+  when: vm_num_nics|int >= 5 or ethernet_ports.e0e|default('') ~ ethernet_ports.e0f|default('') ~ ethernet_ports.e0g|default('') ~ ethernet_ports.e0h|default('') != ""
+
+- name: Add Network Adapters
+  set_fact:
+    networks:  "{{ networks + [ item ] }}"
+  with_items:
+      - name: "{{ethernet_ports.e0f|default(data_network)}}"
+  when: vm_num_nics|int >= 6 or ethernet_ports.e0f|default('') ~ ethernet_ports.e0g|default('') ~ ethernet_ports.e0h|default('') != ""
+
+- name: Add Network Adapters
+  set_fact:
+    networks:  "{{ networks + [ item ] }}"
+  with_items:
+      - name: "{{ethernet_ports.e0g|default(data_network)}}"
+  when: vm_num_nics|int >= 7 or ethernet_ports.e0g|default('') ~ ethernet_ports.e0h|default('') != ""
+
+- name: Add Network Adapters
+  set_fact:
+    networks:  "{{ networks + [ item ] }}"
+  with_items:
+      - name: "{{ethernet_ports.e0h|default(data_network)}}"
+  when: vm_num_nics|int >= 8 or ethernet_ports.e0h|default('') != ""
+
+- name: debug networks
+  debug:
+    msg:
+      - "{{ networks }}"
+

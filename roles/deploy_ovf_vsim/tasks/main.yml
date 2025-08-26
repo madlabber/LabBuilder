@@ -1,18 +1,55 @@
 ---
-- name: Remove VMs if state is absent or forced
-  include_tasks: absent.yml
-  when: state == "absent" or state == "force"
+- name: parse variables
+  include_tasks: parse_vars.yml
 
-- name: build vm on VMware
-  include_tasks: vmw_main.yml
+- name: remove vm if state is absent or forced
+  include_tasks: "{{host_type}}/absent.yml"
+
+- name: parse disks
+  include_tasks: parse_disks.yml
+
+- name: parse networks
+  include_tasks: "{{host_type}}/parse_networks.yml"
+
+- name: locate ovf file - {{ovf_file}}
+  include_tasks: locate_ovf_file.yml
+
+- name: extract OVA
+  include_tasks: extract_ova.yml
+
+- name: install update
+  include_tasks: install_update.yml
+
+- name: Set bootargs
+  include_tasks: set_bootargs.yml
+  when: node_name | default('') != ''
+  loop_control:
+    loop_var: node_name
+  loop:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+
+- name: Create setup.ngsh
+  include_tasks: create_setup_ngsh.yml
+
+- name: update OVA
+  include_tasks: update_ova.yml
+
+- name: Build VM (vha)
+  include_tasks: "{{host_type}}/build_vm_vha.yml"
+  when: disk_model == "vha"
+
+- name: Build VM (vscsi)
+  include_tasks: "{{host_type}}/build_vm_vscsi.yml"
   when: 
-    - state != "absent"
-    - vcenter_address ~ esxi_address != ''
-    - pve_address == ''
+    - disk_model == "vscsi"
+    - partner_name == ""
 
-- name: build vm on PVE
-  include_tasks: pve_main.yml
-  when:
-    - state != "absent"
-    - pve_address != ''
+- name: Build VM (shared)
+  include_tasks: "{{host_type}}/build_vm_shared.yml"
+  when: 
+    - disk_model == "vscsi"
+    - partner_name != ""
 
+- name: cleanup
+  include_tasks: cleanup.yml

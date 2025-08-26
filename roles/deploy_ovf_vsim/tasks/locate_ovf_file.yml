@@ -1,0 +1,23 @@
+- name: locate ovf ovf_file
+  stat:
+    path: "{{ovf_file | default('')}}" 
+  delegate_to: localhost
+  register: ovf_location
+
+- name: Check althernate ovf_file location
+  stat: 
+    path: "{{ playbook_dir }}/files/vsim-netapp-DOT{{ ovf_version }}-cm_nodar.ova"
+  delegate_to: localhost
+  register: ovf_playbook_dir
+  when: not ovf_location.stat.exists
+
+- name: select ovf_file
+  set_fact: 
+    ovf_file: "{{ playbook_dir }}/files/vsim-netapp-DOT{{ ovf_version }}-cm_nodar.ova"
+  when:
+    - not ovf_location.stat.exists
+    - ovf_playbook_dir.stat.exists
+
+- name: selected OVF file
+  debug:
+    msg: "{{ovf_file}}"

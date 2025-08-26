@@ -7,10 +7,6 @@
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
     net: '{{ networks }}'
-      # net0: 'e1000,bridge={{ pve_cluster_network }}'
-      # net1: 'e1000,bridge={{ pve_cluster_network }}'
-      # net2: 'e1000,bridge={{ pve_data_network }}'
-      # net3: 'e1000,bridge={{ pve_data_network }}'
     serial:
       serial0: 'socket'
       serial1: 'socket'
@@ -29,7 +25,39 @@
 
 - debug: 
     msg: "{{ create_vm.vmid }}"
-    
+
+- name: Create partner VM 
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: present
+    name: '{{ partner_name|replace("_", "-") }}'
+    node: "{{ pve_node }}"
+    net: '{{ networks }}'
+      # net0: 'e1000,bridge={{ pve_cluster_network }}'
+      # net1: 'e1000,bridge={{ pve_cluster_network }}'
+      # net2: 'e1000,bridge={{ pve_data_network }}'
+      # net3: 'e1000,bridge={{ pve_data_network }}'
+    serial:
+      serial0: 'socket'
+      serial1: 'socket'
+    vga: serial0
+    cpu: host
+    sockets: '{{ vm_num_cpus|int }}'
+    vcpus: '{{ vm_num_cpus|int }}'
+    memory: '{{ vm_memory_mb |int}}'
+    agent: true
+    scsihw: virtio-scsi-pci
+  delegate_to: localhost
+  register: create_partner_vm
+  retries: 3
+  delay: 10
+  until: create_partner_vm is succeeded
+
+- debug: 
+    msg: "{{ create_partner_vm.vmid }}"
+
 - name: Copy disks to temporary storage
   copy:
     src: "{{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-{{item}}.vmdk"
@@ -40,6 +68,15 @@
     - disk2
     - disk3
 
+- name: Copy partner disks to temporary storage
+  copy:
+    src: "{{ playbook_dir }}/files/{{partner_name}}/vsim-NetAppDOT-simulate-{{item}}.vmdk"
+    dest: "{{ iso_path }}/{{ partner_name }}-{{item}}.vmdk"
+  delegate_to: temp_host
+  loop:
+    - disk1
+    - disk2
+    - disk3
 
 - name: import disks
   shell:  
@@ -50,6 +87,14 @@
     - disk2
     - disk3
 
+- name: import partner disks
+  shell:  
+    cmd: "qm disk import {{ create_partner_vm.vmid }} {{ iso_path }}/{{ partner_name }}-{{item}}.vmdk {{pve_datastore}} --format raw"
+  delegate_to: temp_host
+  loop:
+    - disk1
+    - disk2
+    - disk3
 
 - name: Attach disks
   shell:  
@@ -60,6 +105,14 @@
    - 1
    - 2
 
+- name: Attach partner disks
+  shell:  
+    cmd: "qm set {{ create_partner_vm.vmid }} --ide{{item}} file={{pve_datastore}}:vm-{{create_partner_vm.vmid}}-disk-{{item}}"
+  delegate_to: temp_host
+  loop:
+   - 0
+   - 1
+   - 2
 
 - name: Remove disks from temporary storage
   ansible.builtin.file:
@@ -71,6 +124,15 @@
     - disk2
     - disk3
 
+- name: Remove partner disks from temporary storage
+  ansible.builtin.file:
+    path: "{{ iso_path }}/{{ partner_name }}-{{item}}.vmdk"
+    state: absent
+  delegate_to: temp_host
+  loop:
+    - disk1
+    - disk2
+    - disk3
 
 - name: Set boot order
   shell:  

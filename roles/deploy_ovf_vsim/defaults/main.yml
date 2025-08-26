@@ -1,7 +1,7 @@
 # Path to the Simulate ONTAP OVA File
-ovf_version: "9.12.1"
+version: "9.16.1"
+ovf_version: "{{version}}"
 ovf_file:    "{{ role_path }}/files/vsim-netapp-DOT{{ ovf_version }}-cm_nodar.ova"
-
 # Host type
 host_type: "vmw" # vmw | pve
 
@@ -94,3 +94,28 @@ ontap_location:         ""
 
 #Timers 
 boot_delay: 10
+
+# translation tables for VHA disks
+# mapping common values to closest matching disk type
+size_table: {
+  '0' : '',
+  '500': '35',
+  '1000': '23',
+  '1024': '23',
+  '2000': '30',
+  '2048': '30',
+  '4000': '31',
+  '4096': '31',
+  '8000': '36',
+  '8192': '36', 
+  '9000': '36',
+  '9216': '36'
+}
+type_table: {
+  '0' : '',
+  '35': '500',
+  '23': '1000',
+  '30': '2000',
+  '31': '4000',
+  '36': '9000'      
+    }

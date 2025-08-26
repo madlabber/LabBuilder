@@ -37,11 +37,64 @@
         value: 1024  # Moving the PCI hole here gives ONTAP access to more system ram
   delegate_to: localhost
 
-# This wierdness is because with_sequence evaluates and fails even when this task is not executed
-# bug closed as a wont_fix by ansible
+# Tear down and rebuild the VM's Network Interfaces
+- name: Tag each network adapter 
+  community.vmware.vmware_guest_network:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: '{{ vcenter_datacenter }}'
+    name: "{{ vm_name }}"
+    label: "Network adapter {{ item }}"
+    mac_address: "00:50:56:99:99:0{{ item }}"
+    network_name: "{{cluster_network}}"
+    device_type: e1000
+    state: present
+  with_items: 
+   - 1
+   - 2
+   - 3
+   - 4
+  delegate_to: localhost 
+  ignore_errors: true
+
+- name: remove each network adapter 
+  community.vmware.vmware_guest_network:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: '{{ vcenter_datacenter }}'
+    name: "{{ vm_name }}"
+    mac_address: "00:50:56:99:99:0{{ item }}"
+    state: absent
+  with_items: 
+   - 1
+   - 2
+   - 3
+   - 4
+  delegate_to: localhost 
+  ignore_errors: true
+
 - name: add nics
-  include_tasks: vmw_add_nics.yml
-  when: vm_num_nics|int > 4
+  block:
+    - community.vmware.vmware_guest_network:
+        hostname: "{{ vcenter_address }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: no
+        # datacenter: "{{ vcenter_datacenter }}"
+        name: '{{ vm_name }}'
+        state: present
+        force: yes
+        device_type:  "e1000"
+        network_name: "{{ item.name }}"
+        connected: true
+        start_connected: true
+      delegate_to: localhost
+      with_items: "{{networks}}"
+      ignore_errors: true
 
 - set_fact:
     serial_ports:

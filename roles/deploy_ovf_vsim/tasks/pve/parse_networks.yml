@@ -1,0 +1,61 @@
+
+- name: Add Network Adapters
+  set_fact:
+    networks:
+      net0: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0a|default(cluster_network)] }}'
+      net1: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0b|default(cluster_network)] }}'
+      net2: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0c|default(data_network)] }}'
+      net3: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0d|default(data_network)] }}'
+  when: vm_num_nics|int <= 4
+
+- name: Add Network Adapters
+  set_fact:
+    networks:
+      net0: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0a|default(cluster_network)] }}'
+      net1: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0b|default(cluster_network)] }}'
+      net2: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0c|default(data_network)] }}'
+      net3: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0d|default(data_network)] }}'
+      net4: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0e|default(data_network)] }}'
+  when: vm_num_nics|int >= 5 or ethernet_ports.e0e|default('') ~ ethernet_ports.e0f|default('') ~ ethernet_ports.e0g|default('') ~ ethernet_ports.e0h|default('') != ""
+
+- name: Add Network Adapters
+  set_fact:
+    networks:
+      net0: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0a|default(cluster_network)] }}'
+      net1: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0b|default(cluster_network)] }}'
+      net2: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0c|default(data_network)] }}'
+      net3: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0d|default(data_network)] }}'
+      net4: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0e|default(data_network)] }}'
+      net5: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0f|default(data_network)] }}'
+  when: vm_num_nics|int >= 6 or ethernet_ports.e0f|default('') ~ ethernet_ports.e0g|default('') ~ ethernet_ports.e0h|default('') != ""
+
+- name: Add Network Adapters
+  set_fact:
+    networks:
+      net0: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0a|default(cluster_network)] }}'
+      net1: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0b|default(cluster_network)] }}'
+      net2: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0c|default(data_network)] }}'
+      net3: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0d|default(data_network)] }}'
+      net4: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0e|default(data_network)] }}'
+      net5: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0f|default(data_network)] }}'
+      net6: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0g|default(data_network)] }}'
+  when: vm_num_nics|int >= 7 or ethernet_ports.e0g|default('') ~ ethernet_ports.e0h|default('') != ""
+
+- name: Add Network Adapters
+  set_fact:
+    networks:
+      net0: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0a|default(cluster_network)] }}'
+      net1: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0b|default(cluster_network)] }}'
+      net2: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0c|default(data_network)] }}'
+      net3: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0d|default(data_network)] }}'
+      net4: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0e|default(data_network)] }}'
+      net5: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0f|default(data_network)] }}'
+      net6: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0g|default(data_network)] }}'
+      net7: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0g|default(data_network)] }}'
+  when: vm_num_nics|int >= 8 or ethernet_ports.e0h|default('') != ""
+
+- name: debug
+  debug:
+    msg:
+      - "{{ networks }}"
+
