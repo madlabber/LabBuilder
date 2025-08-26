@@ -58,13 +58,11 @@ all:
             type: thin
           - size_gb: 3072
             type: thin
-        networks:
-          - name: "{{ lab_lan1_portgroup }}"
-            device_type: vmxnet3
-          - name: "{{ lab_lan1_portgroup }}"
-            device_type: vmxnet3
-          - name: "{{ lab_lan1_portgroup }}"
-            device_type: vmxnet3
+        ethernet_ports: 
+          eth0: "{{ lab_lan1_portgroup }}"
+          eth1: "{{ lab_lan1_portgroup }}"
+          eth2: "{{ lab_lan1_portgroup }}"
+        network_device_type: virtio
         extra_commands:
           # enable serial console on EL8 variants
           - 'grub2-editenv - set "$(grub2-editenv - list | grep kernelopts) console=tty0 console=ttyS0,115200"'

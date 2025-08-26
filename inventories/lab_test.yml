@@ -41,6 +41,7 @@ all:
             - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
             # Install Putty
             - "MsiExec.exe /i E:\\files\\putty-64bit-0.83-installer.msi /qn"
+
     winservers:
       hosts:
         server2025:
@@ -96,15 +97,14 @@ all:
         vm_num_cpus: 2
         vm_disk_gb: 40
         install_xrdp: true
-        network_device_type: vmxnet3
+        install_ansible: true
+        network_device_type: virtio
       hosts:
         centos7:
           state: force
           ip_address: 192.168.0.171
           distro: "centos"
           version: "7"
-          install_xrdp: true
-          install_ansible: true
         #   extra_commands:
         #     # Install Docker-CE
         #     - "yum install -y epel-release"
@@ -119,27 +119,27 @@ all:
           version: "8"
           install_xrdp: true
           install_ansible: true # broken in centos8, missing dependancy
-        # alma8:
-        #   state: force
-        #   ip_address: 192.168.0.182
-        #   distro: "alma"
-        #   version: "8"
-        #   install_xrdp: true
-        #   install_ansible: true
-        #   disks:
-        #     - size_gb: 140
-        #       type: thin
-        #     - size_gb: 200
-        #       type: thin
-        #   networks:
-        #     - name: "{{ lab_lan1_portgroup }}"
-        #       device_type: e1000
-        #     - name: "{{ lab_lan1_portgroup }}"
-        #       device_type: e1000
-        #   serial_ports:
-        #     - type: 'pipe'
-        #       pipe_name: '\\.\pipe\{{lab_name}}_com1'
-        #       endpoint: 'client'
+        alma8:
+          state: force
+          ip_address: 192.168.0.182
+          distro: "alma"
+          version: "8"
+          install_xrdp: true
+          install_ansible: true
+          disks:
+            - size_gb: 140
+              type: thin
+            - size_gb: 200
+              type: thin
+          networks:
+            - name: "{{ lab_lan1_portgroup }}"
+              device_type: e1000
+            - name: "{{ lab_lan1_portgroup }}"
+              device_type: e1000
+          serial_ports:
+            - type: 'pipe'
+              pipe_name: '\\.\pipe\{{lab_name}}_com1'
+              endpoint: 'client'
         rocky810:
           state: force
           ip_address: 192.168.0.182
@@ -213,9 +213,16 @@ all:
           distro: "rocky"
           version: "9.4"
           vm_memory_mb: 4096
-          install_xrdp: true
-          install_ansible: true
           nested_virtualization: true
+          ethernet_ports:
+            eth0: "{{ lab_lan1_portgroup }}"
+            eth1: "{{ lab_lan1_portgroup }}"
+            eth2: "{{ lab_lan1_portgroup }}"
+          disks:
+          - size_gb: 160
+            type: thin
+          - size_gb: 3072
+            type: thin
 
     esx:
       hosts:
@@ -244,31 +251,48 @@ all:
       hosts:
         vha-01:
           state: force
-          ovf_version: "9.16.1"
+          version: "9.16.1"
           ip_address:    192.168.0.141
           cluster_name:    "vha"
           cluster_mgmt_ip: 192.168.0.140
           sys_serial_number: "408236-85-07"
-          add_nodes_by_serial: "408236-85-08"
+          # add_nodes_by_serial: "408236-85-08"
           bootargs:
             - bootarg.vm.madlabber=true
           extra_commands:
-            - sleep 180 # give nodes time to join
+            # - sleep 180 # give nodes time to join
             - node run vha-01 disk assign all
-            - node run vha-02 disk assign all
+            # - node run vha-02 disk assign all
             - storage aggregate create -aggregate aggr1 -diskcount 8 -node vha-01
-            - storage aggregate create -aggregate aggr2 -diskcount 8 -node vha-02
+            # - storage aggregate create -aggregate aggr2 -diskcount 8 -node vha-02
           #update_package: files/9171RC1_v_image.tgz
           #add_nodes_by_serial: "408236-85-08,408236-85-09,408236-85-10"
+          ethernet_ports:
+            e0a: '{{ lab_lan2_portgroup }}'
+            e0b: '{{ lab_lan2_portgroup }}'
+            e0c: '{{ lab_lan1_portgroup }}'
+            e0d: '{{ lab_lan1_portgroup }}'
+            e0e: '{{ lab_lan1_portgroup }}'
+            e0f: '{{ lab_lan1_portgroup }}'
+            e0g: '{{ lab_lan2_portgroup }}'
+            e0h: '{{ lab_lan2_portgroup }}'
+
         vha-02:
           state: force
-          ovf_version: "9.16.1"
+          version: "9.16.1"
           ip_address:    192.168.0.142
           sys_serial_number: "408236-85-08"
           #update_package: files/9171RC1_v_image.tgz
+          ethernet_ports:
+            e0a: '{{ lab_lan2_portgroup }}'
+            e0b: '{{ lab_lan2_portgroup }}'
+            e0c: '{{ lab_lan1_portgroup }}'
+            e0d: '{{ lab_lan1_portgroup }}'
+            e0e: '{{ lab_lan2_portgroup }}'
+
         vscsi-01:
           state: force
-          ovf_version: "9.16.1"
+          version: "9.16.1"
           ip_address:    192.168.0.151
           cluster_name:    "vscsi"
           cluster_mgmt_ip: 192.168.0.150
