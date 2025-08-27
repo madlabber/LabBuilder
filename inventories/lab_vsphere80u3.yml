@@ -1,7 +1,7 @@
 all:
   hosts:
   vars:
-    lab_name: lab_vsphere8
+    lab_name: lab_vsphere80u3
     lab_prefix: "{{ lab_name }}_"
     lab_password: P@ssw0rd
     lab_vm_datastore: "{{ lab_name }}"
@@ -48,8 +48,8 @@ all:
           install_iso: "VMware-VMvisor-Installer-8.0U2-22380479.x86_64.iso"
       vars:
           install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
-          vm_memory_mb: 10240
-          vm_num_cpus: 2
+          vm_memory_mb: 24576
+          vm_num_cpus: 6
           disk_controller: nvme
           vm_disk1_size_gb: 6
           vm_disk2_size_gb: 10
@@ -59,9 +59,24 @@ all:
 
     ontapselecteval:
       hosts:
-        lab126ots60:  
+        demo-01:  
           ontap_version: "9.15.1"           
           ontap_node_mgmt_ip:    192.168.0.61
           ontap_cluster_name:    "demo"
           ontap_cluster_mgmt_ip: 192.168.0.60
           vm_data_disk_gb:       500
+
+    centos:
+      vars:
+      hosts:
+        ansible:
+          state: force
+          ip_address: 192.168.0.12
+          distro: "rocky"
+          version: "9.4"
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
+          vm_disk_gb: 120
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: false

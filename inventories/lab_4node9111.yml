@@ -62,7 +62,7 @@ all:
         cluster1-01:
           partner:      "cluster1-02"
           cluster_name: "cluster1"
-          ovf_version:  "9.11.1"
+          version:  "9.11.1"
           cluster_mgmt_ip: 192.168.0.90
           ip_address:      192.168.0.91
           partner_ip:      192.168.0.92
@@ -74,10 +74,10 @@ all:
           fake_ssd_disk_size: 8192
           adp_enabled: "true"
         cluster1-03:
-          partner:      "cluster1-04"
-          ovf_version:  "9.11.1"
-          ip_address:      192.168.0.93
-          partner_ip:      192.168.0.94
+          partner:    "cluster1-04"
+          version:    "9.11.1"
+          ip_address: 192.168.0.93
+          partner_ip: 192.168.0.94
           disk_model: "vscsi"
           shelf0_disk_size: 8192
           shelf0_disk_count: 12
