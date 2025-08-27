@@ -51,7 +51,7 @@ all:
           ontap_cluster_name:    "cluster3"
           ontap_cluster_mgmt_ip: 192.168.0.130
           vm_data_disk_gb:       1024
-          
+
     # centos:
     #   hosts:
     #     ansible:

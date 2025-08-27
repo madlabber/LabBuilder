@@ -234,6 +234,11 @@ all:
         esx03:
           ip_address: 192.168.0.53
           install_iso: "VMware-VMvisor-Installer-7.0U3n-21930508.x86_64.iso"
+        
+        # ESXi 6.7U3
+        esx67:
+          ip_address: 192.168.0.67
+          install_iso: "VMware-VMvisor-Installer-201912001-15160138.x86_64.iso"
         # esx04:
         #   ip_address: 192.168.0.54
       vars:
