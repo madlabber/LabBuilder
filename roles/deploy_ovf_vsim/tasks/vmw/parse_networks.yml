@@ -5,7 +5,6 @@
       - name: "{{ethernet_ports.e0b|default(cluster_network)}}"
       - name: "{{ethernet_ports.e0c|default(cluster_network)}}"
       - name: "{{ethernet_ports.e0d|default(cluster_network)}}"
-  when: vm_num_nics|int <= 4
 
 - name: Add Network Adapters
   set_fact:

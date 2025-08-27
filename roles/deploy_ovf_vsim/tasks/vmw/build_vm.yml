@@ -1,0 +1,208 @@
+---
+- name: 'Deploy ovf file: {{ovf_file}}'
+  community.vmware.vmware_deploy_ovf:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: "{{ vcenter_datacenter }}"
+    cluster: '{{ vcenter_cluster }}'
+    datastore: "{{ vm_datastore }}"
+    name: "{{ loop_vm_name }}"
+   # ovf: "{{ovf_file}}"
+    ovf: "{{ playbook_dir }}/files/{{loop_vm_name}}/vsim-NetAppDOT-simulate.ovf"
+    disk_provisioning: "{{vm_disk_provisioning}}"
+    power_on: no
+    networks: "{u'hostonly':u'{{ cluster_network }}',u'nat':u'{{ data_network }}'}"
+    wait_for_ip_address: false
+  delegate_to: localhost
+  retries: 10
+  delay: 60
+  register: result
+  until: result is succeeded
+
+- name: Adjust VM Sizing
+  community.vmware.vmware_guest:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ loop_vm_name }}'
+    state: present
+    hardware:
+      memory_mb: "{{ vm_memory_mb}}"
+      num_cpus: '{{ vm_num_cpus }}'
+    advanced_settings:
+      - key: pciHole.start
+        value: 1024  # Moving the PCI hole here gives ONTAP access to more system ram
+      - key: "disk.EnableUUID"
+        value: "true"  # Required for vSCSI support
+  delegate_to: localhost
+
+# Tear down and rebuild the VM's Network Interfaces
+- name: Tag each network adapter 
+  community.vmware.vmware_guest_network:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: '{{ vcenter_datacenter }}'
+    name: "{{ loop_vm_name }}"
+    label: "Network adapter {{ item }}"
+    mac_address: "00:50:56:99:99:0{{ item }}"
+    network_name: "{{cluster_network}}"
+    device_type: e1000
+    state: present
+  with_items: 
+   - 1
+   - 2
+   - 3
+   - 4
+  delegate_to: localhost 
+  ignore_errors: true
+
+- name: remove each network adapter 
+  community.vmware.vmware_guest_network:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: '{{ vcenter_datacenter }}'
+    name: "{{ loop_vm_name }}"
+    mac_address: "00:50:56:99:99:0{{ item }}"
+    state: absent
+  with_items: 
+   - 1
+   - 2
+   - 3
+   - 4
+  delegate_to: localhost 
+  ignore_errors: true
+
+# Remove the VHA disk on IDE1:1
+- name: remove vha disk on IDE1:1
+  community.vmware.vmware_guest_disk:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: '{{ vcenter_datacenter }}'
+    name: '{{ loop_vm_name }}'
+    disk:
+      - state: absent
+        controller_type: ide
+        controller_number: 1
+        unit_number: 1
+        destroy: true
+  ignore_errors: true
+  delegate_to: localhost
+  register: disk_facts
+  when: disk_model != 'vha'
+
+- name: add nics
+  community.vmware.vmware_guest_network:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+    # datacenter: "{{ vcenter_datacenter }}"
+    name: '{{ loop_vm_name }}'
+    state: present
+    force: yes
+    device_type:  "e1000"
+    network_name: "{{ item.name }}"
+    connected: true
+    start_connected: true
+  delegate_to: localhost
+  with_items: "{{networks}}"
+  ignore_errors: true
+
+- set_fact:
+    serial_ports:
+      - type: 'pipe'
+        pipe_name: '\\.\pipe\{{ loop_vm_name}}_com1'
+        endpoint: 'client'
+      - type: 'pipe'
+        pipe_name: '\\.\pipe\{{ loop_vm_name}}_com2'
+        endpoint: 'client'
+  when:
+    - serial_ports|default(false) is false
+
+# Create serial ports
+- name: Create multiple serial ports with Backing type - network, pipe, device and file
+  community.vmware.vmware_guest_serial_port:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+    name: '{{ loop_vm_name }}'
+    backings: "{{serial_ports}}"
+  delegate_to: localhost
+  register: create_serial_ports
+  when:
+    - serial_ports is defined
+    - serial_ports is not false
+
+# Pre-create scsi controller is disks will be shared
+- name: Add SCSI controllers
+  community.vmware.vmware_guest_controller:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: "{{ vcenter_datacenter }}"
+    name: '{{ loop_vm_name }}'
+    controllers:
+      - state: present
+        type: lsilogicsas
+        controller_number: 0
+        bus_sharing: virtualSharing
+      - state: present
+        type: lsilogicsas
+        controller_number: 1
+        bus_sharing: virtualSharing
+      - state: present
+        type: lsilogicsas
+        controller_number: 2
+        bus_sharing: virtualSharing
+      - state: present
+        type: lsilogicsas
+        controller_number: 3
+        bus_sharing: virtualSharing
+  delegate_to: localhost
+  register: disk_controller_facts
+  when: partner_name != ''
+
+# Set IC MAC
+- name: Set IC MAC
+  community.vmware.vmware_guest_network:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: '{{ vcenter_datacenter }}'
+    label: "Network adapter {{vm_num_nics}}"
+    network_name: "{{cluster_network}}"
+    device_type: e1000
+    mac_address: "{{node1_icmac|default('00:50:56:3F:01:01')}}"
+    name: '{{ loop_vm_name }}'
+    state: present
+  delegate_to: localhost
+  when: loop_vm_name == vm_name
+
+# Set IC MAC
+- name: Set IC MAC
+  community.vmware.vmware_guest_network:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: '{{ vcenter_datacenter }}'
+    label: "Network adapter {{vm_num_nics}}"
+    network_name: "{{cluster_network}}"
+    device_type: e1000
+    mac_address: "{{node2_icmac|default('00:50:56:3F:02:02')}}"
+    name: '{{ loop_vm_name }}'
+    state: present
+  delegate_to: localhost
+  when: loop_vm_name == partner_name

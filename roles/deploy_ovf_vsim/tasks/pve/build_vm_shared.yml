@@ -310,17 +310,4 @@
     - 31
   ignore_errors: true
 
-- name: Start VM
-  community.proxmox.proxmox_kvm:
-    api_user: '{{ pve_username }}@pam'
-    api_password: '{{ pve_password }}'
-    api_host: '{{ pve_address }}'
-    state: started
-    name: '{{ vm_name|replace("_", "-") }}'
-  delegate_to: localhost
-  retries: 3
-  delay: 10
-  register: result
-  until: result is succeeded
-  ignore_errors: true
   

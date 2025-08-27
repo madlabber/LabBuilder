@@ -1,77 +1,13 @@
-- name: Create new VM 
+- name: Get VMID 
   community.proxmox.proxmox_kvm:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
-    state: present
+    state: current
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
-    net: '{{ networks }}'
-    serial:
-      serial0: 'socket'
-      serial1: 'socket'
-    vga: serial0
-    cpu: host
-    sockets: '{{ vm_num_cpus|int }}'
-    vcpus: '{{ vm_num_cpus|int }}'
-    memory: '{{ vm_memory_mb |int}}'
-    agent: true
-    scsihw: virtio-scsi-pci
   delegate_to: localhost
   register: create_vm
-  retries: 3
-  delay: 10
-  until: create_vm is succeeded
-
-- debug: 
-    msg: "{{ create_vm.vmid }}"
-    
-- name: Copy disks to temporary storage
-  copy:
-    src: "{{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-{{item}}.vmdk"
-    dest: "{{ iso_path }}/{{ vm_name }}-{{item}}.vmdk"
-  delegate_to: temp_host
-  loop:
-    - disk1
-    - disk2
-    - disk3
-
-
-- name: import disks
-  shell:  
-    cmd: "qm disk import {{ create_vm.vmid }} {{ iso_path }}/{{ vm_name }}-{{item}}.vmdk {{pve_datastore}} --format raw"
-  delegate_to: temp_host
-  loop:
-    - disk1
-    - disk2
-    - disk3
-
-
-- name: Attach disks
-  shell:  
-    cmd: "qm set {{ create_vm.vmid }} --ide{{item}} file={{pve_datastore}}:vm-{{create_vm.vmid}}-disk-{{item}}"
-  delegate_to: temp_host
-  loop:
-   - 0
-   - 1
-   - 2
-
-
-- name: Remove disks from temporary storage
-  ansible.builtin.file:
-    path: "{{ iso_path }}/{{ vm_name }}-{{item}}.vmdk"
-    state: absent
-  delegate_to: temp_host
-  loop:
-    - disk1
-    - disk2
-    - disk3
-
-
-- name: Set boot order
-  shell:  
-    cmd: "qm set {{ create_vm.vmid }} --bootdisk ide0 --boot order=ide0"
-  delegate_to: temp_host
 
 # On proxmox you canhave up to 31 virtio disks
 # They can all be declared on shelf 0 or can span over to shelf1

@@ -35,21 +35,29 @@
 - name: update OVA
   include_tasks: update_ova.yml
 
-- name: Build VM (vha)
-  include_tasks: "{{host_type}}/build_vm_vha.yml"
-  when: disk_model == "vha"
+- name: Build VM 
+  include_tasks: "{{host_type}}/build_vm.yml"
+  when: loop_vm_name | default('') != ''
+  loop_control:
+    loop_var: loop_vm_name
+  loop:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
 
-- name: Build VM (vscsi)
-  include_tasks: "{{host_type}}/build_vm_vscsi.yml"
+- name: Add disks
+  include_tasks: "{{host_type}}/add_disks.yml"
   when: 
     - disk_model == "vscsi"
     - partner_name == ""
 
-- name: Build VM (shared)
-  include_tasks: "{{host_type}}/build_vm_shared.yml"
+- name: Add shared disks
+  include_tasks: "{{host_type}}/add_shared_disks.yml"
   when: 
     - disk_model == "vscsi"
     - partner_name != ""
+  
+- name: Start VM 
+  include_tasks: "{{host_type}}/start_vm.yml"
 
 - name: cleanup
   include_tasks: cleanup.yml

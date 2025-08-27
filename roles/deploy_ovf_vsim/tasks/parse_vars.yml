@@ -73,6 +73,14 @@
     - vm_num_nics|int <= 4
     - partner_name|default("") != ""
 
+- name: enforce minimum nics for PVE HA
+  set_fact:
+    vm_num_nics: 6
+  when: 
+    - vm_num_nics|int <= 5
+    - partner_name|default("") != ""
+    - host_type == "pve"
+
 # - set_fact:
 #     ethernet_ports:
 #       e0a: "VM Network"

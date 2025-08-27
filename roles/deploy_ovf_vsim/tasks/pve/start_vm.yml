@@ -1,0 +1,18 @@
+- name: Start VM
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: started
+    name: '{{ item|replace("_", "-") }}'
+  delegate_to: localhost
+  retries: 3
+  delay: 10
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  when: item|default('') != ''
+  with_items:
+    - "{{partner_name}}"
+    - "{{vm_name}}"
+

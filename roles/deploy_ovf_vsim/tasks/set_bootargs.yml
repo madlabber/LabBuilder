@@ -163,6 +163,7 @@
     - bootarg.vm.ha=true
     - bootarg.vm.ha_id=0
     - bootarg.ic_mac="{{ vm_num_nics|int + 1 }}:{{node2_icmac|default('00:50:56:3F:02:02')}}"
+    - bootarg.ic_local_mac="{{ node1_icmac }}"
   when: 
     - partner_name != ""
     - node_name == vm_name
@@ -178,9 +179,29 @@
     - bootarg.vm.ha=true
     - bootarg.vm.ha_id=1
     - bootarg.ic_mac="{{ vm_num_nics|int + 1 }}:{{node1_icmac|default('00:50:56:3F:01:01')}}"
+    # - bootarg.ic_local_mac="{{ node2_icmac }}"
   when: 
     - partner_name != ""
     - node_name == partner_name
+
+- name: set bootargs for non-shared disks on PVE 
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{node_name}}/env"
+    regexp: "^setenv {{item.split('=')[0]}} .*$"
+    line: "setenv {{item.split('=')[0]}} {{item.split('=')[1]}}"
+  delegate_to: localhost
+  with_items:
+    # disable HA since none of this works yet
+    - bootarg.vm.ha=false
+    # - bootarg.vm.ha.type=non_shared
+    # - bootarg.iscsi_bsd_interface=e0e
+    # - bootarg.ic_local_ip=1.2.3.4
+    # - bootarg.ic_local_netmask=255.255.255.0
+    # - bootarg.ic_local_port=7
+    # - bootarg.ic_partner_ip=1.2.3.5
+  when: 
+    - partner_name != ""
+    - host_type == "pve"
 
 - name: set extra bootargs
   ansible.builtin.lineinfile:

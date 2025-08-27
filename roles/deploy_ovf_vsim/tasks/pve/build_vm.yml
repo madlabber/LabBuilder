@@ -4,7 +4,7 @@
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
     state: present
-    name: '{{ vm_name|replace("_", "-") }}'
+    name: '{{ loop_vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
     net: '{{ networks }}'
     serial:
@@ -16,6 +16,7 @@
     vcpus: '{{ vm_num_cpus|int }}'
     memory: '{{ vm_memory_mb |int}}'
     agent: true
+    scsihw: virtio-scsi-pci
   delegate_to: localhost
   register: create_vm
   retries: 3
@@ -27,9 +28,10 @@
 
 - name: Copy disks to temporary storage
   copy:
-    src: "{{ playbook_dir }}/files/{{vm_name}}/vsim-NetAppDOT-simulate-{{item}}.vmdk"
-    dest: "{{ import_path }}/{{ vm_name }}-{{item}}.vmdk"
+    src: "{{ playbook_dir }}/files/{{loop_vm_name}}/vsim-NetAppDOT-simulate-{{item}}.vmdk"
+    dest: "{{ import_path }}/{{ loop_vm_name }}-{{item}}.vmdk"
   delegate_to: temp_host
+  when: item != 'disk4' or disk_model == "vha"
   loop:
     - disk1
     - disk2
@@ -38,8 +40,9 @@
 
 - name: import disks
   shell:  
-    cmd: "qm disk import {{ create_vm.vmid }} {{ import_path }}/{{ vm_name }}-{{item}}.vmdk {{pve_datastore}} --format raw"
+    cmd: "qm disk import {{ create_vm.vmid }} {{ import_path }}/{{ loop_vm_name }}-{{item}}.vmdk {{pve_datastore}} --format raw"
   delegate_to: temp_host
+  when: item != 'disk4' or disk_model == "vha"
   loop:
     - disk1
     - disk2
@@ -50,6 +53,7 @@
   shell:  
     cmd: "qm set {{ create_vm.vmid }} --ide{{item}} file={{pve_datastore}}:vm-{{create_vm.vmid}}-disk-{{item}}"
   delegate_to: temp_host
+  when: item != 3 or disk_model == "vha"
   loop:
    - 0
    - 1
@@ -58,9 +62,10 @@
 
 - name: Remove disks from temporary storage
   ansible.builtin.file:
-    path: "{{ import_path }}/{{ vm_name }}-{{item}}.vmdk"
+    path: "{{ import_path }}/{{ loop_vm_name }}-{{item}}.vmdk"
     state: absent
   delegate_to: temp_host
+  when: item != 'disk4' or disk_model == "vha"
   loop:
     - disk1
     - disk2
@@ -74,7 +79,7 @@
 #     api_password: '{{ pve_password }}'
 #     api_host: '{{ pve_address }}'
 #     vmid: "{{ create_vm.vmid }}"
-#     # name: '{{ vm_name|replace("_", "-") }}'
+#     # name: '{{ loop_vm_name|replace("_", "-") }}'
 #     disk: ide3
 #     storage: "{{pve_datastore}}"
 #     size: 250
@@ -91,3 +96,38 @@
     cmd: "qm set {{ create_vm.vmid }} --bootdisk ide0 --boot order=ide0"
   delegate_to: temp_host
 
+#To Do for HA
+# Set IC MACs
+- name: Configure the last nic for HA traffic
+  community.general.proxmox_nic:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    vmid: "{{ create_vm.vmid }}"
+    interface: "net{{vm_num_nics|int -1}}"
+    model: "e1000"
+    mac: "{{node1_icmac}}"
+    bridge: "{{pve_cluster_network}}"
+  delegate_to: localhost
+  register: set_ic_mac
+  retries: 3
+  delay: 10
+  until: set_ic_mac is succeeded
+  when: loop_vm_name == node1_name
+
+- name: Configure the last nic for HA traffic
+  community.general.proxmox_nic:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    vmid: "{{ create_vm.vmid }}"
+    interface: "net{{vm_num_nics|int -1}}"
+    model: "e1000"
+    mac: "{{node2_icmac}}"
+    bridge: "{{pve_cluster_network}}"
+  delegate_to: localhost
+  register: set_ic_mac
+  retries: 3
+  delay: 10
+  until: set_ic_mac is succeeded
+  when: loop_vm_name == node2_name

@@ -1,0 +1,109 @@
+- name: create shared disk shelf 0
+  include_tasks: share_disk.yml
+  vars:
+    disk_size_mb: "{{shelf0_size}}"
+    node1_scsi_controller: 0
+    node2_scsi_controller: 1
+    lun_number: "{{item.unit_number}}"
+  when:
+    - shelf0_disk_size|default("") != ""
+    - item.disk <= shelf0_disk_count|default(shelf0_qty)|int
+  loop:
+      - { disk:  1, unit_number: 0 }
+      - { disk:  2, unit_number: 1 }
+      - { disk:  3, unit_number: 2 }
+      - { disk:  4, unit_number: 3 }
+      - { disk:  5, unit_number: 4 }
+      - { disk:  6, unit_number: 5 }
+      - { disk:  7, unit_number: 6 }
+      - { disk:  8, unit_number: 8 }
+      - { disk:  9, unit_number: 9 }
+      - { disk: 10, unit_number: 10 }
+      - { disk: 11, unit_number: 11 }
+      - { disk: 12, unit_number: 12 }
+      - { disk: 13, unit_number: 13 }
+      - { disk: 14, unit_number: 14 }
+      - { disk: 15, unit_number: 15 }
+
+- name: create shared disk shelf 1
+  include_tasks: share_disk.yml
+  vars:
+    disk_size_mb: "{{shelf1_size}}"
+    node1_scsi_controller: 1
+    node2_scsi_controller: 0
+    lun_number: "{{item.unit_number}}"
+  when:
+    - shelf1_disk_size|default("") != ""
+    - item.disk <= shelf1_disk_count|default(shelf1_qty)|int
+  loop:
+      - { disk:  1, unit_number: 0 }
+      - { disk:  2, unit_number: 1 }
+      - { disk:  3, unit_number: 2 }
+      - { disk:  4, unit_number: 3 }
+      - { disk:  5, unit_number: 4 }
+      - { disk:  6, unit_number: 5 }
+      - { disk:  7, unit_number: 6 }
+      - { disk:  8, unit_number: 8 }
+      - { disk:  9, unit_number: 9 }
+      - { disk: 10, unit_number: 10 }
+      - { disk: 11, unit_number: 11 }
+      - { disk: 12, unit_number: 12 }
+      - { disk: 13, unit_number: 13 }
+      - { disk: 14, unit_number: 14 }
+      - { disk: 15, unit_number: 15 }
+
+- name: create shared disk shelf 2
+  include_tasks: share_disk.yml
+  vars:
+    disk_size_mb: "{{shelf2_size}}"
+    node1_scsi_controller: 2
+    node2_scsi_controller: 3
+    lun_number: "{{item.unit_number}}"
+  when:
+    - shelf2_disk_size|default("") != ""
+    - item.disk <= shelf2_disk_count|default(shelf2_qty)|int
+  loop:
+      - { disk:  1, unit_number: 0 }
+      - { disk:  2, unit_number: 1 }
+      - { disk:  3, unit_number: 2 }
+      - { disk:  4, unit_number: 3 }
+      - { disk:  5, unit_number: 4 }
+      - { disk:  6, unit_number: 5 }
+      - { disk:  7, unit_number: 6 }
+      - { disk:  8, unit_number: 8 }
+      - { disk:  9, unit_number: 9 }
+      - { disk: 10, unit_number: 10 }
+      - { disk: 11, unit_number: 11 }
+      - { disk: 12, unit_number: 12 }
+      - { disk: 13, unit_number: 13 }
+      - { disk: 14, unit_number: 14 }
+      - { disk: 15, unit_number: 15 }
+
+- name: create shared disk shelf 3
+  include_tasks: share_disk.yml
+  vars:
+    disk_size_mb: "{{shelf3_size}}"
+    node1_scsi_controller: 3
+    node2_scsi_controller: 2
+    lun_number: "{{item.unit_number}}"
+  when:
+    - shelf3_disk_size|default("") != ""
+    - item.disk <= shelf3_disk_count|default(shelf3_qty)|int
+  loop:
+      - { disk:  1, unit_number: 0 }
+      - { disk:  2, unit_number: 1 }
+      - { disk:  3, unit_number: 2 }
+      - { disk:  4, unit_number: 3 }
+      - { disk:  5, unit_number: 4 }
+      - { disk:  6, unit_number: 5 }
+      - { disk:  7, unit_number: 6 }
+      - { disk:  8, unit_number: 8 }
+      - { disk:  9, unit_number: 9 }
+      - { disk: 10, unit_number: 10 }
+      - { disk: 11, unit_number: 11 }
+      - { disk: 12, unit_number: 12 }
+      - { disk: 13, unit_number: 13 }
+      - { disk: 14, unit_number: 14 }
+      - { disk: 15, unit_number: 15 }
+
+

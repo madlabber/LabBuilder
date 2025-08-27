@@ -1,5 +1,5 @@
 # LabBuilder
- A collection of playbooks and tooling for building labs
+A collection of playbooks and tooling for building labs
 
 main.yml - provisions labs from inventory files
 
@@ -78,7 +78,5 @@ Most components can now build on PVE hosts, with the following general exception
 | OTS Eval    | YES    | YES     |
 | SGWS        | YES    | NO      | 
 | VCENTER     | YES    | NO*     | PVE: install nested on an ESX VM
-| VSIM        | YES    | YES     |
-
-
+| VSIM        | YES    | YES*    | PVE: HA pairs are rendered as non-ha nodes
 
