@@ -6,7 +6,7 @@
 		<optimization>normal</optimization>
 		<hostname>router</hostname>
 		<domain>lab.local</domain>
-		<dnsserver>192.168.0.11</dnsserver>
+		<dnsallowoverride></dnsallowoverride>
 		<group>
 			<name>all</name>
 			<description><![CDATA[All Users]]></description>

@@ -168,7 +168,7 @@
       <<: *vmw_login
       name: '{{ vm_name }}'
     delegate_to: localhost
-    retries: 5
+    retries: 1
     delay: 60
     register: vmtools_after_install         
     until: vmtools_after_install is succeeded

@@ -6,7 +6,7 @@
 		<optimization>normal</optimization>
 		<hostname>router</hostname>
 		<domain>vclass.local</domain>
-		<dnsserver>172.20.10.10</dnsserver>
+		<dnsallowoverride></dnsallowoverride>
 		<group>
 			<name>all</name>
 			<description><![CDATA[All Users]]></description>
