@@ -7,7 +7,7 @@
     validate_certs: no
     datacenter: "{{vcenter_datacenter}}"
     datastore: "{{ iso_datastore }}"
-    path: "ks-{{ install_iso }}"
+    path: "{{ install_iso }}"
     state: file
   register: install_iso_exists
   delegate_to: localhost
@@ -19,10 +19,10 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'
     validate_certs: no
-    src: "{{ playbook_dir }}/files/ks-{{install_iso}}"
+    src: "{{ playbook_dir }}/files/{{install_iso}}"
     datacenter: "{{ vcenter_datacenter }}"
     datastore: "{{ iso_datastore }}"
-    path: "ks-{{ install_iso }}"
+    path: "{{ install_iso }}"
   delegate_to: localhost
   ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
   when: install_iso_exists.failed

@@ -9,7 +9,7 @@
     bios: ovmf
     # boot: 'order=sata0;sata5'
     efidisk0:
-      storage: '{{vm_datastore}}'
+      storage: '{{pve_vm_datastore}}'
       format: raw
       efitype: 4m
       pre_enrolled_keys: 1
