@@ -3,6 +3,7 @@
 *.ova
 *.DS_Store
 vars/rhsm_secrets.yml
+priv/*
 files/.DS_Store
 files/*.tgz
 files/*.gz
