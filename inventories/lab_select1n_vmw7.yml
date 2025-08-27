@@ -25,13 +25,13 @@ all:
         dc01:
           version: "Server2019eval"
           ip_address: 192.168.0.11
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+            - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
           extra_commands:
-            # Install Chrome
-            - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
-            - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
-            # Install Putty
-            - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
-            - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+            - MsiExec.exe /i E:\files\putty-64bit-0.83-installer.msi /qn
+            - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
+            
     vcenter:
       hosts:
         vcsa:
