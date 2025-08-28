@@ -1,0 +1,66 @@
+# Configuration Variables for Proxmox Environments
+
+# In the current implementation deployments
+# target a specific proxmox node defined below:
+pve_node: pve51
+pve_address: 192.168.123.51
+pve_username: root
+pve_password: P@ssw0rd
+
+# Default storage location for new VMs
+vm_datastore: "Local-LVM"
+
+# Default iso location
+# iso_datastore: local
+# iso_path: /var/lib/vz/template/iso
+iso_datastore: pve_nfs01
+iso_path: /mnt/pve/pve_nfs01/template/iso
+
+# Default import location
+import_datastore: local
+import_path: /var/lib/vz/import
+
+# Default portgroup for new VMs
+vm_network: "vmbr0"
+
+# This section is not currently implementated:
+# VLAN Pool for building lab pod portgroups
+# vlan_start: 1000
+# vlan_count: 1000
+
+# ONTAP vars required to build lab pod datastores
+# ontap_address: "192.168.123.10"
+# ontap_password: "P@ssw0rd"
+# ontap_svm_name: "svm33"
+# ontap_svm_address: "192.168.122.33"
+# ontap_svm_lif: "svm33_nfs_33"
+# ontap_vol_labs: "Labs"
+# ontap_vol_size_gb: 500
+# ontap_aggregate: "ots10_01_SSD_1"
+
+# Datastore Substitutions:
+# When an inventory calls for a datastore on VMware
+# Substitue with the PVE datastore in this table
+datastore_substitutions: {
+  'lab_test' : 'local-lvm1',
+  'lab_test2': 'local-lvm1',
+  'lab_vlan126' : 'local-lvm1',
+  'lab_ansible_v2a' : 'local-lvm1',
+  'lab_proxmox84' : 'local-lvm1'
+}
+
+# Network substitutions
+# PVE has a very short limit on bridge names
+# This table maps VMW portgroup names to corresponding linux bridge names
+network_substitutions: {
+  'vm_network'    : 'vmbr0',
+  'VM Network' : 'vmbr0',
+  'Cluster Network' : 'vmbr1',
+  'lab_test_net1' : 'vmbr1000',
+  'lab_test_net2' : 'vmbr1001',
+  'VLAN126'       : 'vlan126',
+  'lab_proxmox84_net1' : 'vmbr1002',
+  'lab_proxmox84_net2' : 'vmbr1003',
+  'lab_ansible_v2a_net1' : 'vmbr1004',
+  'lab_vlan126_net2' : 'vmbr2126'
+}
