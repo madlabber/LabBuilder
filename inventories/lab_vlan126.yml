@@ -56,7 +56,7 @@ all:
           install_ansible: true
           nested_virtualization: false
           include_files:
-            - files/9171RC1_v_image.tgz
+            # - files/9171RC1_v_image.tgz
         aiqum1:
           state: force
           ip_address: 192.168.126.27
@@ -130,7 +130,7 @@ all:
         vsim9171:
           state: force
           ovf_version: "9.16.1"
-          update_package: files/9171RC1_v_image.tgz
+          update_package: files/9171_q_image.tgz
           ip_address:    192.168.126.151
           cluster_name:    "demo"
           cluster_mgmt_ip: 192.168.126.150

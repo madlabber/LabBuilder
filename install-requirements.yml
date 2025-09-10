@@ -40,5 +40,13 @@
     become_user: root
     ignore_errors: True
 
+# on some platforms this is the one
+  - name: Install qemu-utils
+    ansible.builtin.package:
+      name: qemu-utils
+      state: present
+    become: True
+    become_user: root
+    ignore_errors: True
 
 

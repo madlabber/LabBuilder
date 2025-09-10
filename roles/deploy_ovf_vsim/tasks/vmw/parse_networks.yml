@@ -3,8 +3,8 @@
     networks:
       - name: "{{ethernet_ports.e0a|default(cluster_network)}}"
       - name: "{{ethernet_ports.e0b|default(cluster_network)}}"
-      - name: "{{ethernet_ports.e0c|default(cluster_network)}}"
-      - name: "{{ethernet_ports.e0d|default(cluster_network)}}"
+      - name: "{{ethernet_ports.e0c|default(data_network)}}"
+      - name: "{{ethernet_ports.e0d|default(data_network)}}"
 
 - name: Add Network Adapters
   set_fact:
