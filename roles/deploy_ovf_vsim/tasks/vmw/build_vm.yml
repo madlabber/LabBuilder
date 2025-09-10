@@ -13,7 +13,7 @@
     ovf: "{{ playbook_dir }}/files/{{loop_vm_name}}/vsim-NetAppDOT-simulate.ovf"
     disk_provisioning: "{{vm_disk_provisioning}}"
     power_on: no
-    networks: "{u'hostonly':u'{{ cluster_network }}',u'nat':u'{{ data_network }}'}"
+    networks: "{u'hostonly':u'{{ cluster_network }}',u'nat':u'{{ cluster_network }}'}"
     wait_for_ip_address: false
   delegate_to: localhost
   retries: 10
