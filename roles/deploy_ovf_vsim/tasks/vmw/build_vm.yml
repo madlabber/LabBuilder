@@ -188,7 +188,9 @@
     name: '{{ loop_vm_name }}'
     state: present
   delegate_to: localhost
-  when: loop_vm_name == vm_name
+  when: 
+    - loop_vm_name == vm_name
+    - partner_name != ''
 
 # Set IC MAC
 - name: Set IC MAC
