@@ -17,6 +17,7 @@
   get_url:
     url: "{{ install_iso_url }}"
     dest: "{{ playbook_dir }}/files/{{install_iso}}"
+    tmp_dest: "{{ playbook_dir }}/files/"
   delegate_to: localhost
   ignore_errors: true #if iso URL isn't valid then fail through to download via esx
   when: install_iso_exists.failed

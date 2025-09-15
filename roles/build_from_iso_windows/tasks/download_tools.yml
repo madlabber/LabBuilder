@@ -8,6 +8,7 @@
   get_url:
     url:  "{{ virtio_win_gt_x64_url }}"
     dest: "{{ role_path }}/files/{{ version }}/virtio_win_gt_x64.msi"
+    tmp_dest: "{{ playbook_dir }}/files/"
   delegate_to: localhost
   when: host_type == 'pve'
 
@@ -15,6 +16,7 @@
   get_url:
     url:  "{{ virtio_win_guest_tools_url }}"
     dest: "{{ role_path }}/files/{{ version }}/virtio_win_guest_tools.exe"
+    tmp_dest: "{{ playbook_dir }}/files/"
   delegate_to: localhost
   when: host_type == 'pve'
 
@@ -22,11 +24,13 @@
   get_url:
     url: "{{ winrm_script_url }}"
     dest: "{{ role_path }}/files/{{ version }}/ConfigureRemotingForAnsible.ps1"
+    tmp_dest: "{{ playbook_dir }}/files/"
   delegate_to: localhost
 
 - name: download VMware Tools
   get_url:
     url:  "{{ vmware_tools_url }}"
     dest: "{{ role_path }}/files/{{ version }}/VMware_tools.exe"
+    tmp_dest: "{{ playbook_dir }}/files/"
   delegate_to: localhost
   when: host_type == 'vmw'

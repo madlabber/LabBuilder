@@ -9,6 +9,7 @@
   ansible.builtin.get_url:
     url: "{{ item }}"
     dest: "{{ playbook_dir }}/files/{{vm_name}}/files/"
+    tmp_dest: "{{ playbook_dir }}/files/"
   delegate_to: localhost 
   when: extra_files_urls|default('') != ''
   ignore_errors: true
