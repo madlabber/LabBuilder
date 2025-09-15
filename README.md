@@ -75,7 +75,7 @@ Most components can now build on PVE hosts, with the following general exception
 | Ubuntu      | YES    | YES     | 
 | XCP-NG      | YES*   | NO      | *experimental: only 8.2.1 on vmware*
 | Nested ESXi | YES    | NO*     | PVE: use ESX (iso) instead
-| AIQUM       | YES    | YES     | specify install_file: aiquminstaller.zip
+| AIQUM       | YES    | YES     | Use install_file: (aiqum installer .zip)
 | OTS Eval    | YES    | YES     | 
 | SGWS        | YES    | NO      | 
 | VCENTER     | YES    | NO*     | PVE: install nested on an ESX VM
