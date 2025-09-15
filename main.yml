@@ -436,6 +436,61 @@
       vm_gateway:       "{{lab_lan1_gateway}}"
       vm_primary_dns:   "{{lab_lan1_dns_ip}}"
       vm_secondary_dns: "{{lab_lan1_gateway}}"
+    when: 
+      - pve_address|default('') != ''
+      - ovf_file|default('') != ''
+
+- name: Build AIQUM on linux
+  hosts: aiqum
+  gather_facts: false
+  vars_files:
+    - defaults/main.yml
+    - "{{ mainvars }}"
+  tasks:
+    - include_vars: vars/rhsm_secrets.yml
+      ignore_errors: true
+    - include_role:
+        name: build_from_iso_centos
+      vars:
+        # regular linux role 
+        vm_hostname: "{{inventory_hostname}}"
+        vm_address: "{{ip_address}}"
+        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
+        vm_network: "{{lab_lan1_portgroup}}"
+        vm_password_new: "{{lab_password}}"
+        vm_netmask: "{{lab_lan1_netmask}}"
+        vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+        vm_gateway: "{{lab_lan1_gateway}}"
+        vm_dns_server: "{{lab_lan1_dns_ip}}"
+        vm_domain: "{{lab_domain_name}}"
+        vm_datastore: "{{lab_vm_datastore}}"
+        # vm_username: 'root'
+        vm_password: '{{lab_password}}'
+        # AIQUM defaults:
+        distro: "{{linux_distro | default('rocky') }}"
+        version: "{{linux_version | default('9.4') }}"
+        vm_memory_mb: 16384
+        vm_num_cpus: 4
+        vm_disk_gb: 200
+        install_xrdp: true
+        extra_files:
+          - "{{ install_file | default('') }}"
+        extra_commands:
+          # copy the install from the cdrom
+          - "mkdir /mnt/cdrom"
+          - "mount /dev/sr1 /mnt/cdrom"
+          - "cp /mnt/cdrom/files/* /home/admin/"
+          - "umount /mnt/cdrom"
+          - "rm -rf /mnt/cdrom"
+          - unzip /home/admin/ActiveIQUnifiedManager-*.zip -d /home/admin
+          - "dnf install -y epel-release"
+          - wget  http://repo.mysql.com/yum/mysql-8.4-community/el/8/x86_64/mysql84-community-release-el8-1.noarch.rpm
+          - "dnf install -y mysql84-community-release-el8-1.noarch.rpm"
+          - "dnf install -y /home/admin/*.rpm"
+          - "firewall-cmd --permanent --add-port=443/tcp"
+          - "firewall-cmd --reload"
+      when: 
+        - install_file|default('') != ''
 
 - name: Deploy OVF files
   hosts: ovf

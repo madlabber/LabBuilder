@@ -51,12 +51,13 @@ Vendor OVA files need to be staged in the LabBuilder "files" folder.
 
 ## Installation Sources that need to be added manually:
  - RedHat linux ISOs
+ - VMware ESXi ISO files
  - Nested ESXi OVA files
  - vCenter OVA files
  - NetApp Simulator OVA files
  - NetApp ONTAP Select eval OVA files
  - NetApp StorageGrid OVA files
- - NetApp AIQUM OVA files
+ - NetApp AIQUM installer files
 
 ## PVE Notes
 Most components can now build on PVE hosts, with the following general exceptions:
@@ -71,11 +72,11 @@ Most components can now build on PVE hosts, with the following general exception
 | pfsense     | YES    | YES     |
 | ESX         | YES    | YES     | 7.x or 8.x ISO sources
 | Proxmox     | YES    | YES     | 
-| Ubuntu      | YES    | YES     |
+| Ubuntu      | YES    | YES     | 
 | XCP-NG      | YES*   | NO      | *experimental: only 8.2.1 on vmware*
-| Nested ESXi | YES    | NO*     | PVE: use ESX instead
-| AIQUM       | YES    | NO*     | PVE: use Linux + install automation
-| OTS Eval    | YES    | YES     |
+| Nested ESXi | YES    | NO*     | PVE: use ESX (iso) instead
+| AIQUM       | YES    | YES     | specify install_file: aiquminstaller.zip
+| OTS Eval    | YES    | YES     | 
 | SGWS        | YES    | NO      | 
 | VCENTER     | YES    | NO*     | PVE: install nested on an ESX VM
 | VSIM        | YES    | YES*    | PVE: HA pairs are rendered as non-ha nodes

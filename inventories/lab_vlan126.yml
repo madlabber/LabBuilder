@@ -262,3 +262,4 @@ all:
         aiqum:
           state: force
           ip_address: 192.168.126.28
+          install_file: files/ActiveIQUnifiedManager-9.16P2-el8.zip
