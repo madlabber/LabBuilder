@@ -351,4 +351,22 @@ all:
           # extra_commands:
           #   - cluster ha modify -configured true
 
-          
+    storagegrid:
+      vars:
+        admin_ip: 192.168.0.170
+        vm_num_cpus: 2
+        vm_memory_mb: 12288
+      hosts:
+        sgws-admin:
+          ip_address: 192.168.0.170
+          node_type: "VM_Admin_Node"
+          vm_memory_mb: 12288
+        sgws-storage1:
+          ip_address: 192.168.0.171
+          node_type: "VM_Storage_Node"
+        sgws-storage2:
+          ip_address: 192.168.0.172
+          node_type: "VM_Storage_Node"
+        sgws-storage3:
+          ip_address: 192.168.0.173
+          node_type: "VM_Storage_Node"

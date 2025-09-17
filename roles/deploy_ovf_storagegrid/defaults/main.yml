@@ -1,4 +1,4 @@
-ovf_version:       "11.5.0"
+ovf_version:       "11.9.0"
 ovf_location:      "{{role_path}}/files/StorageGRID-Webscale-{{ovf_version}}/vsphere"
 vm_name:           "sgws-node"
 grid_network_name: "VM Network"

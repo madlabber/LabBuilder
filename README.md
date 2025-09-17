@@ -80,4 +80,6 @@ Most components can now build on PVE hosts, with the following general exception
 | SGWS        | YES    | NO      | 
 | VCENTER     | YES    | NO*     | PVE: install nested on an ESX VM
 | VSIM        | YES    | YES*    | PVE: HA pairs are rendered as non-ha nodes
+| OVF         | YES    | No      | Generic OVF deployment is not working on PVE
+
 
