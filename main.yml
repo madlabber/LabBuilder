@@ -483,12 +483,29 @@
           - "umount /mnt/cdrom"
           - "rm -rf /mnt/cdrom"
           - unzip /home/admin/ActiveIQUnifiedManager-*.zip -d /home/admin
-          - "dnf install -y epel-release"
+          - dnf install -y epel-release
           - wget  http://repo.mysql.com/yum/mysql-8.4-community/el/8/x86_64/mysql84-community-release-el8-1.noarch.rpm
-          - "dnf install -y mysql84-community-release-el8-1.noarch.rpm"
+          - dnf install -y mysql84-community-release-el8-1.noarch.rpm
+          - /home/admin/pre_install_check.sh
           - "dnf install -y /home/admin/*.rpm"
-          - "firewall-cmd --permanent --add-port=443/tcp"
-          - "firewall-cmd --reload"
+          # HTTP which redirects to 443
+          - firewall-cmd --permanent --add-port=80/tcp
+          # HTTPS for Web UI
+          - firewall-cmd --permanent --add-port=443/tcp
+          # Maintenance over ssh/sftp
+          - firewall-cmd --permanent --add-port=22/tcp
+          # MySQL connectivity for WFA
+          - firewall-cmd --permanent --add-port=3306/tcp
+          # Syslog for EMS messages
+          - firewall-cmd --permanent --add-port=514/tcp
+          # REST API
+          - firewall-cmd --permanent --add-port=9443/tcp
+          # AMQP QPID Broker
+          - firewall-cmd --permanent --add-port=56072/tcp
+          # AMQP QPID Broker WebSocket
+          - firewall-cmd --permanent --add-port=56080/tcp
+          - firewall-cmd --permanent --add-port=56443/tcp
+          - firewall-cmd --reload
       when: 
         - install_file|default('') != ''
 
