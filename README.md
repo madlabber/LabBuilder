@@ -77,7 +77,7 @@ Most components can now build on PVE hosts, with the following general exception
 | Nested ESXi | YES    | NO*     | PVE: use ESX (iso) instead
 | AIQUM       | YES    | YES     | Use install_file: (aiqum installer .zip)
 | OTS Eval    | YES    | YES     | 
-| SGWS        | YES    | NO      | 
+| SGWS        | YES    | NO*     | PVE: Install StorageGrid on Linux
 | VCENTER     | YES    | NO*     | PVE: install nested on an ESX VM
 | VSIM        | YES    | YES*    | PVE: HA pairs are rendered as non-ha nodes
 | OVF         | YES    | No      | Generic OVF deployment is not working on PVE
