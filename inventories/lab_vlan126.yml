@@ -84,6 +84,43 @@ all:
             - "dnf install -y /home/admin/*.rpm"
             - "firewall-cmd --permanent --add-port=443/tcp"
             - "firewall-cmd --reload"
+        
+        bluexp:
+          state: present 
+          ip_address: 192.168.126.27 
+          distro: "rocky"
+          version: "9.4"
+          vm_memory_mb: 24576 # official minimum is 32GB
+          vm_num_cpus: 6 # official minimum is 8 
+          vm_disk_gb: 300
+          install_xrdp: true
+          install_ansible: false
+          nested_virtualization: false
+          extra_files:
+            - files/BlueXP-Connector-Cloud-v3.9.55
+          extra_commands:
+            # copy the install from the cdrom
+            - mkdir /mnt/cdrom
+            - mount /dev/sr1 /mnt/cdrom
+            - cp /mnt/cdrom/files/BlueXP-Connector-Cloud-v3.9.55 /root/
+            # - umount /mnt/cdrom
+            # - rm -rf /mnt/cdrom
+            #- dnf remove -y podman-docker
+            #- rm /var/run/docker.sock
+            - dnf install -y podman-4.9.4
+            - systemctl enable --now podman.socket
+            - dnf install -y podman-compose
+            - chmod +x /root/BlueXP-Connector-Cloud-v3.9.55
+            - /root/BlueXP-Connector-Cloud-v3.9.55 
+            - firewall-cmd --permanent --add-port=80/tcp
+            - firewall-cmd --permanent --add-port=443/tcp
+            - firewall-cmd --permanent --add-port=8080/tcp
+            - firewall-cmd --permanent --add-port=8443/tcp
+            - firewall-cmd --reload
+
+
+
+
 
 
     vsims:
