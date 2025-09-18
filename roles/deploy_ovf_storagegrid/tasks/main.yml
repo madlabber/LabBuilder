@@ -12,6 +12,18 @@
 #     admin_role:        "{{ admin_role | default('Primary') }}"  # Primary, Non-Primary
 #     storage_disk_size: "{{ storage_disk_size | default(200) }}"
 
+- name: remove if absent or forced
+  include_tasks: pve/absent.yml 
+  when: 
+    - state == "absent" or state == "force"
+    - pve_address|default('') != ''
+
+- name: remove if absent or forced
+  include_tasks: vmw/absent.yml 
+  when: 
+    - state == "absent" or state == "force"
+    - pve_address|default('') == ''
+
 # PVE isn't supported so exit now for this host
 - name: deploy to proxmox
   include_tasks: deploy_to_pve.yml 
