@@ -6,3 +6,4 @@ vm_num_cpus:       "8"
 vm_memory_mb:      "24576"
 node_type:         "VM_Storage_Node"  # "VM_Storage_Node", Default="VM_Admin_Node", "VM_API_Gateway", "VM_Archive_Node"
 storage_disk_size: "4096" # in GB
+admin_role: Primary
