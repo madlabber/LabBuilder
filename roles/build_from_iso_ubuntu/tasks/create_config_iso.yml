@@ -1,11 +1,48 @@
 ---
+- name: Creating files directory
+  file:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/files"
+    state: directory
+  delegate_to: localhost
+
+- name: download additional files
+  ansible.builtin.get_url:
+    url: "{{ item }}"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/files/"
+    tmp_dest: "{{ playbook_dir }}/files/"
+  delegate_to: localhost 
+  when: extra_files_urls|default('') != ''
+  ignore_errors: true
+  with_items: "{{ extra_files_urls }}"
+
+- name: include extra files
+  copy:
+    src: "{{item}}"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/files/"
+  delegate_to: localhost
+  with_items: "{{extra_files}}"
+  when: extra_files|default('') != ''
+  ignore_errors: true
+
+- name: include additional files
+  copy:
+    src: "{{item}}"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/files/"
+  delegate_to: localhost
+  with_items: "{{include_files}}"
+  when: include_files|default('') != ''
+  ignore_errors: true
+
 - name: Create config ISO
   community.general.iso_create:
     dest_iso: "{{ playbook_dir }}/files/{{vm_name}}/{{config_iso}}"    
     src_files:
       - "{{ playbook_dir }}/files/{{vm_name}}/user-data"
       - "{{ playbook_dir }}/files/{{vm_name}}/meta-data"
+      - "{{ playbook_dir }}/files/{{vm_name}}/files/"
     interchange_level: 4
     joliet: 3
     vol_ident: cidata
   delegate_to: localhost
+
+

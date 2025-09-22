@@ -61,7 +61,7 @@
         eula --agreed
 
         ignoredisk --only-use=sda
-        autopart
+        autopart --nohome
         # Partition clearing information
         clearpart --none --initlabel
 
@@ -86,7 +86,10 @@
 
         # Post 
         %post --log=/root/post.log
-
+        
+        # Extend the root partition to fill the disk
+        lvextend -l +100%FREE -r /dev/mapper/$(ls /dev/mapper | grep root)
+        
         # enable vm-guest-exec 
         sed -i '/^[^#]/ s/\(^.*BLACKLIST_RPC=.*$\)/#\ \1/' /etc/sysconfig/qemu-ga
         sed -i '/^[^#]/ s/\(^.*FILTER_RPC_ARGS=.*$\)/#\ \1/' /etc/sysconfig/qemu-ga
