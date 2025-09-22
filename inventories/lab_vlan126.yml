@@ -57,41 +57,14 @@ all:
           nested_virtualization: false
           include_files:
             # - files/9171RC1_v_image.tgz
-        aiqum1:
-          state: force
-          ip_address: 192.168.126.27
-          distro: "rocky"
-          version: "9.4"
-          vm_memory_mb: 16384
-          vm_num_cpus: 4
-          vm_disk_gb: 200
-          install_xrdp: true
-          install_ansible: false
-          nested_virtualization: false
-          extra_files:
-            - files/ActiveIQUnifiedManager-9.16P2-el8.zip
-          extra_commands:
-            # copy the install from the cdrom
-            - "mkdir /mnt/cdrom"
-            - "mount /dev/sr1 /mnt/cdrom"
-            - "cp /mnt/cdrom/files/* /home/admin/"
-            - "umount /mnt/cdrom"
-            - "rm -rf /mnt/cdrom"
-            - unzip /home/admin/ActiveIQUnifiedManager-*.zip -d /home/admin
-            - "dnf install -y epel-release"
-            - wget  http://repo.mysql.com/yum/mysql-8.4-community/el/8/x86_64/mysql84-community-release-el8-1.noarch.rpm
-            - "dnf install -y mysql84-community-release-el8-1.noarch.rpm"
-            - "dnf install -y /home/admin/*.rpm"
-            - "firewall-cmd --permanent --add-port=443/tcp"
-            - "firewall-cmd --reload"
         
         bluexp:
           state: present 
           ip_address: 192.168.126.27 
           distro: "rocky"
           version: "9.4"
-          vm_memory_mb: 24576 # official minimum is 32GB
-          vm_num_cpus: 6 # official minimum is 8 
+          vm_memory_mb: 32768 # official minimum is 32GB
+          vm_num_cpus: 8 # official minimum is 8 
           vm_disk_gb: 300
           install_xrdp: true
           install_ansible: false
@@ -112,11 +85,14 @@ all:
             - dnf install -y podman-compose
             - chmod +x /root/BlueXP-Connector-Cloud-v3.9.55
             - /root/BlueXP-Connector-Cloud-v3.9.55 
+            - sed -i '/dns_bind_port/s/^#//g' /usr/share/containers/containers.conf
             - firewall-cmd --permanent --add-port=80/tcp
             - firewall-cmd --permanent --add-port=443/tcp
             - firewall-cmd --permanent --add-port=8080/tcp
             - firewall-cmd --permanent --add-port=8443/tcp
             - firewall-cmd --reload
+            - ( sleep 15; reboot ) &
+  
 
 
 
@@ -257,6 +233,21 @@ all:
         install_xrdp: true
         install_ansible: true
       hosts:
+        pspdev: 
+          state: present 
+          ip_address: 192.168.126.16
+          version: "22.04"
+          extra_commands: 
+            # Install PSP SDK
+            - wget https://raw.githubusercontent.com/PSP-Archive/ARK-4/refs/heads/main/contrib/PC/PSPSDK/ark4_pspsdk_installer.sh
+            - chmod +x ark4_pspsdk_installer.sh 
+            - ./ark4_pspsdk_installer.sh 
+            - echo 'export PSPDEV=/usr/local/pspdev' >> ~/.bashrc
+            - echo 'export PATH=$PATH:/usr/local/pspdev/bin' >> ~/.bashrc
+            # Install vscode 
+            - wget https://go.microsoft.com/fwlink/?LinkID=760868 -O code.deb
+            - sudo apt install -y ./code.deb
+
         ubuntu1:
           state: force
           ip_address: 192.168.126.201
