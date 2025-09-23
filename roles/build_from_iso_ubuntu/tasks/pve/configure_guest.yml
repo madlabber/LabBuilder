@@ -24,8 +24,10 @@
   loop_control:
     pause: 5
   loop: "{{ install_desktop_commands }}"
-    # - "apt update"
-    # - "apt install -y ubuntu-desktop"
+  when: install_xrdp|default(false)
+
+- name: reboot guest 
+  include_tasks: reboot_guest.yml
   when: install_xrdp|default(false)
 
 - name: Install xRDP

@@ -23,6 +23,10 @@
     # - "apt install -y ubuntu-desktop"
   when: install_xrdp|default(false)
 
+- name: reboot guest 
+  include_tasks: reboot_guest.yml
+  when: install_xrdp|default(false)
+
 - name: Install xRDP
   community.vmware.vmware_vm_shell:
     hostname: '{{ vcenter_address }}'

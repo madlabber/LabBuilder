@@ -6,3 +6,7 @@
   ignore_errors: true
   loop: 
     - sudo reboot
+
+- name: Wait for 60 seconds
+  wait_for: timeout=60
+  delegate_to: localhost

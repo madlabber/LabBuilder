@@ -93,12 +93,6 @@ all:
             - firewall-cmd --reload
             - ( sleep 15; reboot ) &
   
-
-
-
-
-
-
     vsims:
       hosts:
         # demo1-01:  
@@ -245,8 +239,9 @@ all:
             - echo 'export PSPDEV=/usr/local/pspdev' >> ~/.bashrc
             - echo 'export PATH=$PATH:/usr/local/pspdev/bin' >> ~/.bashrc
             # Install vscode 
+            - echo 'code code/add-microsoft-repo boolean true' | sudo debconf-set-selections
             - wget https://go.microsoft.com/fwlink/?LinkID=760868 -O code.deb
-            - sudo apt install -y ./code.deb
+            - DEBIAN_FRONTEND=noninteractive sudo apt install -y ./code.deb
 
         ubuntu1:
           state: force
