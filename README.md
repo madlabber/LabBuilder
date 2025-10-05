@@ -62,7 +62,7 @@ Vendor OVA files need to be staged in the LabBuilder "files" folder.
 ## PVE Notes
 Most components can now build on PVE hosts, with the following general exceptions:
   - Interconnected Serial ports are not configured on PVE hosts
-  - Shared virtual disks are not build on PVE hosts
+  - Shared virtual disks are not built on PVE hosts
 
 ## Proxmox Compatibility Status
 | Component   | VMware | Proxmox | Notes 
@@ -70,7 +70,7 @@ Most components can now build on PVE hosts, with the following general exception
 | centos      | YES    | YES     | 
 | windows     | YES    | YES     |
 | pfsense     | YES    | YES     |
-| ESX         | YES    | YES     | 7.x or 8.x ISO sources
+| ESX         | YES    | YES     | 7.x or 8.x ISO sources, 9.x only working on VMW
 | Proxmox     | YES    | YES     | 
 | Ubuntu      | YES    | YES     | 
 | XCP-NG      | YES*   | NO      | *experimental: only 8.2.1 on vmware*
