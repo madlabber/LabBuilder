@@ -452,7 +452,7 @@
       vm_primary_dns:   "{{lab_lan1_dns_ip}}"
       vm_secondary_dns: "{{lab_lan1_gateway}}"
     when: 
-      - pve_address|default('') != ''
+      - pve_address|default('') == ''
       - ovf_file|default('') != ''
 
 - name: Build AIQUM on linux
@@ -555,4 +555,4 @@
     register: result
     until: result is succeeded
     when: #only run on VMware
-      - pve_address|default('') != ''
+      - pve_address|default('') == ''
