@@ -15,6 +15,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   roles:
     - role: build_from_iso_pfsense
       vars:
@@ -28,6 +29,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   roles:
     - role: build_from_iso_windows
       vars:
@@ -51,6 +53,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   tasks:
   - name: Add DNS record via vm shell
     community.vmware.vmware_vm_shell:
@@ -81,6 +84,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   roles:
     - role: deploy_ovf_vcenter
       vars:
@@ -106,6 +110,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   tasks:
     - include_role:
         name: build_from_iso_esx
@@ -131,6 +136,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   roles:
     - role: deploy_ovf_esxi
       vars:
@@ -158,6 +164,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   tasks:
     - set_fact:
         ovf_file: 'files/Nested_ESXi{{esx_version}}_Appliance_Template_v1.ova'
@@ -202,6 +209,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   roles:
     - role: build_from_iso_windows
       vars:
@@ -223,6 +231,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   tasks:
     - include_vars: vars/rhsm_secrets.yml
       ignore_errors: true
@@ -249,6 +258,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   roles:
     - role: build_from_iso_ubuntu
       vars:
@@ -272,6 +282,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   roles:
     - role: build_from_iso_proxmox
       vars:
@@ -294,6 +305,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   roles:
     - role: build_from_iso_xcpng
       vars:
@@ -317,6 +329,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   tasks:
     - set_fact:
         partner_name: "{{ lab_name }}_{{ partner }}"
@@ -352,6 +365,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   tasks:
     - set_fact:
         partner_name: "{{ lab_name }}_{{ partner }}"
@@ -384,6 +398,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   roles:
     - role: deploy_ovf_ontapselecteval
       vars:
@@ -413,7 +428,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
-
+    - "{{ credentials }}"
 - name: Build AIQUM from OVA
   hosts: aiqum
   gather_facts: false
@@ -446,6 +461,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   tasks:
     - include_vars: vars/rhsm_secrets.yml
       ignore_errors: true
@@ -515,6 +531,7 @@
   vars_files:
     - defaults/main.yml
     - "{{ mainvars }}"
+    - "{{ credentials }}"
   tasks:
   - vmware_deploy_ovf:
       hostname: '{{ vcenter_address }}'

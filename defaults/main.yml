@@ -1,1 +1,6 @@
+# the mainvars file configured connectivity to the 
+# infrasture on which labs will be built
 mainvars: vars/main.yml
+
+# Credentials can be stored here:
+credentials: vars/credentials.yml

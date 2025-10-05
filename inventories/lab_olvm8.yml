@@ -1,0 +1,117 @@
+all:
+  hosts:
+  vars:
+    lab_name: lab_olvm8
+    lab_prefix: "{{ lab_name }}_"
+    lab_password: "{{ default_lab_password }}"
+    lab_vm_datastore: "{{ lab_name }}"
+    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.1"
+    lab_domain_name:   "lab.local"
+    lab_domain_controller: "dc01"
+  children:
+    pfsense:
+      hosts:
+        gateway:
+          vm_network_wan: "{{lab_wan_portgroup}}"
+          vm_network_lan: "{{lab_lan1_portgroup}}"
+          config_xml_file: "files/pfsense/config.xml"
+    dc:
+      hosts:
+        dc01:
+          version: "Server2022eval"
+          ip_address: 192.168.0.11
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+            - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
+          extra_commands:
+            - MsiExec.exe /i E:\files\putty-64bit-0.83-installer.msi /qn
+            - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
+          serial_ports:
+            - type: 'pipe'
+              pipe_name: '\\.\pipe\{{lab_name}}_com1'
+              endpoint: 'server'
+            - type: 'pipe'
+              pipe_name: '\\.\pipe\{{lab_name}}_com2'
+              endpoint: 'server'
+            - type: 'pipe'
+              pipe_name: '\\.\pipe\{{lab_name}}_com3'
+              endpoint: 'server'
+    centos:
+      vars:
+        vm_memory_mb: 24576
+        vm_num_cpus: 6
+        vm_disk_gb: 160
+        distro: "oracle"
+        version: "8.8"
+        nested_virtualization: true
+        disks:
+          - size_gb: 160
+            type: thin
+          - size_gb: 3072
+            type: thin
+        ethernet_ports: 
+          eth0: "{{ lab_lan1_portgroup }}"
+          eth1: "{{ lab_lan1_portgroup }}"
+          eth2: "{{ lab_lan1_portgroup }}"
+        network_device_type: virtio
+        extra_commands:
+          # enable serial console on EL8 variants
+          - 'grub2-editenv - set "$(grub2-editenv - list | grep kernelopts) console=tty0 console=ttyS0,115200"'
+      hosts:
+        olvm:
+          ip_address: 192.168.0.40
+          install_xrdp: true
+          install_ansible: true
+          extra_commands:
+            - dnf config-manager --enable ol8_baseos_latest   
+            - dnf install -y oracle-ovirt-release-45-el8
+            - dnf clean all 
+            - dnf install -y ovirt-engine
+        kvm1:
+          ip_address: 192.168.0.41
+          install_package: minimal-environment
+          serial_ports:
+            - type: 'pipe'
+              pipe_name: '\\.\pipe\{{lab_name}}_com1'
+              endpoint: 'client'
+          extra_commands:
+            - dnf config-manager --enable ol8_baseos_latest   
+            - dnf install -y oracle-ovirt-release-45-el8
+            - dnf clean all 
+        kvm2:
+          ip_address: 192.168.0.42
+          install_package: minimal-environment
+          serial_ports:
+            - type: 'pipe'
+              pipe_name: '\\.\pipe\{{lab_name}}_com2'
+              endpoint: 'client'
+          extra_commands:
+            - dnf config-manager --enable ol8_baseos_latest   
+            - dnf install -y oracle-ovirt-release-45-el8
+            - dnf clean all 
+        kvm3:
+          ip_address: 192.168.0.43
+          install_package: minimal-environment
+          serial_ports:
+            - type: 'pipe'
+              pipe_name: '\\.\pipe\{{lab_name}}_com3'
+              endpoint: 'client'
+          extra_commands:
+            - dnf config-manager --enable ol8_baseos_latest   
+            - dnf install -y oracle-ovirt-release-45-el8
+            - dnf clean all 
+
+    ontapselecteval:
+      hosts:
+        ontap-01:  
+          ontap_version: "9.15.1"           
+          ontap_node_mgmt_ip:    192.168.0.61
+          ontap_cluster_name:    "ontap"
+          ontap_cluster_mgmt_ip: 192.168.0.60
+          vm_data_disk_gb:       1024
+    

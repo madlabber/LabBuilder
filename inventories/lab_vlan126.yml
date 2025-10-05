@@ -3,7 +3,8 @@ all:
   vars:
     lab_name: lab_vlan126
     lab_prefix: "{{ lab_name }}_"
-    lab_password: P@ssw0rd
+    #lab_password: P@ssw0rd
+    lab_password: "{{ default_lab_password }}"
     lab_vm_datastore: lab_vlan126
     lab_wan_portgroup: "VM Network"
     lab_lan1_portgroup: "VLAN126"

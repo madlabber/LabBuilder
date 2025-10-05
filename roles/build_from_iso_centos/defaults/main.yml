@@ -4,6 +4,7 @@ distro: "rocky"
 version: "9"
 install_iso: ""
 install_iso_utl: ""
+install_package: "graphical-server-environment"
 
 versions:
   # (up)stream works on most days
@@ -130,6 +131,9 @@ versions:
     "9.4":
       install_iso:        "OracleLinux-R9-U4-x86_64-dvd.iso"
       install_iso_url:    "https://yum.oracle.com/ISOS/OracleLinux/OL9/u4/x86_64/OracleLinux-R9-U4-x86_64-dvd.iso"      
+    "8.8":
+      install_iso:        "OracleLinux-R8-U8-x86_64-dvd.iso"
+      install_iso_url:    "https://yum.oracle.com/ISOS/OracleLinux/OL8/u8/x86_64/OracleLinux-R8-U8-x86_64-dvd.iso"    
 
 vm_num_cpus: 2
 vm_memory_mb: 4096
