@@ -1,5 +1,5 @@
 - name: Create new VM 
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
@@ -26,7 +26,7 @@
   until: create_vm is succeeded
 
 - name: Attach Install ISO
-  community.general.proxmox_disk:
+  community.proxmox.proxmox_disk:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
@@ -43,7 +43,7 @@
   ignore_errors: true
 
 - name: Attach Config ISO
-  community.general.proxmox_disk:
+  community.proxmox.proxmox_disk:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
@@ -60,7 +60,7 @@
   ignore_errors: true
 
 - name: Start VM
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
@@ -72,9 +72,9 @@
   register: result
   until: result is succeeded
   ignore_errors: true
-  
+
 - name: Wait for guest tools to start 
-  community.general.proxmox_vm_info:
+  community.proxmox.proxmox_vm_info:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
@@ -89,9 +89,10 @@
   until: vminfo is succeeded
   ignore_errors: true
 
+- debug:
+    msg: '{{vminfo}}'
+
 - name: Pause for first boot commands (120 sec)
   wait_for: timeout=120
   delegate_to: localhost
 
-# - debug:
-#     msg: '{{vminfo}}'

@@ -1,5 +1,5 @@
 - name: Reboot Guest
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
@@ -17,7 +17,7 @@
   delegate_to: localhost
 
 - name: Wait for guest tools to start 
-  community.general.proxmox_vm_info:
+  community.proxmox.proxmox_vm_info:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'

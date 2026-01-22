@@ -1,5 +1,5 @@
 - name: Get VMID by Name
-  community.general.proxmox_kvm:
+  community.proxmox.proxmox_kvm:
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
