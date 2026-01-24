@@ -58,7 +58,59 @@ all:
           nested_virtualization: false
           include_files:
             # - files/9171RC1_v_image.tgz
-        
+
+        kvm71:
+          state: force
+          ip_address: 192.168.126.71
+          distro: "rocky"
+          version: "9.4"
+          vm_memory_mb: "{{ 24 * 1024 | int }}"
+          vm_num_cpus: 6
+          vm_disk_gb: 120
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true
+          include_files:
+            # - files/9171RC1_v_image.tgz    
+          disks:
+            - size_gb: 160
+              type: thin
+            - size_gb: 3072
+              type: thin
+          networks:
+            - name: "{{ lab_lan1_portgroup }}"
+              device_type: e1000
+            # - name: "{{ lab_lan1_portgroup }}"
+            #   device_type: e1000
+            # - name: "{{ lab_lan1_portgroup }}"
+            #   device_type: e1000
+
+        kvm72:
+          state: force
+          ip_address: 192.168.126.72
+          distro: "rocky"
+          version: "9.4"
+          vm_memory_mb: "{{ 24 * 1024 | int }}"
+          vm_num_cpus: 6
+          vm_disk_gb: 120
+          install_xrdp: true
+          install_ansible: true
+          nested_virtualization: true
+          include_files:
+            # - files/9171RC1_v_image.tgz    
+          disks:
+            - size_gb: 160
+              type: thin
+            - size_gb: 3072
+              type: thin
+          networks:
+            - name: "{{ lab_lan1_portgroup }}"
+              device_type: e1000
+            - name: "{{ lab_lan1_portgroup }}"
+              device_type: e1000
+            - name: "{{ lab_lan1_portgroup }}"
+              device_type: e1000
+
         bluexp:
           state: present 
           ip_address: 192.168.126.27 

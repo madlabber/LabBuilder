@@ -12,9 +12,9 @@
   include_tasks: process_vars.yml
   when: state == "present" or state == "force"
     
-# - name: remove if absent or forced
-#   include_tasks: pve_absent.yml
-#   when: state == "absent" or state == "force"
+- name: remove if absent or forced
+  include_tasks: pve/absent.yml
+  when: state == "absent" or state == "force"
 
 # - name: Process vars
 #   include_tasks: pve_process_vars.yml

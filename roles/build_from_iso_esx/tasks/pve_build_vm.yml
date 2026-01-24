@@ -18,11 +18,11 @@
       net1: 'vmxnet3,bridge={{ pve_vm_network }}'
     sata:
       sata0: '{{pve_vm_datastore}}:{{ vm_disk_gb |int }}'
-      # sata5: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
-      # sata4: "{{iso_datastore}}:iso/{{config_iso}},media=cdrom"
-    ide:
-      ide1: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
-      ide2: "{{iso_datastore}}:iso/{{config_iso}},media=cdrom"
+      sata1: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
+      sata2: "{{iso_datastore}}:iso/{{config_iso}},media=cdrom"
+    # ide:
+    #   ide1: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
+      # ide2: "{{iso_datastore}}:iso/{{config_iso}},media=cdrom"
     cpu: host
     cores: '{{ vm_num_cpus|int }}'
     vcpus: '{{ vm_num_cpus|int }}'

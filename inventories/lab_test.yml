@@ -239,8 +239,9 @@ all:
         esx67:
           ip_address: 192.168.0.67
           install_iso: "VMware-VMvisor-Installer-201912001-15160138.x86_64.iso"
-        # esx04:
-        #   ip_address: 192.168.0.54
+        esx90:
+          ip_address: 192.168.0.68
+          install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
       vars:
           install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
           vm_memory_mb: 10240
