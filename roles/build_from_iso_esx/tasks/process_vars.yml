@@ -14,6 +14,6 @@
 
 - name: pve substitutions
   set_fact:
-    pve_vm_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_vm_datastore: "{{ pve_datastores[vm_datastore]|default(vm_datastore) }}"
     pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
   when: pve_address != ''

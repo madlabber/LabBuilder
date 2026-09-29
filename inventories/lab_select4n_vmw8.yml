@@ -1,0 +1,120 @@
+all:
+  hosts:
+  vars:
+    lab_name: lab_select4n_vmw8
+    lab_prefix: "{{ lab_name }}_"
+    lab_password: P@ssw0rd
+    lab_vm_datastore: "{{ lab_name }}"
+    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "{{ lab_prefix }}net1"
+    lab_lan2_portgroup: "{{ lab_prefix }}net2"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.1"
+    lab_domain_name:   "lab.local"
+    lab_domain_controller: "dc01"
+  children:
+    pfsense:
+      hosts:
+        gateway:
+          vm_network_wan: "{{lab_wan_portgroup}}"
+          vm_network_lan: "{{lab_lan1_portgroup}}"
+          config_xml_file: "files/pfsense/config.xml"
+    dc:
+      hosts:
+        dc01:
+          version: "Server2022eval"
+          ip_address: 192.168.0.11
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+            - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
+          extra_commands:
+            - MsiExec.exe /i E:\files\putty-64bit-0.83-installer.msi /qn
+            - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
+    vcenter:
+      hosts:
+        vcsa:
+          ip_address: 192.168.0.50
+          vm_fqdn: "vcsa.lab.local"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
+    esx:
+      hosts:
+        esx01:
+          ip_address: 192.168.0.51
+        esx02:
+          ip_address: 192.168.0.52
+        esx03:
+          ip_address: 192.168.0.53
+        esx04:
+          ip_address: 192.168.0.54
+      vars:
+          esx_version: "8.0u3"
+          install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
+          vm_memory_mb: 24576
+          vm_num_cpus: 6
+          networks:
+            - name: "{{ lab_lan1_portgroup }}"
+              device_type: vmxnet3
+            - name: "{{ lab_lan1_portgroup }}"
+              device_type: vmxnet3
+            - name: "{{ lab_lan2_portgroup }}"
+              device_type: vmxnet3
+            - name: "{{ lab_lan2_portgroup }}"
+              device_type: vmxnet3
+          disk_controller: nvme
+          create_local_vmfs: 'False'
+          enable_ssh: 'True'
+          disks:
+            - size_gb: 40
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 0
+              type: thin
+            - size_gb: 3000
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 1
+              type: thin
+            - size_gb: 200
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 2
+              type: thin
+            - size_gb: 200
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 3
+              type: thin
+            - size_gb: 200
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 4
+              type: thin
+            - size_gb: 200
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 5
+              type: thin
+            - size_gb: 200
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 6
+              type: thin
+            - size_gb: 200
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 7
+              type: thin
+    centos:
+      hosts:
+        ansible:
+          ip_address: 192.168.0.12
+          distro: "alma"
+          version: "8"
+          install_xrdp: true
+          install_ansible: true
+          vm_memory_mb: 2048
+          vm_num_cpus: 2
+          vm_disk_gb: 80
+      vars:

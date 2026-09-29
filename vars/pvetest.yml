@@ -13,8 +13,8 @@ vm_datastore: "Local-LVM"
 # Default iso location
 # iso_datastore: local
 # iso_path: /var/lib/vz/template/iso
-iso_datastore: pve_nfs01
-iso_path: /mnt/pve/pve_nfs01/template/iso
+iso_datastore: ISOs
+iso_path: /mnt/pve/ISOs
 
 # Default import location
 import_datastore: local
@@ -38,17 +38,6 @@ vm_network: "vmbr0"
 # ontap_vol_size_gb: 500
 # ontap_aggregate: "ots10_01_SSD_1"
 
-# Datastore Substitutions:
-# When an inventory calls for a datastore on VMware
-# Substitue with the PVE datastore in this table
-datastore_substitutions: {
-  'lab_test' : 'local-lvm1',
-  'lab_test2': 'local-lvm1',
-  'lab_vlan126' : 'local-lvm1',
-  'lab_ansible_v2a' : 'local-lvm1',
-  'lab_proxmox84' : 'local-lvm1'
-}
-
 # Network substitutions
 # PVE has a very short limit on bridge names
 # This table maps VMW portgroup names to corresponding linux bridge names
@@ -56,11 +45,39 @@ network_substitutions: {
   'vm_network'    : 'vmbr0',
   'VM Network' : 'vmbr0',
   'Cluster Network' : 'vmbr1',
-  'lab_test_net1' : 'vmbr1000',
-  'lab_test_net2' : 'vmbr1001',
+  'lab_test_net1' : 'vmbr1',
+  'lab_test_net2' : 'vmbr1',
   'VLAN126'       : 'vlan126',
-  'lab_proxmox84_net1' : 'vmbr1002',
-  'lab_proxmox84_net2' : 'vmbr1003',
-  'lab_ansible_v2a_net1' : 'vmbr1004',
-  'lab_vlan126_net2' : 'vmbr2126'
+  'lab_proxmox84_net1' : 'vmbr1',
+  'lab_proxmox84_net2' : 'vmbr1',
+  'lab_ansible_v2a_net1' : 'vmbr1',
+  'lab_vlan126_net2' : 'vmbr2126',
+  'VLAN121' : 'vlan121',
+  'lab_pvetest_net1' : 'vmbr1',
+  'lab_pvetest_net2' : 'vmbr1'
 }
+
+network_vlan_table: {
+  'lab_pvetest_net1' : 1001
+}
+
+# This table maps lab datastores to proxmox datastores
+pve_datastores:
+  "lab_test":        'local-lvm1'
+  "lab_test2":       'local-lvm1'
+  "lab_vlan126":     'local-lvm1'
+  "lab_ansible_v2a": 'local-lvm1'
+  "lab_proxmox84":   'local-lvm1'
+
+# This table maps portgroup names to proxmox bridge and vlan
+pve_networks:
+    "vmbr0":             { "bridge": "vmbr0" }
+    "vmbr1":             { "bridge": "vmbr1" }
+    "VM Network":        { "bridge": "vmbr0" }
+    "VLAN121":           { "bridge": "vlan121" }
+    "VLAN126":           { "bridge": "vlan126" }
+    "lab_vlan126_net2":  { "bridge": "vmbr0", "vlan": 2126 }
+    "Cluster Network":   { "bridge": "vmbr1" }
+    "lab_pvetest_net1":  { "bridge": "vmbr1", "vlan": 1001 }
+    "lab_pvetest_net2":  { "bridge": "vmbr1", "vlan": 1002 }
+

@@ -32,10 +32,19 @@
       - E:\files\virtio_win_guest_tools.exe /S
       - powershell -command "new-netipaddress -InterfaceAlias Ethernet -IPAddress {{ vm_address }} -prefixlength {{vm_netmask_cidr}} -defaultgateway {{ vm_gateway }}"
       - powershell -command "Set-DnsClientServerAddress -InterfaceAlias Ethernet -ServerAddresses {{ vm_dns_server }}"
-    pve_vm_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_vm_datastore: "{{ pve_datastores[vm_datastore]|default(vm_datastore) }}"
     pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
+    pve_vm_network_vlan: "{{ network_vlan_table[vm_network]|default('') }}"
+    pve_vlan_tag: ""
   when:
     - pve_address != ''   
+
+- name: construct pve_vlan_tag
+  set_fact:
+    pve_vlan_tag: ",tag={{pve_vm_network_vlan}}"
+  when:
+    - pve_address != ''
+    - pve_vm_network_vlan != ''
 
 - name: Map ESXi login variables
   set_fact:

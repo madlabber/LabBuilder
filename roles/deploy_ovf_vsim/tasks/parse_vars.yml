@@ -21,7 +21,7 @@
   set_fact:
     host_type: "pve"
     checksum_type: "zoned"
-    pve_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_datastore: "{{ pve_datastores[vm_datastore]|default(vm_datastore) }}"
     pve_data_network: "{{ network_substitutions[data_network]|default(data_network) }}"
     pve_cluster_network: "{{ network_substitutions[cluster_network]|default(cluster_network) }}"
   when:

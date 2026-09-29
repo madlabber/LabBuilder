@@ -1,0 +1,43 @@
+#cloud-config
+autoinstall:
+  version: 1
+  user-data:
+    hostname: arkdev
+    fqdn: arkdev.schlab.pri
+    disable_root: false
+    users:
+    - name: ubuntu
+      passwd: "$6$rounds=656000$LxWQYfUCXZDwxMdw$P4B9eIsRfK.cAqmqZpZOfdUNsPedqdKDmwHUdn2DDm2QfnKzsqVL8eRBzFp6HHFf3v/0tAUMnizvk3CZNnrOM0"
+      shell: /bin/bash
+      lock-passwd: false
+      sudo: ALL=(ALL) NOPASSWD:ALL
+      groups: [users,admin] 
+  ssh:
+      install-server: yes
+      allow-pw: yes
+  network: 
+    network:
+      version: 2
+      ethernets:
+        eth0:
+          match:
+            name: ens*
+          addresses:
+            - 192.168.121.84/24
+          nameservers:
+            addresses:
+              - 192.168.123.21
+            search:
+              - schlab.pri
+          routes:
+          - to: default
+            via: 192.168.123.1
+
+  packages:
+  - net-tools
+  - open-vm-tools
+  - qemu-guest-agent
+  runcmd:
+  - echo "192.168.121.84 arkdev.schlab.pri arkdev" >> /etc/hosts
+  - sudo systemctl enable qemu-guest-agent
+  - sudo systemctl start qemu-guest-agent

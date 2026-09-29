@@ -7,19 +7,19 @@ all:
     lab_password: P@ssw0rd
     lab_vm_datastore: "{{ lab_name }}"
     lab_wan_portgroup: "WAN Network"
-    lab_lan1_portgroup: "VM Network"
+    lab_lan1_portgroup: "VLAN121"
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
-    lab_lan1_gateway: "192.168.123.1"
-    lab_lan1_dns_ip: "192.168.123.21"
-    lab_domain_name: "schlab.pri"
-    lab_domain_controller: "labdc01"
+    lab_lan1_gateway: "192.168.121.1"
+    lab_lan1_dns_ip: "192.168.121.21"
+    lab_domain_name: "lab.madlabber.com"
+    lab_domain_controller: "dc1.lab.madlabber.com"
   children:
     dc:
       hosts:
-        labdc01:
+        dc01:
           version: "Server2022eval"
-          ip_address: 192.168.123.21
+          ip_address: 192.168.121.21
           extra_commands:
             # Install Chrome
             - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
@@ -27,20 +27,31 @@ all:
             # Install Putty
             - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
             - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+        # labdc01:
+        #   version: "Server2022eval"
+        #   ip_address: 192.168.123.21
+        #   extra_commands:
+        #     # Install Chrome
+        #     - "Invoke-WebRequest -Uri http://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile C:\\Windows\\temp\\chrome_installer.exe"
+        #     - "C:\\Windows\\temp\\chrome_installer.exe /silent /install"
+        #     # Install Putty
+        #     - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
+        #     - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
     winservers:
       hosts:
         hlod:
-          ip_address: 192.168.123.22
+          ip_address: 192.168.121.22
           version: "Server2022eval"
           vm_memory_mb: 2048
           vm_num_cpus: 2
           vm_disk_gb: 40
-        labshift:
-          ip_address: 192.168.123.27
+        shift:
+          ip_address: 192.168.121.26
           version: "Server2022eval"
           vm_memory_mb: 8192
           vm_num_cpus: 2
           vm_disk_gb: 80
+  
     centos:
       hosts:
         ansible:
@@ -53,11 +64,37 @@ all:
         labaiqum:
           ip_address: 192.168.123.28
           ovf_file: files/ActiveIQUnifiedManager-9.16RC1.ova
+
+    ubuntu:
+      vars:
+        vm_memory_mb: 8192
+        vm_num_cpus: 2
+        vm_disk_gb: 120 
+        install_xrdp: true
+        install_ansible: true
+      hosts:
+        arkdev: 
+          state: force
+          ip_address: 192.168.121.84
+          version: "22.04"
+          edition: desktop
+          extra_commands: 
+            # Install PSP SDK
+            #- wget https://raw.githubusercontent.com/PSP-Archive/ARK-4/refs/heads/main/contrib/PC/PSPSDK/ark4_pspsdk_installer.sh
+            #- chmod +x ark4_pspsdk_installer.sh 
+            #- ./ark4_pspsdk_installer.sh 
+            #- echo 'export PSPDEV=/usr/local/pspdev' >> ~/.bashrc
+            #- echo 'export PATH=$PATH:/usr/local/pspdev/bin' >> ~/.bashrc
+            # Install vscode 
+            #- echo 'code code/add-microsoft-repo boolean true' | sudo debconf-set-selections
+            #- wget https://go.microsoft.com/fwlink/?LinkID=760868 -O code.deb
+            #- DEBIAN_FRONTEND=noninteractive sudo apt install -y ./code.deb
     vcenter:
       hosts:
-        labvc01:
-          ip_address: 192.168.123.20
-          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
+        vc1:
+          ip_address: 192.168.121.20
+          vm_fqdn: vc1.lab.madlabber.com
+          ovf_file: "files/VMware-vCenter-Server-Appliance-9.1.1.0.25712839_OVF10.ova"
     esx:
       hosts:
         # esx47:
@@ -83,7 +120,7 @@ all:
         #   ip_address: 192.168.123.54
         #   cluster: "Mgmt Cluster"
       vars:
-          esx_version: "8.0u2"
+          esx_version: "9.1.1.0"
           enable_ssh: 'True'
     pve_hosts:
       hosts:

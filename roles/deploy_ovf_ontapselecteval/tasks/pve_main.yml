@@ -21,7 +21,7 @@
 
 - name: pve substitutions
   set_fact:
-    pve_datastore: "{{ datastore_substitutions[vm_datastore]|default(vm_datastore) }}"
+    pve_datastore: "{{ pve_datastores[vm_datastore]|default(vm_datastore) }}"
     pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
 #    pve_cluster_network: "{{ network_substitutions[cluster_network]|default(cluster_network) }}"
 

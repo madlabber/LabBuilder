@@ -7,7 +7,7 @@
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
     net:
-      net0: 'e1000,bridge={{ pve_vm_network }}'
+      net0: 'e1000,bridge={{ pve_vm_network }}{{pve_vlan_tag}}'
     sata:
       sata0: '{{pve_vm_datastore}}:{{ vm_disk_gb |int }}'
     ide:
