@@ -60,3 +60,6 @@ roles/build_from_iso_windows/files/Server2019eval/*
 roles/build_from_iso_windows/files/Server2025eval/*
 files/BlueXP-Connector-Cloud-v3.9.55
 experimental.md
+files/lab_pvetest_pve01/answer.toml
+files/lab_pvetest_pve01/autoinstall-flat.vmdk
+files/lab_pvetest_pve01/autoinstall.vmdk

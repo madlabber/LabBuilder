@@ -7,7 +7,6 @@
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
     net: "{{ networks }}"
-      # net0: 'virtio,bridge={{ pve_vm_network }}'
     scsihw: 'virtio-scsi-pci'
     scsi:
       scsi0: "{{ (disks[0].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[0].size_gb|default(omit) , omit ) }}"

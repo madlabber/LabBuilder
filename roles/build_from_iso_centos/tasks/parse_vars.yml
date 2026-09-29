@@ -14,16 +14,13 @@
 - name: set vmw vars
   set_fact:
     host_type: "vmw"
-    vm_nic0_name: "Ethernet0"
   when:
     - vcenter_address ~ esxi_address != ''
 
 - name: set pve vars
   set_fact:
     host_type: "pve"
-    vm_nic0_name: "Ethernet"
     pve_vm_datastore: "{{ pve_datastores[vm_datastore]|default(vm_datastore) }}"
-    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
   when:
     - pve_address != ''    
     
@@ -48,9 +45,7 @@
 - name: set pve vars
   set_fact:
     host_type: "pve"
-    vm_nic0_name: "Ethernet"
     pve_vm_datastore: "{{ pve_datastores[vm_datastore]|default(vm_datastore) }}"
-    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
   when:
     - pve_address != ''    
 

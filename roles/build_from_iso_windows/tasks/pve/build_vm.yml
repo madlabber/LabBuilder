@@ -7,9 +7,9 @@
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
     net:
-      net0: 'e1000,bridge={{ pve_vm_network }}{{pve_vlan_tag}}'
+      net0: "e1000,bridge={{pve_networks[vm_network].bridge }}{{ (pve_networks[vm_network].vlan is defined) | ternary(',tag=' ~ (pve_networks[vm_network].vlan | default('')), '') }}"
     sata:
-      sata0: '{{pve_vm_datastore}}:{{ vm_disk_gb |int }}'
+      sata0: '{{ pve_datastores[vm_datastore]|default(vm_datastore) }}:{{ vm_disk_gb |int }}'
     ide:
       ide1: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
       ide2: "{{iso_datastore}}:iso/{{config_iso}},media=cdrom"

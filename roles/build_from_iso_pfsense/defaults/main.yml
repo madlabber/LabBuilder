@@ -26,6 +26,3 @@ config_xml_file: ""
 pve_address: ""
 esxi_address: ""
 vcenter_address: ""
-
-pve_vm_network_wan: ""
-pve_vm_network_lan: ""

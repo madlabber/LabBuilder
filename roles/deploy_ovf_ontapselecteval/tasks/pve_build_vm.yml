@@ -7,9 +7,9 @@
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
     net: #'{{ networks }}'
-      net0: 'virtio,bridge={{ pve_vm_network }}'
-      net1: 'virtio,bridge={{ pve_vm_network }}'
-      net2: 'virtio,bridge={{ pve_vm_network }}'
+      net0: "virtio,bridge={{pve_networks[vm_network].bridge }}{{ (pve_networks[vm_network].vlan is defined) | ternary(',tag=' ~ (pve_networks[vm_network].vlan | default('')), '') }}"
+      net1: "virtio,bridge={{pve_networks[vm_network].bridge }}{{ (pve_networks[vm_network].vlan is defined) | ternary(',tag=' ~ (pve_networks[vm_network].vlan | default('')), '') }}"
+      net2: "virtio,bridge={{pve_networks[vm_network].bridge }}{{ (pve_networks[vm_network].vlan is defined) | ternary(',tag=' ~ (pve_networks[vm_network].vlan | default('')), '') }}"
     serial:
       serial0: 'socket'
       serial1: 'socket'

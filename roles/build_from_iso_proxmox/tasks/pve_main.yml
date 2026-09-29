@@ -1,10 +1,3 @@
-# - debug: 
-#     msg:
-#       - "****************************************"
-#       - "* This component is not yet functional *"
-#       - "*          on Proxmox hosts            *"
-#       - "****************************************"
-
 - name: Add PVE Host to Dynamic Inventory
   add_host:
     hostname: temp_host
@@ -22,8 +15,6 @@
 - name: pve substitutions
   set_fact:
     pve_vm_datastore: "{{ pve_datastores[vm_datastore]|default(vm_datastore) }}"
-    pve_vm_network: "{{ network_substitutions[vm_network]|default(vm_network) }}"
-#    pve_cluster_network: "{{ network_substitutions[cluster_network]|default(cluster_network) }}"
 
 - name: upload install iso
   include_tasks: pve_upload_install_iso.yml
