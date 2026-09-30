@@ -34,6 +34,9 @@
         #cloud-config
         autoinstall:
           version: 1
+          apt:
+            fallback: offline-install
+          updates: security
           user-data:
             hostname: {{ vm_hostname }}
             fqdn: {{vm_hostname}}.{{ vm_domain }}

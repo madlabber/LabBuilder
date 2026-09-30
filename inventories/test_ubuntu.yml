@@ -24,7 +24,7 @@ all:
       hosts:
         ubuntu1:
           ip_address: 192.168.0.201
-          version: "20.04"
+          version: "22.04"
 
 
 

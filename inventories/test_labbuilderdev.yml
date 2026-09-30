@@ -185,10 +185,10 @@ all:
       hosts:
         ubuntu1:
           ip_address: 192.168.0.41
-          version: "20.04"
+          version: "22.04"
         ubuntu2: 
           ip_address: 192.168.0.42
-          version: "22.04"
+          version: "24.04"
     proxmox:
       vars:
         vm_memory_mb: 8192
