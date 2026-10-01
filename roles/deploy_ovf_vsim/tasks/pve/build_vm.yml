@@ -38,22 +38,32 @@
     - disk3
     - disk4
 
-- name: import disks
-  shell:  
-    cmd: "qm disk import {{ create_vm.vmid }} {{ import_path }}/{{ loop_vm_name }}-{{item}}.vmdk {{pve_datastore}} --format raw"
-  delegate_to: temp_host
-  when: item != 'disk4' or disk_model == "vha"
-  loop:
-    - disk1
-    - disk2
-    - disk3
-    - disk4
+# - name: import disks
+#   shell:  
+#     cmd: "qm disk import {{ create_vm.vmid }} {{ import_path }}/{{ loop_vm_name }}-{{item}}.vmdk {{pve_datastore}} --format raw"
+#   delegate_to: temp_host
+#   when: item != 'disk4' or disk_model == "vha"
+#   loop:
+#     - disk1
+#     - disk2
+#     - disk3
+#     - disk4
 
-- name: Attach disks
+# - name: Attach disks
+#   shell:  
+#     cmd: "qm set {{ create_vm.vmid }} --ide{{item}} file={{pve_datastore}}:vm-{{create_vm.vmid}}-disk-{{item}}"
+#   delegate_to: temp_host
+#   when: item != 3 or disk_model == "vha"
+#   loop:
+#    - 0
+#    - 1
+#    - 2
+#    - 3
+
+- name: Import and Attach disks
   shell:  
-    cmd: "qm set {{ create_vm.vmid }} --ide{{item}} file={{pve_datastore}}:vm-{{create_vm.vmid}}-disk-{{item}}"
+    cmd: "qm set {{ create_vm.vmid }} --ide{{item}} {{ pve_datastore }}:0,import-from={{ import_path }}/{{ vm_name }}-disk{{item+1}}.vmdk"
   delegate_to: temp_host
-  when: item != 3 or disk_model == "vha"
   loop:
    - 0
    - 1

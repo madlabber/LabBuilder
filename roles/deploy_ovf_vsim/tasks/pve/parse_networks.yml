@@ -2,56 +2,56 @@
 - name: Add Network Adapters
   set_fact:
     networks:
-      net0: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0a|default(cluster_network)] }}'
-      net1: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0b|default(cluster_network)] }}'
-      net2: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0c|default(data_network)] }}'
-      net3: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0d|default(data_network)] }}'
+      net0: "e1000,bridge={{ pve_networks[ethernet_ports.e0a|default(cluster_network)].bridge }}{{ (pve_networks[ethernet_ports.e0a|default(cluster_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0a|default(cluster_network)].vlan | default('')), '') }}"
+      net1: "e1000,bridge={{ pve_networks[ethernet_ports.e0b|default(cluster_network)].bridge }}{{ (pve_networks[ethernet_ports.e0b|default(cluster_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0b|default(cluster_network)].vlan | default('')), '') }}"
+      net2: "e1000,bridge={{ pve_networks[ethernet_ports.e0c|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0c|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0c|default(data_network)].vlan | default('')), '') }}"
+      net3: "e1000,bridge={{ pve_networks[ethernet_ports.e0d|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0d|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0d|default(data_network)].vlan | default('')), '') }}"
   when: vm_num_nics|int <= 4
 
 - name: Add Network Adapters
   set_fact:
     networks:
-      net0: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0a|default(cluster_network)] }}'
-      net1: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0b|default(cluster_network)] }}'
-      net2: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0c|default(data_network)] }}'
-      net3: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0d|default(data_network)] }}'
-      net4: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0e|default(data_network)] }}'
+      net0: "e1000,bridge={{ pve_networks[ethernet_ports.e0a|default(cluster_network)].bridge }}{{ (pve_networks[ethernet_ports.e0a|default(cluster_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0a|default(cluster_network)].vlan | default('')), '') }}"
+      net1: "e1000,bridge={{ pve_networks[ethernet_ports.e0b|default(cluster_network)].bridge }}{{ (pve_networks[ethernet_ports.e0b|default(cluster_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0b|default(clusterNetwork)].vlan | default('')), '') }}"
+      net2: "e1000,bridge={{ pveNetworks[ethernet_ports.e0c|default(dataNetwork)].bridge }}{{ (pveNetworks[ethernet_ports.e0c|default(dataNetwork)].vlan is defined) | ternary(',tag=' ~ (pveNetworks[ethernet_ports.e0c|default(dataNetwork)].vlan | default('')), '') }}"
+      net3: "e1000,bridge={{ pve_networks[ethernet_ports.e0d|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0d|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0d|default(data_network)].vlan | default('')), '') }}"
+      net4: "e1000,bridge={{ pve_networks[ethernet_ports.e0e|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0e|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0e|default(data_network)].vlan | default('')), '') }}"
   when: vm_num_nics|int >= 5 or ethernet_ports.e0e|default('') ~ ethernet_ports.e0f|default('') ~ ethernet_ports.e0g|default('') ~ ethernet_ports.e0h|default('') != ""
 
 - name: Add Network Adapters
   set_fact:
     networks:
-      net0: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0a|default(cluster_network)] }}'
-      net1: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0b|default(cluster_network)] }}'
-      net2: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0c|default(data_network)] }}'
-      net3: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0d|default(data_network)] }}'
-      net4: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0e|default(data_network)] }}'
-      net5: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0f|default(data_network)] }}'
+      net0: "e1000,bridge={{ pve_networks[ethernet_ports.e0a|default(cluster_network)].bridge }}{{ (pve_networks[ethernet_ports.e0a|default(cluster_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0a|default(cluster_network)].vlan | default('')), '') }}"
+      net1: "e1000,bridge={{ pve_networks[ethernet_ports.e0b|default(cluster_network)].bridge }}{{ (pve_networks[ethernet_ports.e0b|default(cluster_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0b|default(clusterNetwork)].vlan | default('')), '') }}"
+      net2: "e1000,bridge={{ pveNetworks[ethernet_ports.e0c|default(dataNetwork)].bridge }}{{ (pveNetworks[ethernet_ports.e0c|default(dataNetwork)].vlan is defined) | ternary(',tag=' ~ (pveNetworks[ethernet_ports.e0c|default(dataNetwork)].vlan | default('')), '') }}"
+      net3: "e1000,bridge={{ pve_networks[ethernet_ports.e0d|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0d|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0d|default(data_network)].vlan | default('')), '') }}"
+      net4: "e1000,bridge={{ pve_networks[ethernet_ports.e0e|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0e|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0e|default(data_network)].vlan | default('')), '') }}"
+      net5: "e1000,bridge={{ pve_networks[ethernet_ports.e0f|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0f|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0f|default(data_network)].vlan | default('')), '') }}"
   when: vm_num_nics|int >= 6 or ethernet_ports.e0f|default('') ~ ethernet_ports.e0g|default('') ~ ethernet_ports.e0h|default('') != ""
 
 - name: Add Network Adapters
   set_fact:
     networks:
-      net0: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0a|default(cluster_network)] }}'
-      net1: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0b|default(cluster_network)] }}'
-      net2: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0c|default(data_network)] }}'
-      net3: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0d|default(data_network)] }}'
-      net4: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0e|default(data_network)] }}'
-      net5: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0f|default(data_network)] }}'
-      net6: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0g|default(data_network)] }}'
+      net0: "e1000,bridge={{ pve_networks[ethernet_ports.e0a|default(cluster_network)].bridge }}{{ (pve_networks[ethernet_ports.e0a|default(cluster_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0a|default(cluster_network)].vlan | default('')), '') }}"
+      net1: "e1000,bridge={{ pve_networks[ethernet_ports.e0b|default(cluster_network)].bridge }}{{ (pve_networks[ethernet_ports.e0b|default(cluster_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0b|default(clusterNetwork)].vlan | default('')), '') }}"
+      net2: "e1000,bridge={{ pveNetworks[ethernet_ports.e0c|default(dataNetwork)].bridge }}{{ (pveNetworks[ethernet_ports.e0c|default(dataNetwork)].vlan is defined) | ternary(',tag=' ~ (pveNetworks[ethernet_ports.e0c|default(dataNetwork)].vlan | default('')), '') }}"
+      net3: "e1000,bridge={{ pve_networks[ethernet_ports.e0d|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0d|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0d|default(data_network)].vlan | default('')), '') }}"
+      net4: "e1000,bridge={{ pve_networks[ethernet_ports.e0e|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0e|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0e|default(data_network)].vlan | default('')), '') }}"
+      net5: "e1000,bridge={{ pve_networks[ethernet_ports.e0f|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0f|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0f|default(data_network)].vlan | default('')), '') }}"
+      net6: "e1000,bridge={{ pve_networks[ethernet_ports.e0g|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0g|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0g|default(data_network)].vlan | default('')), '') }}"
   when: vm_num_nics|int >= 7 or ethernet_ports.e0g|default('') ~ ethernet_ports.e0h|default('') != ""
 
 - name: Add Network Adapters
   set_fact:
     networks:
-      net0: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0a|default(cluster_network)] }}'
-      net1: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0b|default(cluster_network)] }}'
-      net2: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0c|default(data_network)] }}'
-      net3: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0d|default(data_network)] }}'
-      net4: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0e|default(data_network)] }}'
-      net5: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0f|default(data_network)] }}'
-      net6: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0g|default(data_network)] }}'
-      net7: 'e1000,bridge={{ network_substitutions[ethernet_ports.e0g|default(data_network)] }}'
+      net0: "e1000,bridge={{ pve_networks[ethernet_ports.e0a|default(cluster_network)].bridge }}{{ (pve_networks[ethernet_ports.e0a|default(cluster_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0a|default(cluster_network)].vlan | default('')), '') }}"
+      net1: "e1000,bridge={{ pve_networks[ethernet_ports.e0b|default(cluster_network)].bridge }}{{ (pve_networks[ethernet_ports.e0b|default(cluster_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0b|default(clusterNetwork)].vlan | default('')), '') }}"
+      net2: "e1000,bridge={{ pveNetworks[ethernet_ports.e0c|default(dataNetwork)].bridge }}{{ (pveNetworks[ethernet_ports.e0c|default(dataNetwork)].vlan is defined) | ternary(',tag=' ~ (pveNetworks[ethernet_ports.e0c|default(dataNetwork)].vlan | default('')), '') }}"
+      net3: "e1000,bridge={{ pve_networks[ethernet_ports.e0d|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0d|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0d|default(data_network)].vlan | default('')), '') }}"
+      net4: "e1000,bridge={{ pve_networks[ethernet_ports.e0e|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0e|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0e|default(data_network)].vlan | default('')), '') }}"
+      net5: "e1000,bridge={{ pve_networks[ethernet_ports.e0f|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0f|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0f|default(data_network)].vlan | default('')), '') }}"
+      net6: "e1000,bridge={{ pve_networks[ethernet_ports.e0g|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0g|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0g|default(data_network)].vlan | default('')), '') }}"
+      net7: "e1000,bridge={{ pve_networks[ethernet_ports.e0h|default(data_network)].bridge }}{{ (pve_networks[ethernet_ports.e0h|default(data_network)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.e0h|default(data_network)].vlan | default('')), '') }}"
   when: vm_num_nics|int >= 8 or ethernet_ports.e0h|default('') != ""
 
 - name: debug

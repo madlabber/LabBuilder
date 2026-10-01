@@ -259,14 +259,14 @@ all:
           ontap_cluster_name:    "demo"
           ontap_cluster_mgmt_ip: 192.168.0.101
           vm_data_disk_gb:       100
-    # vsims:
-    #   hosts:
-    #     vsim1-01:
-    #       ip_address: 192.168.0.71
-    #       sys_serial_number: "4082368-50-7"
-    #       cluster_setup: true
-    #       cluster_name: vsim1
-    #       cluster_mgmt_ip: 192.168.0.70
+    vsims:
+      hosts:
+        vsim1-01:
+          ip_address: 192.168.0.71
+          sys_serial_number: "4082368-50-7"
+          cluster_setup: true
+          cluster_name: vsim1
+          cluster_mgmt_ip: 192.168.0.70
     #     vsim2-01:
     #       ip_address: 192.168.0.81
     #       sys_serial_number: "4082368-50-7"

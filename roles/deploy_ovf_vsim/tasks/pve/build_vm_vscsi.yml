@@ -37,25 +37,33 @@
     - disk3
 
 
-- name: import disks
-  shell:  
-    cmd: "qm disk import {{ create_vm.vmid }} {{ iso_path }}/{{ vm_name }}-{{item}}.vmdk {{pve_datastore}} --format raw"
-  delegate_to: temp_host
-  loop:
-    - disk1
-    - disk2
-    - disk3
+# - name: import disks
+#   shell:  
+#     cmd: "qm disk import {{ create_vm.vmid }} {{ iso_path }}/{{ vm_name }}-{{item}}.vmdk {{pve_datastore}} --format raw"
+#   delegate_to: temp_host
+#   loop:
+#     - disk1
+#     - disk2
+#     - disk3
 
 
-- name: Attach disks
+# - name: Attach disks
+#   shell:  
+#     cmd: "qm set {{ create_vm.vmid }} --ide{{item}} file={{pve_datastore}}:vm-{{create_vm.vmid}}-disk-{{item}}"
+#   delegate_to: temp_host
+#   loop:
+#    - 0
+#    - 1
+#    - 2
+
+- name: Import and Attach disks
   shell:  
-    cmd: "qm set {{ create_vm.vmid }} --ide{{item}} file={{pve_datastore}}:vm-{{create_vm.vmid}}-disk-{{item}}"
+    cmd: "qm set {{ create_vm.vmid }} --ide{{item}} {{ pve_datastore }}:0,import-from={{ import_path }}/{{ vm_name }}-disk{{item+1}}.vmdk"
   delegate_to: temp_host
   loop:
    - 0
    - 1
    - 2
-
 
 - name: Remove disks from temporary storage
   ansible.builtin.file:
