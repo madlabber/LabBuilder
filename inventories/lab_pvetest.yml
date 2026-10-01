@@ -251,6 +251,14 @@ all:
           ip_address: 192.168.0.201
           version: "22.04"
 
+    ontapselecteval:
+      hosts:
+        ots-01:  
+          ontap_version: "9.15.1"           
+          ontap_node_mgmt_ip:    192.168.0.111
+          ontap_cluster_name:    "demo"
+          ontap_cluster_mgmt_ip: 192.168.0.101
+          vm_data_disk_gb:       100
     # vsims:
     #   hosts:
     #     vsim1-01:

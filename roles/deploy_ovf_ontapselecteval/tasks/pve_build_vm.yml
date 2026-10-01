@@ -31,14 +31,15 @@
 - debug: 
     msg: "VMID: {{ create_vm.vmid }}"
 
-- name: import disks
-  shell:  
-    cmd: "qm disk import {{ create_vm.vmid }} {{ import_path }}/{{ vm_name }}-{{disk_name}}.vmdk {{pve_datastore}} --format raw"
-  delegate_to: temp_host
+# - name: import disks
+#   shell:  
+#     cmd: "qm disk import {{ create_vm.vmid }} {{ import_path }}/{{ vm_name }}-{{disk_name}}.vmdk {{pve_datastore}} --format raw"
+#   delegate_to: temp_host
 
 - name: Attach disks
   shell:  
-    cmd: "qm set {{ create_vm.vmid }} --scsi0 file={{pve_datastore}}:vm-{{create_vm.vmid}}-disk-0"
+  #  cmd: "qm set {{ create_vm.vmid }} --scsi0 file={{pve_datastore}}:vm-{{create_vm.vmid}}-disk-0"
+    cmd: "qm set {{ create_vm.vmid }} --scsi0 {{ pve_datastore }}:0,import-from={{ import_path }}/{{ vm_name }}-{{disk_name}}.vmdk"
   delegate_to: temp_host
 
 - name: Set boot order
