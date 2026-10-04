@@ -1,0 +1,27 @@
+- name: Remove staging directory
+  file:
+    path: "{{ playbook_dir }}/files/{{item}}"
+    state: absent
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+
+- name: Creating a new staging directory
+  file:
+    path: "{{ playbook_dir }}/files/{{item}}"
+    state: directory
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+
+- name: Extract OVA
+  ansible.builtin.unarchive:
+    src: "{{ovf_file}}"
+    dest: "{{ playbook_dir }}/files/{{item}}"
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+

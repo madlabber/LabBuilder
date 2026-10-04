@@ -202,11 +202,18 @@ all:
             type: thin
           - size_gb: 3072
             type: thin
-
+    vcenter:
+      hosts:
+        vcsa:
+          state: force
+          ip_address: 192.168.0.50
+          vm_fqdn: "vcsa.lab.local"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
     esx:
       hosts:
         esx01:
           ip_address: 192.168.0.51
+          install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
         esx02:
           ip_address: 192.168.0.52
           install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"

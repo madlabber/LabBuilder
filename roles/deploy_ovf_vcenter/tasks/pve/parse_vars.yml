@@ -1,0 +1,32 @@
+- name: Add PVE Host to Dynamic Inventory
+  add_host:
+    hostname: temp_host
+    group: "temp_hosts"
+    ansible_host: '{{ pve_address }}'
+    ansible_user: '{{ pve_username }}'
+    ansible_password: '{{ pve_password }}'
+    ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+
+- name: pve substitutions
+  set_fact:
+    pve_datastore: "{{ pve_datastores[vm_datastore]|default(vm_datastore) }}"
+
+- name: Parse the version strings
+  set_fact:
+    vcsa_version: "{{ ovf_file | basename | regex_search('\\b\\d+\\.\\d+\\.\\d+') }}"
+    vcsa_major_version: "{{ ovf_file | basename | regex_search('\\d+\\.\\d+') }}"
+
+- name: Set VM configuration based on deployment size
+  set_fact:
+    vm_num_cpus: "{{ deployment_options[vcsa_major_version][deployment_option].cpu }}"
+    vm_memory_mb: "{{ deployment_options[vcsa_major_version][deployment_option].ram_gb * 1024 }}"
+    vm_disks: "{{ deployment_options[vcsa_major_version][deployment_option].disks }}"
+
+- name: Display the extracted version
+  debug:
+    msg: 
+      - "The extracted version is: {{ vcsa_version }}"
+      - "The extracted major version is: {{ vcsa_major_version }}"
+      - "The number of CPUs is: {{ vm_num_cpus }}"
+      - "The memory is: {{ vm_memory_mb }} MB"
+      - "The disks configuration is: {{ vm_disks }}"

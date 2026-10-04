@@ -1,6 +1,7 @@
+state: "present"
 
 # Path to the vCenter OVA File
-ovf_file: "files/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
+ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
 
 # Default VM Namw
 vm_name: vcsa
@@ -31,7 +32,9 @@ vm_gateway: ""
 searchpath: ""
 
 # vCenter t-shirt size: tiny,small,medium,large, or infrastructure 
-vm_deployment_size: 'tiny' 
+deployment_option: 'tiny'
+vm_num_cpus: 2
+vm_memory_mb: 14336
 
 # True will autoconfigure vCenter, False will stop at the first phase install
 vm_autoconfig: 'True' 
@@ -39,7 +42,409 @@ vm_autoconfig: 'True'
 # True or False setting controls SSH service
 vm_enable_ssh: 'True'
 
+vcenter_address: ""
+esxi_address: ""
+pve_address: ""
 
+deployment_options:
+  # ================= vCENTER 7.0 Footprints =================
+  "7.0":
+    tiny:
+      cpu: 2
+      ram_gb: 12
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 10 }
+        - { index: 5, size: 10 }
+        - { index: 6, size: 15 }
+        - { index: 7, size: 10 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 10 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 150 }
+    small:
+      cpu: 4
+      ram_gb: 19
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 10 }
+        - { index: 5, size: 10 }
+        - { index: 6, size: 15 }
+        - { index: 7, size: 150 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 10 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 150 }
+    medium:
+      cpu: 8
+      ram_gb: 28
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 15 }
+        - { index: 5, size: 22 }
+        - { index: 6, size: 30 }
+        - { index: 7, size: 300 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 10 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 250 }
+    large:
+      cpu: 16
+      ram_gb: 37
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 20 }
+        - { index: 5, size: 50 }
+        - { index: 6, size: 35 }
+        - { index: 7, size: 600 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 15 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 350 }
+    x-large:
+      cpu: 24
+      ram_gb: 56
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 25 }
+        - { index: 5, size: 100 }
+        - { index: 6, size: 50 }
+        - { index: 7, size: 1100 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 25 }
+        - { index: 14, size: 10 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 600 }
 
+  # ================= vCENTER 8.0 Footprints =================
+  "8.0":
+    tiny:
+      cpu: 2
+      ram_gb: 14
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 10 }
+        - { index: 5, size: 10 }
+        - { index: 6, size: 15 }
+        - { index: 7, size: 10 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 10 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 150 }
+    small:
+      cpu: 4
+      ram_gb: 21
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 10 }
+        - { index: 5, size: 10 }
+        - { index: 6, size: 15 }
+        - { index: 7, size: 150 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 10 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 150 }
+    medium:
+      cpu: 8
+      ram_gb: 28
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 15 }
+        - { index: 5, size: 22 }
+        - { index: 6, size: 30 }
+        - { index: 7, size: 300 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 10 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 250 }
+    large:
+      cpu: 16
+      ram_gb: 37
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 20 }
+        - { index: 5, size: 50 }
+        - { index: 6, size: 35 }
+        - { index: 7, size: 600 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 15 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 350 }
+    x-large:
+      cpu: 24
+      ram_gb: 56
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 25 }
+        - { index: 5, size: 100 }
+        - { index: 6, size: 50 }
+        - { index: 7, size: 1100 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 25 }
+        - { index: 14, size: 10 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 600 }
 
+  # ================= vCENTER 9.0 Footprints =================
+  "9.0":
+    tiny:
+      cpu: 2
+      ram_gb: 14
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 15 }
+        - { index: 5, size: 15 }
+        - { index: 6, size: 20 }
+        - { index: 7, size: 15 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 15 }
+        - { index: 10, size: 15 }
+        - { index: 11, size: 110 }
+        - { index: 12, size: 55 }
+        - { index: 13, size: 15 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 110 }
+        - { index: 16, size: 165 }
+        - { index: 17, size: 50 }
+    small:
+      cpu: 4
+      ram_gb: 21
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 15 }
+        - { index: 5, size: 15 }
+        - { index: 6, size: 20 }
+        - { index: 7, size: 110 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 15 }
+        - { index: 10, size: 15 }
+        - { index: 11, size: 110 }
+        - { index: 12, size: 55 }
+        - { index: 13, size: 15 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 110 }
+        - { index: 16, size: 165 }
+        - { index: 17, size: 50 }
+    medium:
+      cpu: 8
+      ram_gb: 30
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 20 }
+        - { index: 5, size: 30 }
+        - { index: 6, size: 35 }
+        - { index: 7, size: 250 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 15 }
+        - { index: 10, size: 15 }
+        - { index: 11, size: 110 }
+        - { index: 12, size: 55 }
+        - { index: 13, size: 15 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 110 }
+        - { index: 16, size: 265 }
+        - { index: 17, size: 75 }
+    large:
+      cpu: 16
+      ram_gb: 39
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 25 }
+        - { index: 5, size: 60 }
+        - { index: 6, size: 40 }
+        - { index: 7, size: 550 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 15 }
+        - { index: 10, size: 15 }
+        - { index: 11, size: 110 }
+        - { index: 12, size: 55 }
+        - { index: 13, size: 20 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 110 }
+        - { index: 16, size: 365 }
+        - { index: 17, size: 100 }
+    x-large:
+      cpu: 24
+      ram_gb: 56
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 30 }
+        - { index: 5, size: 120 }
+        - { index: 6, size: 60 }
+        - { index: 7, size: 1050 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 15 }
+        - { index: 10, size: 15 }
+        - { index: 11, size: 110 }
+        - { index: 12, size: 55 }
+        - { index: 13, size: 30 }
+        - { index: 14, size: 10 }
+        - { index: 15, size: 110 }
+        - { index: 16, size: 615 }
+        - { index: 17, size: 150 }
 
+  # ================= vCENTER 9.1 Footprints =================
+  "9.1":
+    tiny:
+      cpu: 2
+      ram_gb: 14
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 15 }
+        - { index: 5, size: 15 }
+        - { index: 6, size: 20 }
+        - { index: 7, size: 15 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 15 }
+        - { index: 10, size: 15 }
+        - { index: 11, size: 110 }
+        - { index: 12, size: 55 }
+        - { index: 13, size: 15 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 110 }
+        - { index: 16, size: 165 }
+        - { index: 17, size: 50 }
+    small:
+      cpu: 4
+      ram_gb: 21
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 15 }
+        - { index: 5, size: 15 }
+        - { index: 6, size: 20 }
+        - { index: 7, size: 110 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 15 }
+        - { index: 10, size: 15 }
+        - { index: 11, size: 110 }
+        - { index: 12, size: 55 }
+        - { index: 13, size: 15 }   
+        - { index: 14, size: 5 }
+        - { index: 15, size: 110 }
+        - { index: 16, size: 165 }
+        - { index: 17, size: 50 }
+    medium:
+      cpu: 8
+      ram_gb: 30
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 20 }
+        - { index: 5, size: 30 }
+        - { index: 6, size: 35 }
+        - { index: 7, size: 250 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 15 }
+        - { index: 10, size: 15 }
+        - { index: 11, size: 110 }
+        - { index: 12, size: 55 }
+        - { index: 13, size: 15 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 110 }
+        - { index: 16, size: 265 }
+        - { index: 17, size: 75 }
+    large:
+      cpu: 16
+      ram_gb: 39
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 25 }
+        - { index: 5, size: 60 }
+        - { index: 6, size: 40 }
+        - { index: 7, size: 550 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 15 }
+        - { index: 10, size: 15 }
+        - { index: 11, size: 110 }
+        - { index: 12, size: 55 }
+        - { index: 13, size: 20 }
+        - { index: 14, size: 5 }
+        - { index: 15, size: 110 }
+        - { index: 16, size: 365 }
+        - { index: 17, size: 100 }
+    x-large:
+      cpu: 24
+      ram_gb: 56
+      disks:
+        - { index: 2, size: 25 }
+        - { index: 3, size: 25 }
+        - { index: 4, size: 30 }
+        - { index: 5, size: 120 }
+        - { index: 6, size: 60 }
+        - { index: 7, size: 1050 }
+        - { index: 8, size: 1 }
+        - { index: 9, size: 15 }
+        - { index: 10, size: 15 }
+        - { index: 11, size: 110 }
+        - { index: 12, size: 55 }
+        - { index: 13, size: 30 }
+        - { index: 14, size: 10 }
+        - { index: 15, size: 110 }
+        - { index: 16, size: 615 }
+        - { index: 17, size: 150 }

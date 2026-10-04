@@ -1,0 +1,16 @@
+- name: Locate the disk files using wildcard pattern
+  ansible.builtin.find:
+    paths: "{{ playbook_dir }}/files/{{ vm_name }}"
+    patterns: "{{ disk_pattern | default('*-disk*.vmdk') }}"
+  delegate_to: localhost
+  register: matched_files
+
+- name: Copy and rename disk files to temporary storage sequentially
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "{{ import_path }}/{{vm_name}}-disk{{ my_idx + 1 }}.vmdk"
+  delegate_to: temp_host
+  loop: "{{ matched_files.files }}"
+  loop_control:
+    index_var: my_idx
+  when: matched_files.matched > 0

@@ -1,0 +1,6 @@
+- name: Copy config iso to datastore
+  copy:
+    src: "{{ playbook_dir }}/files/{{vm_name}}-ovfenv.iso"
+    dest: "{{ iso_path }}/{{vm_name}}-ovfenv.iso"
+  delegate_to: temp_host
+

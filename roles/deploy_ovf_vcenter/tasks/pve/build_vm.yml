@@ -1,0 +1,77 @@
+- name: Generate a pseudo-UUID via standard hashing filters
+  set_fact:
+    vm_uuid: "{{ 'vcsa-lab-local-seed' | string | hash('md5') | regex_replace('^(.{8})(.{4})(.{4})(.{4})(.{12})$', '\\1-\\2-\\3-\\4-\\5') }}"
+
+- name: Generate and Encode SMBIOS Parameters
+  set_fact:
+    # 1. Generate the raw UUID
+    raw_uuid: "{{ lookup('ansible.builtin.pipe', 'python3 -c \"import uuid; print(uuid.uuid4())\"') }}"
+    
+    # 2. Pre-encode your literal company strings to match base64=1 constraints
+    encoded_manufacturer: "{{ 'VMware, Inc.' | b64encode }}"
+    encoded_product: "{{ 'VMware Virtual Platform' | b64encode }}"
+
+- name: Encode the UUID
+  set_fact:
+    encoded_uuid: "{{ raw_uuid | b64encode }}"
+
+- name: Create new VM 
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: present
+    name: '{{ vm_name|replace("_", "-") }}'
+    node: "{{ pve_node }}"
+    # Force Proxmox to present a native VMware SMBIOS signature
+    smbios: "base64=1,uuid={{ raw_uuid }},manufacturer={{ encoded_manufacturer }},product={{ encoded_product }}"
+    # Use standard host CPU flags but mask the KVM signature
+    cpu: "host"
+    net: 
+      net0: "vmxnet3,bridge={{pve_networks[vm_network].bridge }}{{ (pve_networks[vm_network].vlan is defined) | ternary(',tag=' ~ (pve_networks[vm_network].vlan | default('')), '') }}"
+    ide:
+      ide0: "{{iso_datastore}}:iso/{{vm_name}}-ovfenv.iso,media=cdrom"
+    sockets: '{{ vm_num_cpus|int }}'
+    vcpus: '{{ vm_num_cpus|int }}'
+    memory: '{{ vm_memory_mb |int}}'
+    agent: true
+    scsihw: lsi
+    args: "-cpu host,kvm=off,hv_vendor_id=VMwareVMware,+kvm_pv_unhalt,+kvm_pv_eoi"
+  delegate_to: localhost
+  register: create_vm
+  retries: 3
+  delay: 10
+  until: create_vm is succeeded
+
+- debug: 
+    msg: "VMID: {{ create_vm.vmid }}"
+
+- name: Find all renamed sequential disk files for this specific VM
+  ansible.builtin.find:
+    paths: "{{ import_path }}"
+    patterns: "{{ vm_name }}-disk*.vmdk"
+  delegate_to: temp_host
+  register: disk_files
+
+- name: Attach and import disks directly to SCSI controller using import-from
+  ansible.builtin.command: >
+    qm set {{ create_vm.vmid }} 
+      --scsi{{ disk_idx }} {{  pve_datastore }}:0,import-from="{{ item.path }}"
+  delegate_to: temp_host
+  loop: "{{ disk_files.files | sort(attribute='path') }}"
+  loop_control:
+    index_var: disk_idx
+
+- name: Set boot order
+  shell:  
+    cmd: "qm set {{ create_vm.vmid }} --bootdisk scsi0 --boot order=scsi0"
+  delegate_to: temp_host
+
+# disk 3 is in the ova but not used
+- name: delete disk 3 
+  shell:  
+    cmd: "qm set {{ create_vm.vmid }} --delete scsi2"
+  delegate_to: temp_host
+
+
+  

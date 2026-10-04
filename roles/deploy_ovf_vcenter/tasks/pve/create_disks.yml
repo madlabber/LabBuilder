@@ -1,0 +1,22 @@
+- name: Create any remaining synthetic/blank data disks required by the appliance layout
+  ansible.builtin.command: >
+    qm set {{create_vm.vmid}}
+    --scsi{{ item.index }} {{ pve_datastore }}:{{ item.size }}
+  delegate_to: temp_host
+  loop: "{{ vm_disks }}"
+# for example:
+    # - { index: 2, size: 25 } # swap
+    # - { index: 3, size: 25 } # core
+    # - { index: 4, size: 10 } # log
+    # - { index: 5, size: 10 } # db
+    # - { index: 6, size: 15 } # dblog
+    # - { index: 7, size: 10 } # seat
+    # - { index: 8, size: 1 }  # netdump
+    # - { index: 9, size: 10 } # autodeploy
+    # - { index: 10, size: 10 } # imagebuilder
+    # - { index: 11, size: 100 } # updatemgr
+    # - { index: 12, size: 50 } # archive
+    # - { index: 13, size: 10 } # vtsdb
+    # - { index: 14, size: 5 }  # vtsdblog
+    # - { index: 15, size: 100 } # lifecycle
+    # - { index: 16, size: 150 } # lvm_snapshot

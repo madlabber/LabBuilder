@@ -49,4 +49,10 @@
     become_user: root
     ignore_errors: True
 
-
+  - name: Install xorriso
+    ansible.builtin.package:
+      name: xorriso
+      state: present
+    become: True
+    become_user: root
+    ignore_errors: True

@@ -1,0 +1,39 @@
+- name: Create new ovf-env.xml
+  copy:
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/ovf-env.xml"
+    content: |
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Environment
+          xmlns="http://schemas.dmtf.org/ovf/environment/1"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:oe="http://schemas.dmtf.org/ovf/environment/1"
+          xmlns:ve="http://www.vmware.com/schema/ovfenv"
+          oe:id=""
+          ve:esxId="12">
+        <PlatformSection>
+          <Kind>VMware ESXi</Kind>
+          <Version>8.0.3</Version>
+          <Vendor>VMware, Inc.</Vendor>
+          <Locale>US</Locale>
+        </PlatformSection>
+        <PropertySection>
+          <Property oe:key="DeploymentOption.value" oe:value="{{deployment_option | default('tiny')}}"/>
+          <Property oe:key="guestinfo.cis.appliance.net.addr.family" oe:value="ipv4" />
+          <Property oe:key="guestinfo.cis.appliance.net.mode" oe:value="{{vm_net_mode}}" /> 
+          <Property oe:key="guestinfo.cis.appliance.net.addr" oe:value="{{ vm_address }}" />
+          <Property oe:key="guestinfo.cis.appliance.net.pnid" oe:value="{{ vm_fqdn|default(vm_address) }}" />
+          <Property oe:key="guestinfo.cis.appliance.net.prefix" oe:value="{{ vm_netmask_cidr }}" />
+          <Property oe:key="guestinfo.cis.appliance.net.gateway" oe:value="{{ vm_gateway }}" />
+          <Property oe:key="guestinfo.cis.appliance.net.dns.servers" oe:value="{{ vm_dns_server }}" />
+          <Property oe:key="guestinfo.cis.appliance.root.passwd" oe:value="{{ vm_password }}" />
+          <Property oe:key="guestinfo.cis.deployment.autoconfig" oe:value="{{vm_autoconfig|string}}" /> 
+          <Property oe:key="guestinfo.cis.appliance.ssh.enabled" oe:value="{{vm_enable_ssh|string}}" />
+          <Property oe:key="guestinfo.cis.vmdir.domain-name" oe:value="vsphere.local" />
+          <Property oe:key="guestinfo.cis.vmdir.password" oe:value="{{ vm_password }}" />
+          <Property oe:key="guestinfo.cis.upgrade.import.directory" oe:value="/storage/seat/cis-export-folder" />
+          <Property oe:key="domain" oe:value="{{ vm_domain }}" />
+          <Property oe:key="searchpath" oe:value="{{ searchpath }}" />
+        </PropertySection>
+      </Environment>
+  delegate_to: localhost
+

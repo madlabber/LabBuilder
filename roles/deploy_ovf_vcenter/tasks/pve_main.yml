@@ -1,0 +1,42 @@
+# - name: Warning
+#   debug:
+#     msg:
+#       - "***************************"
+#       - "** This Component is Not **"
+#       - "** Supported On Proxmox  **"
+#       - "***************************"
+#       - "role/deploy_ovf_vcenter/tasks/deploy_to_pve.yml"
+#       - ""
+
+- name: parse vars
+  include_tasks: pve/parse_vars.yml
+
+- name: extract ova
+  include_tasks: pve/extract_ova.yml
+
+- name: create config file
+  include_tasks: pve/create_config_file.yml
+
+- name: create config iso
+  include_tasks: pve/create_config_iso.yml
+
+- name: upload config iso
+  include_tasks: pve/upload_config_iso.yml
+
+- name: upload disks
+  include_tasks: pve/upload_disks.yml
+
+- name: build vm
+  include_tasks: pve/build_vm.yml
+
+- name: create disks
+  include_tasks: pve/create_disks.yml
+
+- name: start vm
+  include_tasks: pve/start_vm.yml
+
+- name: cleanup
+  include_tasks: pve/cleanup.yml
+
+# - name: end play for this host 
+#   ansible.builtin.meta: end_host

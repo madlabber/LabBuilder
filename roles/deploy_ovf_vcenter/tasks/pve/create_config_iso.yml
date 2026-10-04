@@ -1,0 +1,36 @@
+---
+- name: Create local temporary staging directory for transport ISO
+  ansible.builtin.file:
+    path: "{{playbook_dir}}/files/{{vm_name}}/isoroot"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+
+- name: Create cloud-init meta-data file
+  ansible.builtin.copy:
+    dest: "{{playbook_dir}}/files/{{vm_name}}/isoroot/meta-data"
+    content: |
+      instance-id: lab-pvetest-vcsa
+      local-hostname: vcsa.lab.local
+    mode: '0644'
+  delegate_to: localhost
+
+- name: Create blank cloud-init user-data file
+  ansible.builtin.copy:
+    dest: "{{playbook_dir}}/files/{{vm_name}}/isoroot/user-data"
+    content: |
+      #cloud-config
+    mode: '0644'
+  delegate_to: localhost
+
+- name: Copy your existing working ovf-env.xml to the staging folder
+  ansible.builtin.copy:
+    src: "{{playbook_dir}}/files/{{vm_name}}/ovf-env.xml"
+    dest: "{{playbook_dir}}/files/{{vm_name}}/isoroot/ovf-env.xml"
+    mode: '0644'
+  delegate_to: localhost
+
+- name: Create OVF transport ISO with exact hyphenated filename using xorrisofs on temp_host
+  ansible.builtin.command: >
+    xorrisofs -J -R -V "OVF ENF" -o {{ playbook_dir }}/files/{{vm_name}}-ovfenv.iso {{ playbook_dir }}/files/{{ vm_name }}/isoroot/
+  delegate_to: localhost
