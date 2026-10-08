@@ -28,6 +28,7 @@ default_networks:
     device_type: "{{ network_device_type }}"
 
 serial_ports: false
+iso_path: /var/lib/vz/template/iso
 
 # blank host addresses
 pve_address: ""

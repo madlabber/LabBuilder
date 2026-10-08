@@ -225,6 +225,9 @@ all:
         esx03:
           state: force
           ip_address: 192.168.0.53
+          vm_memory_mb: 16384
+          vm_num_cpus: 2
+          install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
           ethernet_ports:
             eth0: "{{ lab_lan1_portgroup }}"
             eth1: "{{ lab_lan1_portgroup }}"
