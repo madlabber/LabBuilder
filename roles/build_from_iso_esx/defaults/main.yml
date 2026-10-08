@@ -3,11 +3,6 @@ state: present
 install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
 kickstart_file: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
 vm_disk_gb: 128
-vm_disk2_gb: 0
-vm_disk3_gb: 0
-vm_disk4_gb: 0
-vm_disk5_gb: 0
-vm_disk6_gb: 0
 
 vm_network: "VM Network"
 disk_controller: paravirtual
@@ -34,3 +29,13 @@ iso_path: /var/lib/vz/template/iso
 pve_address: ""
 esxi_address: ""
 vcenter_address: ""
+
+# vm defaults
+vm_address:
+vm_netmask:
+vm_gateway:
+vm_dns_server:
+vm_domain:
+vm_hostname: esx 
+vm_name:     esx 
+config_iso:  "{{vm_name}}-ks.iso"

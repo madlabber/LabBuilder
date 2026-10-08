@@ -11,29 +11,6 @@
     state: absent
   delegate_to: localhost
 
-# - name: "Create customized ESXi 9.0 Kickstart ISO"
-#   community.general.iso_customize:
-#     src_iso: "{{ playbook_dir }}/files/{{ install_iso }}"
-#     dest_iso: "{{ playbook_dir }}/files/ks-{{ install_iso }}"
-#     # Delete old configs first to avoid conflicts
-#     # delete_files:
-#     #   - "/BOOT.CFG"
-#     #   - "/EFI/BOOT/BOOT.CFG"
-#     # Inject your modified boot configs and your unique KS.CFG
-#     add_files:
-#       # - src_file: "{{ role_path }}/files/BOOT.CFG"
-#       #   dest_file: "/boot.cfg"
-#       # - src_file: "{{ role_path }}/files/BOOT.CFG"
-#       #   dest_file: "/efi/boot/boot.cfg"
-#       - src_file: "{{ role_path }}/files/{{ vm_name }}/KS.CFG"
-#         dest_file: "/ks.cfg"
-#   delegate_to: localhost
-#   register: customize_iso_result
-
-# - name: Update ISO variable for downstream tasks
-#   set_fact:
-#     install_iso: "ks-{{ install_iso }}"
-
 - name: remove old temporary workspace
   ansible.builtin.file:   
     path: "{{ workspace }}"
@@ -63,8 +40,6 @@
   ansible.builtin.lineinfile:
     path: "{{ workspace }}/BOOT.CFG"
     regexp: '^kernelopt='
-    #line: "kernelopt=runweasel cdromBoot ks=cdrom:/KS.CFG"
-    # line: "kernelopt=ks=cdrom:/KS.CFG"
     line: "kernelopt=runweasel cdromBoot ks=file:///KS.CFG"
   delegate_to: localhost  
 
@@ -72,8 +47,6 @@
   ansible.builtin.lineinfile:
     path: "{{ workspace }}/EFI/BOOT/BOOT.CFG"
     regexp: '^kernelopt='
-    #line: "kernelopt=runweasel cdromBoot ks=cdrom:/KS.CFG"
-    # line: "kernelopt=ks=cdrom:/KS.CFG"
     line: "kernelopt=runweasel cdromBoot ks=file:///KS.CFG"
   delegate_to: localhost  
 
