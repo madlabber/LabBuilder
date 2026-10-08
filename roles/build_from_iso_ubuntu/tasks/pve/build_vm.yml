@@ -87,6 +87,10 @@
     state: current
   register: create_vm
   delegate_to: localhost
+  retries: 3
+  delay: 10
+  until: create_vm is succeeded
+  ignore_errors: true
 
 - name: Wait for 120 seconds for autoinstall confirmation prompt
   wait_for: timeout=120

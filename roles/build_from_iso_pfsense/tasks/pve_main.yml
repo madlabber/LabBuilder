@@ -70,6 +70,10 @@
     state: current
   register: create_vm
   delegate_to: localhost
+  retries: 3
+  delay: 10
+  until: create_vm is succeeded
+  ignore_errors: true
 
 - name: Start VM
   community.general.proxmox_kvm:
