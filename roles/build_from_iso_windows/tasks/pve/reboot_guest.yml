@@ -30,7 +30,7 @@
   delegate_to: localhost
 
 - name: Wait until QEMU agent reports a valid IPv4 address
-  ansible.builtin.command: "qm guest cmd {{ target_vmid }} network-get-interfaces"
+  ansible.builtin.command: "qm guest cmd {{ create_vm.vmid }} network-get-interfaces"
   delegate_to: temp_host
   register: qm_output
   changed_when: false
