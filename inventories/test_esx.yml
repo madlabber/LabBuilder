@@ -33,10 +33,17 @@ all:
           install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
           vm_memory_mb: 10240
           vm_num_cpus: 2
-          disk_controller: nvme
-          vm_disk1_size_gb: 6
-          vm_disk2_size_gb: 60
-          vm_disk3_size_gb: 80
+          disks:
+            - size_gb: 128
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 0
+              type: thin
+            - size_gb: 256
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 1
+              type: thin
           create_local_vmfs: 'False'
           enable_ssh: 'True'
 

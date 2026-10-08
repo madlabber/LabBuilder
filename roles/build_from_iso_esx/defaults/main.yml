@@ -2,7 +2,13 @@
 state: present
 install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
 kickstart_file: "{{ role_path }}/files/{{vm_name}}/KS.CFG"
-vm_disk_gb: 40
+vm_disk_gb: 128
+vm_disk2_gb: 0
+vm_disk3_gb: 0
+vm_disk4_gb: 0
+vm_disk5_gb: 0
+vm_disk6_gb: 0
+
 vm_network: "VM Network"
 disk_controller: paravirtual
 default_disks:
@@ -11,11 +17,16 @@ default_disks:
     controller_number: 0
     unit_number: 0
     type: thin
+disks: "{{default_disks}}"
+
+vm_num_nics: 2
+network_device_type: "vmxnet3"
 default_networks:
   - name: "{{ vm_network }}"
-    device_type: vmxnet3
+    device_type: "{{ network_device_type }}"
   - name: "{{ vm_network }}"
-    device_type: vmxnet3
+    device_type: "{{ network_device_type }}"
+
 serial_ports: false
 
 # blank host addresses

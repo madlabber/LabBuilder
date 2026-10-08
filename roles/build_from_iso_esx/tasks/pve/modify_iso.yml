@@ -1,0 +1,126 @@
+- name: set workspace variable
+  set_fact:
+    #workspace: "/tmp/esxi_iso_workspace"
+    workspace: "{{ playbook_dir }}/files/{{ vm_name }}-install"
+    custom_iso: "{{ vm_name }}-install.iso"
+  delegate_to: localhost
+
+- name: delete old kickstart iso
+  ansible.builtin.file: 
+    path: "{{ playbook_dir }}/files/{{ custom_iso }}"
+    state: absent
+  delegate_to: localhost
+
+# - name: "Create customized ESXi 9.0 Kickstart ISO"
+#   community.general.iso_customize:
+#     src_iso: "{{ playbook_dir }}/files/{{ install_iso }}"
+#     dest_iso: "{{ playbook_dir }}/files/ks-{{ install_iso }}"
+#     # Delete old configs first to avoid conflicts
+#     # delete_files:
+#     #   - "/BOOT.CFG"
+#     #   - "/EFI/BOOT/BOOT.CFG"
+#     # Inject your modified boot configs and your unique KS.CFG
+#     add_files:
+#       # - src_file: "{{ role_path }}/files/BOOT.CFG"
+#       #   dest_file: "/boot.cfg"
+#       # - src_file: "{{ role_path }}/files/BOOT.CFG"
+#       #   dest_file: "/efi/boot/boot.cfg"
+#       - src_file: "{{ role_path }}/files/{{ vm_name }}/KS.CFG"
+#         dest_file: "/ks.cfg"
+#   delegate_to: localhost
+#   register: customize_iso_result
+
+# - name: Update ISO variable for downstream tasks
+#   set_fact:
+#     install_iso: "ks-{{ install_iso }}"
+
+- name: remove old temporary workspace
+  ansible.builtin.file:   
+    path: "{{ workspace }}"
+    state: absent
+  delegate_to: localhost
+
+- name: Create local temporary workspace for ESXi payload
+  ansible.builtin.file:
+    path: "{{ workspace }}"
+    state: directory
+  delegate_to: localhost
+
+- name: Extract original VMware ISO via xorriso
+  ansible.builtin.command: >
+    xorriso -osirrox on -indev {{ playbook_dir }}/files/{{ install_iso }} 
+    -extract / {{ workspace }}
+  delegate_to: localhost
+
+- name: Fix directory permissions to make workspace writable
+  ansible.builtin.file:
+    path: "{{ workspace }}"
+    mode: "u+w"
+    recurse: yes
+  delegate_to: localhost
+
+- name: append boot.cfg with kernel options for kickstart
+  ansible.builtin.lineinfile:
+    path: "{{ workspace }}/BOOT.CFG"
+    regexp: '^kernelopt='
+    #line: "kernelopt=runweasel cdromBoot ks=cdrom:/KS.CFG"
+    # line: "kernelopt=ks=cdrom:/KS.CFG"
+    line: "kernelopt=runweasel cdromBoot ks=file:///KS.CFG"
+  delegate_to: localhost  
+
+- name: append boot.cfg with kernel options for kickstart
+  ansible.builtin.lineinfile:
+    path: "{{ workspace }}/EFI/BOOT/BOOT.CFG"
+    regexp: '^kernelopt='
+    #line: "kernelopt=runweasel cdromBoot ks=cdrom:/KS.CFG"
+    # line: "kernelopt=ks=cdrom:/KS.CFG"
+    line: "kernelopt=runweasel cdromBoot ks=file:///KS.CFG"
+  delegate_to: localhost  
+
+- name: Append ks.cfg to modules line
+  ansible.builtin.lineinfile:
+    path: "{{ workspace }}/BOOT.CFG"
+    regexp: '^(modules=.*)$'
+    line: '\1 --- /ks.tgz'
+    backrefs: true
+  delegate_to: localhost
+
+- name: Append ks.cfg to modules line
+  ansible.builtin.lineinfile:
+    path: "{{ workspace }}/EFI/BOOT/BOOT.CFG"
+    regexp: '^(modules=.*)$'
+    line: '\1 --- /ks.tgz'
+    backrefs: true
+  delegate_to: localhost
+
+- name: Inject kickstart configuration file to root directory
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/{{ vm_name }}/KS.CFG"
+    dest: "{{ workspace }}/KS.CFG"
+  delegate_to: localhost
+
+- name: tgz the ks.cfg using tar command
+  ansible.builtin.shell: |
+    cd {{ workspace }}
+    tar -czf ks.tgz KS.CFG
+  delegate_to: localhost
+
+- name: Recompile valid ESXi ISO via xorriso
+  ansible.builtin.command: >
+    xorriso -as mkisofs -relaxed-filenames -J -R
+    -o "{{ playbook_dir }}/files/{{ custom_iso }}"
+    -b ISOLINUX.BIN -c BOOT.CAT -no-emul-boot -boot-load-size 4 -boot-info-table
+    -eltorito-alt-boot -e EFIBOOT.IMG -no-emul-boot
+    {{ workspace }}/
+  delegate_to: localhost
+
+- name: Clean up local staging area
+  ansible.builtin.file:
+    path: "{{workspace}}"
+    state: absent
+  delegate_to: localhost
+
+- name: Update ISO pointer fact for subsequent installation steps
+  set_fact:
+    install_iso: "{{ custom_iso }}"
+  delegate_to: localhost

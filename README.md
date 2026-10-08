@@ -68,9 +68,9 @@ Most components can now build on PVE hosts, with the following general exception
 | Component   | VMware | Proxmox | Notes 
 |-------------|--------|---------|-------
 | centos      | YES    | YES     | 
-| windows     | YES    | YES     |
-| pfsense     | YES    | YES     |
-| ESX         | YES    | YES     | 7.x or 8.x ISO sources, 9.x only working on VMW
+| windows     | YES    | YES     | 
+| pfsense     | YES    | YES     | 
+| ESX         | YES    | YES     | 
 | Proxmox     | YES    | YES     | 
 | Ubuntu      | YES    | YES     | 
 | XCP-NG      | YES*   | NO      | *experimental: only 8.2.1 on vmware*
@@ -78,7 +78,7 @@ Most components can now build on PVE hosts, with the following general exception
 | AIQUM       | YES    | YES     | Use install_file: (aiqum installer .zip)
 | OTS Eval    | YES    | YES     | 
 | SGWS        | YES    | NO*     | PVE: Install StorageGrid on Linux
-| VCENTER     | YES    | NO*     | PVE: install nested on an ESX VM
+| VCENTER     | YES    | YES*    | PVE: requires manual ip/stage2 configuration
 | VSIM        | YES    | YES*    | PVE: HA pairs are rendered as non-ha nodes
 | OVF         | YES    | No      | Generic OVF deployment is not working on PVE
 

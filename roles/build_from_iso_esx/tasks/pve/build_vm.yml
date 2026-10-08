@@ -1,0 +1,81 @@
+- name: Create new VM 
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: present
+    name: '{{ vm_name|replace("_", "-") }}'
+    node: "{{ pve_node }}"
+    bios: seabios
+    #machine: i440fx-7.2
+    ostype: l26
+    scsihw: pvscsi
+    # boot: 'order=sata0;sata5'
+    # efidisk0:
+    #   storage: '{{ pve_datastores[vm_datastore]|default(vm_datastore) }}'
+    #   format: raw
+    #   efitype: 4m
+    #   pre_enrolled_keys: 0
+    net: "{{ networks }}"
+    #  net0: "vmxnet3,bridge={{pve_networks[vm_network].bridge }}{{ (pve_networks[vm_network].vlan is defined) | ternary(',tag=' ~ (pve_networks[vm_network].vlan | default('')), '') }}"
+    #  net1: "vmxnet3,bridge={{pve_networks[vm_network].bridge }}{{ (pve_networks[vm_network].vlan is defined) | ternary(',tag=' ~ (pve_networks[vm_network].vlan | default('')), '') }}"
+    sata:
+      sata0: "{{ (disks[0].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[0].size_gb|default(omit) , omit ) }}"
+      sata1: "{{ (disks[1].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[1].size_gb|default(omit) , omit ) }}"
+      sata2: "{{ (disks[2].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[2].size_gb|default(omit) , omit ) }}"
+      sata3: "{{ (disks[3].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[3].size_gb|default(omit) , omit ) }}"
+      sata4: "{{ (disks[4].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[4].size_gb|default(omit) , omit ) }}"
+      sata5: "{{ (disks[5].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[5].size_gb|default(omit) , omit ) }}"
+    ide: 
+      ide1: "{{iso_datastore}}:iso/{{install_iso}},media=cdrom"
+      # ide2: "{{iso_datastore}}:iso/{{config_iso}},media=cdrom"
+    cpu: host
+    cores: '{{ vm_num_cpus|int }}'
+    vcpus: '{{ vm_num_cpus|int }}'
+    memory: '{{ vm_memory_mb |int}}'
+    agent: true
+  delegate_to: localhost
+  register: create_vm
+
+- name: Start VM
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    state: started
+    name: '{{ vm_name|replace("_", "-") }}'
+  delegate_to: localhost
+  retries: 3
+  delay: 10
+  register: result
+  until: result is succeeded
+  ignore_errors: true
+  
+# - name: Wait for 4 seconds for menu
+#   wait_for: timeout=6
+#   delegate_to: localhost
+
+# - name: configure kernel options
+#   command:
+#     cmd: 'qm sendkey {{ create_vm.vmid }} {{item}}'
+#   delegate_to: temp_host
+#   loop: 
+#     - shift-o
+#     - spc
+#     - k
+#     - s
+#     - equal
+#     - c
+#     - d 
+#     - r
+#     - o
+#     - m
+#     - shift-semicolon
+#     - slash
+#     - shift-k
+#     - shift-s
+#     - dot
+#     - shift-c
+#     - shift-f
+#     - shift-g
+#     - ret

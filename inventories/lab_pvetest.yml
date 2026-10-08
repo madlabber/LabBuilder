@@ -208,18 +208,30 @@ all:
           state: force
           ip_address: 192.168.0.50
           vm_fqdn: "vcsa.lab.local"
-          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
+          #ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-9.0.0.0.24755230_OVF10.ova"
+          #ovf_file: "files/VMware-vCenter-Server-Appliance-9.1.1.0.25712839_OVF10.ova"
     esx:
       hosts:
         esx01:
+          state: force
           ip_address: 192.168.0.51
-          install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
+          #install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
+          #install_iso: "VMware-VMvisor-Installer-7.0U3n-21930508.x86_64.iso"
         esx02:
+          state: force
           ip_address: 192.168.0.52
-          install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
+          #install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
         esx03:
+          state: force
           ip_address: 192.168.0.53
-          install_iso: "VMware-VMvisor-Installer-7.0U3n-21930508.x86_64.iso"
+          disks:
+            - size_gb: 128
+              type: thin
+            - size_gb: 2600
+              type: thin
+          
+          #install_iso: "VMware-VMvisor-Installer-7.0U3n-21930508.x86_64.iso"
         
         # ESXi 6.7U3
         esx67:
@@ -232,10 +244,17 @@ all:
           install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
           vm_memory_mb: 10240
           vm_num_cpus: 2
-          disk_controller: nvme
-          vm_disk1_size_gb: 6
-          vm_disk2_size_gb: 60
-          vm_disk3_size_gb: 80
+          disks:
+            - size_gb: 128
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 0
+              type: thin
+            - size_gb: 256
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 1
+              type: thin
           create_local_vmfs: 'False'
           enable_ssh: 'True'
     proxmox:

@@ -62,7 +62,6 @@ all:
               device_type: vmxnet3
             - name: "{{ lab_lan2_portgroup }}"
               device_type: vmxnet3
-          disk_controller: nvme
           create_local_vmfs: 'False'
           enable_ssh: 'True'
           disks:
