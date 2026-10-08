@@ -44,6 +44,18 @@
   delay: 10
   until: create_vm is succeeded
 
+- name: Get VMID by Name
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    validate_certs: false
+    node: "{{ pve_node }}"
+    name: '{{ vm_name|replace("_", "-") }}'
+    state: current
+  register: create_vm
+  delegate_to: localhost
+  
 - debug: 
     msg: "VMID: {{ create_vm.vmid }}"
 

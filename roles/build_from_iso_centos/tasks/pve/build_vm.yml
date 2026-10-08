@@ -94,22 +94,23 @@
     - shift-i
     - ret
 
-- name: Wait for guest tools to start 
-  community.proxmox.proxmox_vm_info:
-    api_user: '{{ pve_username }}@pam'
-    api_password: '{{ pve_password }}'
-    api_host: '{{ pve_address }}'
-    validate_certs: false
-    node: "{{ pve_node }}"
-    type: qemu
-    name: '{{ vm_name|replace("_", "-") }}'
-    network: True
-  delegate_to: localhost
-  retries: 60
-  delay: 60
-  register: vminfo
-  until: vminfo is succeeded
-  ignore_errors: true
+- name: Wait until QEMU agent reports a valid IPv4 address
+  ansible.builtin.command: "qm guest cmd {{ create_vm.vmid }} network-get-interfaces"
+  delegate_to: temp_host
+  register: qm_output
+  changed_when: false
+  # Retry logic
+  until: >
+    qm_output.rc == 0 and 
+    (qm_output.stdout | from_json) 
+    | rejectattr('name', 'equalto', 'lo') 
+    | map(attribute='ip-addresses') 
+    | flatten 
+    | selectattr('ip-address-type', 'equalto', 'ipv4') 
+    | list 
+    | length > 0
+  retries: 60                    # Total number of attempts
+  delay: 60  
 
 - name: Wait for 60 seconds for guest to settle
   wait_for: timeout=60

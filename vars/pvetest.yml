@@ -79,4 +79,6 @@ pve_networks:
     "Cluster Network":   { "bridge": "vmbr1" }
     "lab_pvetest_net1":  { "bridge": "vmbr1", "vlan": 1001 }
     "lab_pvetest_net2":  { "bridge": "vmbr1", "vlan": 1002 }
+    "lab_test_net1":     { "bridge": "vmbr1", "vlan": 1003 }
+    "lab_test_net2":     { "bridge": "vmbr1", "vlan": 1004 }    
 

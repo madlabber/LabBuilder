@@ -75,7 +75,19 @@
   register: result
   until: result is succeeded
   ignore_errors: true
-  
+
+- name: Get VMID by Name
+  community.proxmox.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    validate_certs: false
+    node: "{{ pve_node }}"
+    name: '{{ vm_name|replace("_", "-") }}'
+    state: current
+  register: create_vm
+  delegate_to: localhost
+
 - name: Wait for 120 seconds for autoinstall confirmation prompt
   wait_for: timeout=120
   delegate_to: localhost
@@ -90,23 +102,3 @@
     - s
     - ret
 
-# - name: Wait for guest tools to start 
-#   community.proxmox.proxmox_vm_info:
-#     api_user: '{{ pve_username }}@pam'
-#     api_password: '{{ pve_password }}'
-#     api_host: '{{ pve_address }}'
-#     validate_certs: false
-#     node: "{{ pve_node }}"
-#     type: qemu
-#     name: '{{ vm_name|replace("_", "-") }}'
-#     network: True
-#   delegate_to: localhost
-#   retries: 20
-#   delay: 60
-#   register: vminfo
-#   until: vminfo is succeeded
-#   ignore_errors: true
-
-# - name: Wait for 60 seconds for guest to settle
-#   wait_for: timeout=60
-#   delegate_to: localhost
