@@ -28,6 +28,9 @@ Virtual Machine Configuration Variables:
 | vm_memory_mb  | 8192 | virtual memory in MB |
 | ethernet_ports |  | list of ports eth0-eth7 mapping each to a specific vm network |
 | disks | | list of disks to create on the VM |
+| enable_ssh | true | Enable/Disable root ssh access |
+| create_local_vmfs | false | Enable/Disable creation of default local datastore |
+
 
 
 

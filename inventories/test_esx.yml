@@ -5,11 +5,9 @@ all:
     lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
     lab_password: P@ssw0rd
-    #lab_vm_datastore: "{{ lab_name }}"
-    lab_vm_datastore: "local-lvm"
+    lab_vm_datastore: "{{ lab_name }}"
     lab_wan_portgroup: "VM Network"
-    #lab_lan1_portgroup: "{{ lab_name }}_net1"
-    lab_lan1_portgroup: "vmbr1000"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
@@ -19,20 +17,26 @@ all:
   children:       
     esx:
       hosts:
+        # Minimal example ESX host definition.
         esx01:
           ip_address: 192.168.0.51
-        esx02:
-          ip_address: 192.168.0.52
           install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
-        esx03:
-          ip_address: 192.168.0.53
-          install_iso: "VMware-VMvisor-Installer-7.0U3n-21930508.x86_64.iso"
-        # esx04:
-        #   ip_address: 192.168.0.54
-      vars:
-          install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
-          vm_memory_mb: 10240
+          vm_memory_mb: 16384
           vm_num_cpus: 2
+          vm_disk_gb: 32
+
+        # Detailed example ESX host definition with additional variables.
+        esx02:
+          state: force
+          ip_address: 192.168.0.52
+          install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
+          vm_memory_mb: 16384
+          vm_num_cpus: 2
+          ethernet_ports:
+            eth0: "{{ lab_lan1_portgroup }}"
+            eth1: "{{ lab_lan1_portgroup }}"
+            eth2: "{{ lab_lan2_portgroup }}"
+            eth3: "{{ lab_lan2_portgroup }}"
           disks:
             - size_gb: 128
               controller_type: 'nvme'
@@ -44,6 +48,15 @@ all:
               controller_number: 0
               unit_number: 1
               type: thin
+          create_local_vmfs: 'False'
+          enable_ssh: 'True'
+        esx03:
+          ip_address: 192.168.0.53
+        # common vars are defined here, but can be overridden in the host definition above
+      vars:
+          install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
+          vm_memory_mb: 10240
+          vm_num_cpus: 2
           create_local_vmfs: 'False'
           enable_ssh: 'True'
 
