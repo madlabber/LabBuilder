@@ -225,6 +225,11 @@ all:
         esx03:
           state: force
           ip_address: 192.168.0.53
+          ethernet_ports:
+            eth0: "{{ lab_lan1_portgroup }}"
+            eth1: "{{ lab_lan1_portgroup }}"
+            eth2: "{{ lab_lan2_portgroup }}"
+            eth3: "{{ lab_lan2_portgroup }}"
           disks:
             - size_gb: 128
               type: thin

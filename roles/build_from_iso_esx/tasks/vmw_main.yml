@@ -13,6 +13,10 @@
   include_tasks: vmw/process_vars.yml
   when: state == "present" or state == "force"
 
+- name: parse networks
+  include_tasks: vmw/parse_networks.yml
+  when: state == "present" or state == "force"
+
 # - name: modify install iso
 #   include_tasks: modify_iso.yml
 #   when: state == "present" or state == "force"
