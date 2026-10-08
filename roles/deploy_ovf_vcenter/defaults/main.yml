@@ -251,100 +251,95 @@ deployment_options:
       disks:
         - { index: 2, size: 25 }
         - { index: 3, size: 25 }
-        - { index: 4, size: 15 }
-        - { index: 5, size: 15 }
-        - { index: 6, size: 20 }
-        - { index: 7, size: 15 }
+        - { index: 4, size: 50 }
+        - { index: 5, size: 10 }
+        - { index: 6, size: 15 }
+        - { index: 7, size: 10 }
         - { index: 8, size: 1 }
-        - { index: 9, size: 15 }
-        - { index: 10, size: 15 }
-        - { index: 11, size: 110 }
-        - { index: 12, size: 55 }
-        - { index: 13, size: 15 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 10 }
         - { index: 14, size: 5 }
-        - { index: 15, size: 110 }
-        - { index: 16, size: 165 }
-        - { index: 17, size: 50 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 150 }
     small:
       cpu: 4
       ram_gb: 21
       disks:
         - { index: 2, size: 25 }
-        - { index: 3, size: 25 }
-        - { index: 4, size: 15 }
-        - { index: 5, size: 15 }
-        - { index: 6, size: 20 }
-        - { index: 7, size: 110 }
+        - { index: 3, size: 50 }
+        - { index: 4, size: 50 }
+        - { index: 5, size: 10 }
+        - { index: 6, size: 15 }
+        - { index: 7, size: 25 }
         - { index: 8, size: 1 }
-        - { index: 9, size: 15 }
-        - { index: 10, size: 15 }
-        - { index: 11, size: 110 }
-        - { index: 12, size: 55 }
-        - { index: 13, size: 15 }
-        - { index: 14, size: 5 }
-        - { index: 15, size: 110 }
-        - { index: 16, size: 165 }
-        - { index: 17, size: 50 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 25 }
+        - { index: 14, size: 15 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 200 }
     medium:
       cpu: 8
       ram_gb: 30
       disks:
-        - { index: 2, size: 25 }
-        - { index: 3, size: 25 }
-        - { index: 4, size: 20 }
-        - { index: 5, size: 30 }
-        - { index: 6, size: 35 }
-        - { index: 7, size: 250 }
-        - { index: 8, size: 1 }
-        - { index: 9, size: 15 }
-        - { index: 10, size: 15 }
-        - { index: 11, size: 110 }
-        - { index: 12, size: 55 }
-        - { index: 13, size: 15 }
-        - { index: 14, size: 5 }
-        - { index: 15, size: 110 }
-        - { index: 16, size: 265 }
-        - { index: 17, size: 75 }
+        - { index: 2, size: 50 }
+        - { index: 3, size: 50 }
+        - { index: 4, size: 50 }
+        - { index: 5, size: 25 }
+        - { index: 6, size: 25 }
+        - { index: 7, size: 50 }
+        - { index: 8, size: 10 }
+        - { index: 9, size: 25 }
+        - { index: 10, size: 25 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 100 }
+        - { index: 13, size: 50 }
+        - { index: 14, size: 25 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 200 }
     large:
       cpu: 16
       ram_gb: 39
       disks:
-        - { index: 2, size: 25 }
-        - { index: 3, size: 25 }
-        - { index: 4, size: 25 }
-        - { index: 5, size: 60 }
-        - { index: 6, size: 40 }
-        - { index: 7, size: 550 }
-        - { index: 8, size: 1 }
-        - { index: 9, size: 15 }
-        - { index: 10, size: 15 }
-        - { index: 11, size: 110 }
-        - { index: 12, size: 55 }
-        - { index: 13, size: 20 }
-        - { index: 14, size: 5 }
-        - { index: 15, size: 110 }
-        - { index: 16, size: 365 }
-        - { index: 17, size: 100 }
+        - { index: 2, size: 50 }
+        - { index: 3, size: 100 }
+        - { index: 4, size: 50 }
+        - { index: 5, size: 25 }
+        - { index: 6, size: 25 }
+        - { index: 7, size: 200 }
+        - { index: 8, size: 10 }
+        - { index: 9, size: 25 }
+        - { index: 10, size: 25 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 100 }
+        - { index: 13, size: 50 }
+        - { index: 14, size: 25 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 300 }
     x-large:
       cpu: 24
-      ram_gb: 56
+      ram_gb: 58
       disks:
-        - { index: 2, size: 25 }
-        - { index: 3, size: 25 }
-        - { index: 4, size: 30 }
-        - { index: 5, size: 120 }
-        - { index: 6, size: 60 }
-        - { index: 7, size: 1050 }
-        - { index: 8, size: 1 }
-        - { index: 9, size: 15 }
-        - { index: 10, size: 15 }
-        - { index: 11, size: 110 }
-        - { index: 12, size: 55 }
-        - { index: 13, size: 30 }
-        - { index: 14, size: 10 }
-        - { index: 15, size: 110 }
-        - { index: 16, size: 615 }
-        - { index: 17, size: 150 }
+        - { index: 2, size: 50 }
+        - { index: 3, size: 100 }
+        - { index: 4, size: 50 }
+        - { index: 5, size: 50 }
+        - { index: 6, size: 25 }
+        - { index: 7, size: 500 }
+        - { index: 8, size: 10 }
+        - { index: 9, size: 25 }
+        - { index: 10, size: 25 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 200 }
+        - { index: 13, size: 500 }
+        - { index: 14, size: 25 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 500 }
 
   # ================= vCENTER 9.1 Footprints =================
   "9.1":
@@ -354,97 +349,92 @@ deployment_options:
       disks:
         - { index: 2, size: 25 }
         - { index: 3, size: 25 }
-        - { index: 4, size: 15 }
-        - { index: 5, size: 15 }
-        - { index: 6, size: 20 }
-        - { index: 7, size: 15 }
+        - { index: 4, size: 50 }
+        - { index: 5, size: 10 }
+        - { index: 6, size: 15 }
+        - { index: 7, size: 10 }
         - { index: 8, size: 1 }
-        - { index: 9, size: 15 }
-        - { index: 10, size: 15 }
-        - { index: 11, size: 110 }
-        - { index: 12, size: 55 }
-        - { index: 13, size: 15 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 10 }
         - { index: 14, size: 5 }
-        - { index: 15, size: 110 }
-        - { index: 16, size: 165 }
-        - { index: 17, size: 50 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 150 }
     small:
       cpu: 4
       ram_gb: 21
       disks:
         - { index: 2, size: 25 }
-        - { index: 3, size: 25 }
-        - { index: 4, size: 15 }
-        - { index: 5, size: 15 }
-        - { index: 6, size: 20 }
-        - { index: 7, size: 110 }
+        - { index: 3, size: 50 }
+        - { index: 4, size: 50 }
+        - { index: 5, size: 10 }
+        - { index: 6, size: 15 }
+        - { index: 7, size: 25 }
         - { index: 8, size: 1 }
-        - { index: 9, size: 15 }
-        - { index: 10, size: 15 }
-        - { index: 11, size: 110 }
-        - { index: 12, size: 55 }
-        - { index: 13, size: 15 }   
-        - { index: 14, size: 5 }
-        - { index: 15, size: 110 }
-        - { index: 16, size: 165 }
-        - { index: 17, size: 50 }
+        - { index: 9, size: 10 }
+        - { index: 10, size: 10 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 50 }
+        - { index: 13, size: 25 }
+        - { index: 14, size: 15 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 200 }
     medium:
       cpu: 8
       ram_gb: 30
       disks:
-        - { index: 2, size: 25 }
-        - { index: 3, size: 25 }
-        - { index: 4, size: 20 }
-        - { index: 5, size: 30 }
-        - { index: 6, size: 35 }
-        - { index: 7, size: 250 }
-        - { index: 8, size: 1 }
-        - { index: 9, size: 15 }
-        - { index: 10, size: 15 }
-        - { index: 11, size: 110 }
-        - { index: 12, size: 55 }
-        - { index: 13, size: 15 }
-        - { index: 14, size: 5 }
-        - { index: 15, size: 110 }
-        - { index: 16, size: 265 }
-        - { index: 17, size: 75 }
+        - { index: 2, size: 50 }
+        - { index: 3, size: 50 }
+        - { index: 4, size: 50 }
+        - { index: 5, size: 25 }
+        - { index: 6, size: 25 }
+        - { index: 7, size: 50 }
+        - { index: 8, size: 10 }
+        - { index: 9, size: 25 }
+        - { index: 10, size: 25 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 100 }
+        - { index: 13, size: 50 }
+        - { index: 14, size: 25 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 200 }
     large:
       cpu: 16
       ram_gb: 39
       disks:
-        - { index: 2, size: 25 }
-        - { index: 3, size: 25 }
-        - { index: 4, size: 25 }
-        - { index: 5, size: 60 }
-        - { index: 6, size: 40 }
-        - { index: 7, size: 550 }
-        - { index: 8, size: 1 }
-        - { index: 9, size: 15 }
-        - { index: 10, size: 15 }
-        - { index: 11, size: 110 }
-        - { index: 12, size: 55 }
-        - { index: 13, size: 20 }
-        - { index: 14, size: 5 }
-        - { index: 15, size: 110 }
-        - { index: 16, size: 365 }
-        - { index: 17, size: 100 }
+        - { index: 2, size: 50 }
+        - { index: 3, size: 100 }
+        - { index: 4, size: 50 }
+        - { index: 5, size: 25 }
+        - { index: 6, size: 25 }
+        - { index: 7, size: 200 }
+        - { index: 8, size: 10 }
+        - { index: 9, size: 25 }
+        - { index: 10, size: 25 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 100 }
+        - { index: 13, size: 50 }
+        - { index: 14, size: 25 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 300 }
     x-large:
       cpu: 24
-      ram_gb: 56
+      ram_gb: 58
       disks:
-        - { index: 2, size: 25 }
-        - { index: 3, size: 25 }
-        - { index: 4, size: 30 }
-        - { index: 5, size: 120 }
-        - { index: 6, size: 60 }
-        - { index: 7, size: 1050 }
-        - { index: 8, size: 1 }
-        - { index: 9, size: 15 }
-        - { index: 10, size: 15 }
-        - { index: 11, size: 110 }
-        - { index: 12, size: 55 }
-        - { index: 13, size: 30 }
-        - { index: 14, size: 10 }
-        - { index: 15, size: 110 }
-        - { index: 16, size: 615 }
-        - { index: 17, size: 150 }
+        - { index: 2, size: 50 }
+        - { index: 3, size: 100 }
+        - { index: 4, size: 50 }
+        - { index: 5, size: 50 }
+        - { index: 6, size: 25 }
+        - { index: 7, size: 500 }
+        - { index: 8, size: 10 }
+        - { index: 9, size: 25 }
+        - { index: 10, size: 25 }
+        - { index: 11, size: 100 }
+        - { index: 12, size: 200 }
+        - { index: 13, size: 500 }
+        - { index: 14, size: 25 }
+        - { index: 15, size: 100 }
+        - { index: 16, size: 500 }
