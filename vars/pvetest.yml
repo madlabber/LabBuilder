@@ -29,14 +29,14 @@ vm_network: "vmbr0"
 # vlan_count: 1000
 
 # ONTAP vars required to build lab pod datastores
-# ontap_address: "192.168.123.10"
-# ontap_password: "P@ssw0rd"
-# ontap_svm_name: "svm33"
-# ontap_svm_address: "192.168.122.33"
-# ontap_svm_lif: "svm33_nfs_33"
-# ontap_vol_labs: "Labs"
-# ontap_vol_size_gb: 500
-# ontap_aggregate: "ots10_01_SSD_1"
+ontap_address: "192.168.123.10"
+ontap_password: "P@ssw0rd"
+ontap_svm_name: "svm33"
+ontap_svm_address: "192.168.122.33"
+ontap_svm_lif: "svm33_nfs_33"
+ontap_vol_labs: "Labs"
+ontap_vol_size_gb: 500
+ontap_aggregate: "ots10_01_SSD_1"
 
 # Network substitutions
 # PVE has a very short limit on bridge names
@@ -63,7 +63,6 @@ network_vlan_table: {
 
 # This table maps lab datastores to proxmox datastores
 pve_datastores:
-  "lab_test":        'local-lvm1'
   "lab_test2":       'local-lvm1'
   "lab_vlan126":     'local-lvm1'
   "lab_ansible_v2a": 'local-lvm1'

@@ -8,6 +8,12 @@ files/.DS_Store
 files/*.tgz
 files/*.gz
 files/*.iso
+files/*.vmdk
+files/*.ovf
+files/*.mf
+files/*.json
+files/*.rpm
+files/*.cert
 files/CentOS8/.DS_Store
 .DS_Store
 *.vib

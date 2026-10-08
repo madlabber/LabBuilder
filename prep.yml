@@ -6,14 +6,50 @@
     - defaults/main.yml
     - "{{ mainvars }}"
   tasks:
-  #- include_vars: "{{ mainvars }}"
+  - name: set vmw vars
+    set_fact:
+      host_type: "vmw"
+    when:
+      - vcenter_address|default('') ~ esxi_address|default('') != ''
+
+  - name: set pve vars
+    set_fact:
+      host_type: "pve"
+      pve_vm_datastore: "{{ pve_datastores[vm_datastore]|default(lab_vm_datastore) }}"
+    when:
+      - pve_address|default('') != ''    
+
   - debug:
       msg:
+      - "host_type:          {{ host_type }}"
       - "vcenter_address:    {{ vcenter_address|default(esxi_address) }}"
+      - "esxi_address:       {{ esxi_address|default('') }}"
       - "lab name:           {{ lab_name|default('') }}"
       - "lab_vm_datastore:   {{ lab_vm_datastore|default('') }}"
       - "lab_lan1_portgroup: {{ lab_lan1_portgroup|default('') }}"
       - "lab_lan2_portgroup: {{ lab_lan2_portgroup|default('') }}"
+    when: host_type == 'vmw'
+
+  - debug:
+      msg:
+      - "host_type:          {{ host_type }}"
+      - "pve_address:        {{ pve_address|default('') }}"
+      - "lab name:           {{ lab_name|default('') }}"
+      - "pve_vm_datastore:   {{ pve_vm_datastore|default('') }}"
+      - "lab_lan1_portgroup: {{ lab_lan1_portgroup|default('') }}"
+      - "lab_lan2_portgroup: {{ lab_lan2_portgroup|default('') }}"
+    when: host_type == 'pve'
+
+  - name: Add PVE Host to Dynamic Inventory
+    add_host:
+      hostname: temp_host
+      group: "temp_hosts"
+      ansible_host: '{{ pve_address }}'
+      ansible_user: '{{ pve_username }}'
+      ansible_password: '{{ pve_password }}'
+      ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+    when: 
+      - host_type == 'pve'
 
   - name: Get Portgroup info
     community.vmware.vmware_portgroup_info:
@@ -24,6 +60,7 @@
       cluster_name: "{{ vcenter_cluster|default('') }}"
     delegate_to: localhost
     register: portgroupinfo
+    when: host_type == 'vmw'
 
   - name: get used vlans
     set_fact:
@@ -31,9 +68,12 @@
       used_vlans: "{{ portgroupinfo.hosts_portgroup_info[portgroupinfo.hosts_portgroup_info|first] |
                selectattr('vswitch', 'eq', esxi_vswitch) |
                map(attribute='vlan_id') }}"
+    when: host_type == 'vmw'
+
   - name: get unused vlans
     set_fact:
       unused_vlans: "{{ all_vlans | difference(used_vlans) | sort }}"
+    when: host_type == 'vmw'
 
   - name: VM Portgroup to all hosts in a cluster
     community.vmware.vmware_portgroup:
@@ -46,8 +86,9 @@
       portgroup: "{{ lab_lan1_portgroup }}"
       vlan_id: "{{ unused_vlans[0] }}"
     delegate_to: localhost
-    when: lab_lan1_portgroup|default('') != ""
-
+    when: 
+     - host_type == 'vmw'
+     - lab_lan1_portgroup|default('') != ""
 
   - name: VM Portgroup to all hosts in a cluster
     community.vmware.vmware_portgroup:
@@ -60,7 +101,9 @@
       portgroup: "{{ lab_lan2_portgroup }}"
       vlan_id: "{{ unused_vlans[1] }}"
     delegate_to: localhost
-    when: lab_lan2_portgroup|default('') != ""
+    when: 
+     - host_type == 'vmw'
+     - lab_lan2_portgroup|default('') != ""
 
   - name: Create Lab Volume
     na_ontap_volume:
@@ -97,7 +140,27 @@
     delegate_to: localhost
     with_items: "{{cluster_hosts}}"
     when: 
+      - host_type == 'vmw'
       - ontap_address|default('') != ""
+
+# Handle PVE lab datastore creation
+  - name: Create Lab Datastore
+    community.proxmox.proxmox_storage:
+      api_user: '{{ pve_username }}@pam'
+      api_password: '{{ pve_password }}'
+      api_host: '{{ pve_address }}'
+      validate_certs: false
+      name: "{{pve_vm_datastore}}"
+      type: nfs
+      nfs_options:  
+        server: "{{ ontap_svm_address }}"
+        export: "/{{ ontap_vol_labs }}/{{ pve_vm_datastore }}"
+    when: host_type == 'pve'  
+
+# Create pve bridge with no uplinks if require
+  # - name: Create bridge on proxmox if required
+  #   community.proxmox.proxmox:
+      
 
 
 

@@ -3,6 +3,7 @@
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
+    validate_certs: false
     state: present
     name: '{{ loop_vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
@@ -89,6 +90,7 @@
 #     api_user: '{{ pve_username }}@pam'
 #     api_password: '{{ pve_password }}'
 #     api_host: '{{ pve_address }}'
+#     validate_certs: false
 #     vmid: "{{ create_vm.vmid }}"
 #     # name: '{{ loop_vm_name|replace("_", "-") }}'
 #     disk: ide3
@@ -116,6 +118,7 @@
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
+    validate_certs: false
     vmid: "{{ create_vm.vmid }}"
     interface: "net{{vm_num_nics|int -1}}"
     model: "e1000"
@@ -134,6 +137,7 @@
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
+    validate_certs: false
     vmid: "{{ create_vm.vmid }}"
     interface: "net{{vm_num_nics|int -1}}"
     model: "e1000"

@@ -3,6 +3,7 @@
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
+    validate_certs: false
     state: present
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
@@ -31,6 +32,7 @@
     api_user: '{{ pve_username }}@pam'
     api_password: '{{ pve_password }}'
     api_host: '{{ pve_address }}'
+    validate_certs: false
     state: present
     name: '{{ partner_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
