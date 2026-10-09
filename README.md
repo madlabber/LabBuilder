@@ -18,25 +18,57 @@ test_ - playbooks that demonstrate how to use the tasks
 
 
 # requirements
-ansible 2.14
+ansible 2.17+
 ansible-galaxy collections:
 - community.vmware
 - community.general
 - netapp.ontap
+- community.proxmox
 
 python libraries
 - pyvmomi
 - pycdlib
 - pywinrm
 - netapp-lib
+- proxmoxer
 
 ESXi host(s)
 vCenter Server
 
+# Setup
+1. Install ansible, then execute the install-requirements.yml playbook:
+    ``` 
+    ansible-playbook install-requirements.yml 
+    ```
+2. Configure your virtualization hosting environment variables in the main vars file:
+    ```
+    vars/main.yml
+    ```
+3. Add the ISOs and OVAs for components you intend to deploy to the files folder on the ansible controller
+
+4. Select or customize a lab blueprint from the inventories folder
+
+5. Run the prep.yml playbook to provision any required networking and storage defined in the blueprint
+    ```
+    ansible-playbook prep.yml -i inventories/lab_template.yml
+    ```
+6. Run the main.yml playbook to build the lab environment as defined in the blueprint
+    ```
+    ansible-playbook main.yml -i inventories/lab_template.yml
+    ```
+
+
+
 # using alternate main vars
 The default vars related to the lab hosting infrastructure are read from vars/main.yml
-To load an alternate configuration, store an alternate set of vars in vars/\<altconfig\>.yml and load it at runtime with
- - -e mainvars=\<altconfig\>.yml
+To load an alternate configuration, store an alternate set of vars in vars/\<altconfig\>.yml and load it at runtime with:
+    
+     - -e mainvars=\<altconfig\>.yml
+
+To make this persistent, update this entry in defaults/main.yml:
+    
+    mainvars: vars/main.yml
+
 
 # Adding ISO and OVA files
 The various VM build roles require installation media or OVA files.  In some cases these can be downloaded on demand, in other cases they need to be added to the files folder. 

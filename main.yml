@@ -8,7 +8,6 @@
 #         - "{{inventory_hostname}}.{{lab_domain_name}}"
 #         - "{{ip_address|default('')}}"
 
-#   # ---
 - name: Build pfSense VMs
   hosts: pfsense
   gather_facts: false
