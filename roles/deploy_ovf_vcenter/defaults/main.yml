@@ -43,6 +43,10 @@ vm_autoconfig: 'True'
 vm_enable_ssh: 'True'
 
 vcenter_address: ""
+vcenter_username:
+vcenter_password:
+vcenter_datacenter:
+vcenter_cluster:
 esxi_address: ""
 pve_address: ""
 

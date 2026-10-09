@@ -17,5 +17,6 @@ vm_password:     "P@ssw0rd"
 
 state: present
 vcenter_address: ""
+vcenter_cluster: ""
 esxi_address: ""
 pve_address: ""

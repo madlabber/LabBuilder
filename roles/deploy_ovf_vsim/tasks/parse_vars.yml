@@ -22,8 +22,6 @@
     host_type: "pve"
     checksum_type: "zoned"
     pve_datastore: "{{ pve_datastores[vm_datastore]|default(vm_datastore) }}"
-    pve_data_network: "{{ network_substitutions[data_network]|default(data_network) }}"
-    pve_cluster_network: "{{ network_substitutions[cluster_network]|default(cluster_network) }}"
   when:
     - pve_address != ''    
 
@@ -80,30 +78,3 @@
     - vm_num_nics|int <= 5
     - partner_name|default("") != ""
     - host_type == "pve"
-
-# - set_fact:
-#     ethernet_ports:
-#       e0a: "VM Network"
-#       e0b: "VM Network"
-#       e0c: "Cluster Network"
-#       e0d: "Cluster Network"
-
-# - set_fact:
-#     ethernet_ports:
-#       e0e: "VM Network"
-
-# - debug:
-#     msg:
-#       - "count: {{ ethernet_ports| length }}"
-#       - "e0a: {{ network_substitutions[ethernet_ports.e0a|default(cluster_network)] }}"
-#       - "e0b: {{ network_substitutions[ethernet_ports.e0b|default(cluster_network)] }}"
-#       - "e0c: {{ network_substitutions[ethernet_ports.e0c|default(data_network)] }}"  
-#       - "e0d: {{ network_substitutions[ethernet_ports.e0d|default(data_network)] }}" 
-#       - "e0e: {{ network_substitutions[ethernet_ports.e0e|default('')]|default('') }}"          
-#       - "e0f: {{ network_substitutions[ethernet_ports.e0f|default('')]|default('') }}" 
-#       - "e0g: {{ network_substitutions[ethernet_ports.e0g|default('')]|default('') }}" 
-#       - "e0h: {{ network_substitutions[ethernet_ports.e0h|default('')]|default('') }}"   
-          
-# - debug:
-#     msg:
-#       - "break: {{break}}"

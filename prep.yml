@@ -141,6 +141,7 @@
     with_items: "{{cluster_hosts}}"
     when: 
       - host_type == 'vmw'
+      - esxi_hostname|default('') != ""
       - ontap_address|default('') != ""
 
 # Handle PVE lab datastore creation

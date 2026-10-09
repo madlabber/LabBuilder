@@ -27,14 +27,16 @@ add_nodes_delay: 60       # seconds to wait between cluster setup and adding nod
 # vcenter_cluster: "Cluster"
 # vm_datastore: "datastore1"
 vcenter_address: ""
+vcenter_username:
+vcenter_password:
+vcenter_datacenter:
+vcenter_cluster:
 
 # ESX variables:
 esxi_address: ""
 
 # Proxmox Variables
 pve_address: ""
-pve_data_network: ""
-pve_cluster_network: ""
 
 # Virtual Machine configuration
 vm_name:         "SimulateONTAP"

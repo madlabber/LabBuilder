@@ -1,52 +1,84 @@
-# If there is no vcenter, use the esxi host crendentials
-# to complete the vcenter variables
-vcenter_address: 192.168.123.48
-vcenter_username: root
+## ==============================================================
+## This configuration file defines the virtualization environment
+## which will host lab VMs constructed by labbuilder.
+## ==============================================================
+
+## For vCenter managed VMware environments complete this section
+## ---------------------------------------------------------------
+vcenter_address: vc1.lab.madlabber.com
+vcenter_username: administrator@vsphere.local
 vcenter_password: P@ssw0rd
-
-# # If there is no vcenter, use 'ha-datacenter'
-vcenter_datacenter: 'ha-datacenter'
-
-# Default cluster for new VM provisioning
-# if there is no cluster set it to ""
-vcenter_cluster: ""
+vcenter_datacenter: 'Datacenter'
+vcenter_cluster: "hlod"
 cluster_hosts:
-  - 192.168.123.48
+  - esx48.lab.madlabber.com
+# - esx49.lab.madlabber.com  
 
-# Credentials for a host with access to the datastore
-# Used when ISOs are missing from the ISO datastore
+## For all VMware based environments, complete this section 
+## -------------------------------------------------------------
+## Designate a primary host for provisioning and delegation:
+## If this host is managed by vcenter the hostname must match the inventory name
+esxi_hostname: "esx48.lab.madlabber.com"
 esxi_address: 192.168.123.48
 esxi_username: root
 esxi_password: P@ssw0rd
 
-# If there is a vcenter, this must match the host's name in vcenter inventory
-# if there is no vcenter, the name can be the IP address
-esxi_hostname: "192.168.123.48"
-
-# Default datastore for new VMs
+## Default datastore for new VMs
 vm_datastore: "AdminVMs"
 
-# Default datastore for ISO files
+## Default datastore for ISO files
 iso_datastore: "ISOs"
 
-# Default portgroup for new VMs
-vm_network: "VM Network"
-
-# Default vswitch for new portgroups
+## Default vswitch for new portgroups
 esxi_vswitch: "vSwitch1"
 
-# uncomment to test ESX target mode
-# vcenter_address: 192.168.123.48
-# vcenter_username: root
-# vcenter_password: P@ssw0rd
-# vcenter_datacenter: 'ha-datacenter'
-# vcenter_cluster: ""
-
-# VLAN Pool for building lab pod portgroups
+## VLAN Pool for building lab pod portgroups
 vlan_start: 1000
 vlan_count: 1000
 
-# ONTAP vars required to build lab pod datastores
+## For Proxmox environments, complete this section:
+## --------------------------------------------------------------
+## This section defines the proxmox node for provisioning operations:
+# pve_node: pve51
+# pve_address: 192.168.123.51
+# pve_username: root
+# pve_password: P@ssw0rd
+
+## Default storage for new VMs:
+# vm_datastore: "local-lvm"
+
+## Default datastore for ISO files:
+# iso_datastore: "local"
+# iso_path: /var/lib/vz/template/iso
+
+## Default bridge for new VMs
+# vm_network: "vmbr0"
+
+## VLAN Pool for building lab pod portgroups
+# vlan_start: 1000
+# vlan_count: 1000
+
+## This table maps portgroup names to proxmox bridge and vlan
+# pve_networks:
+#     "vmbr0":             { "bridge": "vmbr0" }
+#     "vmbr1":             { "bridge": "vmbr1" }
+#     "VM Network":        { "bridge": "vmbr0" }
+#     "lab_test_net1":     { "bridge": "vmbr1", "vlan": 1001 }
+#     "lab_test_net2":     { "bridge": "vmbr1", "vlan": 1002 }   
+
+## This table maps lab datastores to proxmox datastores
+# pve_datastores:
+#   "lab_test2":       'local-lvm1'
+#   "lab_vlan126":     'local-lvm1'
+#   "lab_ansible_v2a": 'local-lvm1'
+#   "lab_proxmox84":   'local-lvm1'
+
+## -------------------------------------------------
+## This section defines the storage environment
+## Only define this section is the back end storage
+## is a NetApp ONTAP based system
+## -------------------------------------------------
+## ONTAP vars required to build lab datastores
 ontap_address: "192.168.123.10"
 ontap_password: "P@ssw0rd"
 ontap_svm_name: "svm33"

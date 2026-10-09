@@ -38,29 +38,6 @@ ontap_vol_labs: "Labs"
 ontap_vol_size_gb: 500
 ontap_aggregate: "ots10_01_SSD_1"
 
-# Network substitutions
-# PVE has a very short limit on bridge names
-# This table maps VMW portgroup names to corresponding linux bridge names
-network_substitutions: {
-  'vm_network'    : 'vmbr0',
-  'VM Network' : 'vmbr0',
-  'Cluster Network' : 'vmbr1',
-  'lab_test_net1' : 'vmbr1',
-  'lab_test_net2' : 'vmbr1',
-  'VLAN126'       : 'vlan126',
-  'lab_proxmox84_net1' : 'vmbr1',
-  'lab_proxmox84_net2' : 'vmbr1',
-  'lab_ansible_v2a_net1' : 'vmbr1',
-  'lab_vlan126_net2' : 'vmbr2126',
-  'VLAN121' : 'vlan121',
-  'lab_pvetest_net1' : 'vmbr1',
-  'lab_pvetest_net2' : 'vmbr1'
-}
-
-network_vlan_table: {
-  'lab_pvetest_net1' : 1001
-}
-
 # This table maps lab datastores to proxmox datastores
 pve_datastores:
   "lab_test2":       'local-lvm1'

@@ -29,6 +29,7 @@ iso_path: /var/lib/vz/template/iso
 pve_address: ""
 esxi_address: ""
 vcenter_address: ""
+vcenter_cluster:
 
 # vm defaults
 vm_address:

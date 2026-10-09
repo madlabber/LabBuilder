@@ -144,7 +144,7 @@ vm_num_nics: 1
 default_disks:
   - size_gb: '{{ vm_disk_gb }}'
     type: thin
-    
+
 network_device_type: "e1000"
 default_networks:
   - name: "{{ vm_network }}"
@@ -158,7 +158,7 @@ vcenter_address: ""
 vcenter_username:
 vcenter_password:
 vcenter_datacenter:
-vcenter_cluster:
+vcenter_cluster: 
 esxi_address: ""
 pve_node:
 pve_address: ""

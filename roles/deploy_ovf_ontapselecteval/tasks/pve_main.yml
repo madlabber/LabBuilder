@@ -22,7 +22,6 @@
 - name: pve substitutions
   set_fact:
     pve_datastore: "{{ pve_datastores[vm_datastore]|default(vm_datastore) }}"
-#    pve_cluster_network: "{{ network_substitutions[cluster_network]|default(cluster_network) }}"
 
 # locate OVF File
 - name: locate ovf file - {{ovf_file}}

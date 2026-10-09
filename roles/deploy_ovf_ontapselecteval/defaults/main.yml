@@ -53,9 +53,13 @@ vm_disk_provisioning: "thin"
 vm_data_disk_gb: "500"
 
 # blank host addresses
-vcenter_address: ""
 esxi_address: ""
 pve_address: ""
+vcenter_address: ""
+vcenter_username:
+vcenter_password:
+vcenter_datacenter:
+vcenter_cluster:
 
 # Network
 vm_network: "VM Network"
