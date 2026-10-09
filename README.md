@@ -32,10 +32,65 @@ python libraries
 - netapp-lib
 - proxmoxer
 
+Additional packages:
+- mtools
+- qemu-img /
+  qemu-utils
+- xorriso
+
 ESXi host(s)
 vCenter Server
 
-# Setup
+# Usage 
+## Using make
+1. Install ansible, then make install:
+    ``` 
+    make install 
+    ```
+2. Configure your virtualization hosting environment variables in the main vars file:
+    ```
+    make configure
+    ```
+3. Add the ISOs and OVAs for components you intend to deploy to the files folder on the ansible controller
+
+4. Select or customize a lab blueprint from the inventories folder, i.e. lab_test.yml
+
+5. Prepare the environment to host the lab blueprint
+    ```
+    make prep lab_test
+    ```
+6. Build the lab blueprint
+    ```
+    make lab_test
+    ```
+### using an alternate config
+You can use alternate config files to target different hosting environments.  For example you may have one environment hosted on VMware, and another environment hosted on Proxmox.
+
+1. create the config file using the main config as a reference
+   ```
+   cp vars/main.yml vars/altconfig.yml
+   make configure altconfig
+   ```
+2. use the alternate config in the make commands
+   ```
+   make prep lab_test config:altconfig
+   make lab_test config:altconfig
+
+### Building a portion of a blueprint
+You may want to only build a portion of a blueprint, as shown in these examples:
+```
+make lab_test -- -l server01
+make lab_test config:altconfig -- -l server02,router01
+```
+everything after the -- is forwarded to ansible-playbook as cli parameters.
+
+### Printing the inventory graph of a blueprint
+You may print a list of VMs included in a blueprint using make graph:
+```
+make graph lab_test
+```
+
+## Using ansible-playbook
 1. Install ansible, then execute the install-requirements.yml playbook:
     ``` 
     ansible-playbook install-requirements.yml 
@@ -57,9 +112,7 @@ vCenter Server
     ansible-playbook main.yml -i inventories/lab_template.yml
     ```
 
-
-
-# using alternate main vars
+### using alternate main vars with ansible-playbook
 The default vars related to the lab hosting infrastructure are read from vars/main.yml
 To load an alternate configuration, store an alternate set of vars in vars/\<altconfig\>.yml and load it at runtime with:
     
