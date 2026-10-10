@@ -1,12 +1,13 @@
 ---
-# - name: print vars
-#   hosts: all
-#   gather_facts: false
-#   tasks:
-#   - debug:
-#       msg:
-#         - "{{inventory_hostname}}.{{lab_domain_name}}"
-#         - "{{ip_address|default('')}}"
+- name: print vars
+  hosts: all
+  gather_facts: false
+  tasks:
+  - debug:
+      msg:
+        - "lab_vm_datastore: {{ lab_vm_datastore }}"
+        - "{{inventory_hostname}}.{{lab_domain_name}}"
+        - "{{ip_address|default('')}}"
 
 - name: Build pfSense VMs
   hosts: pfsense

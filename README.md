@@ -61,7 +61,7 @@ vCenter Server
     ```
 6. Build the lab blueprint
     ```
-    make lab_test
+    make lab lab_test
     ```
 ### using an alternate config
 You can use alternate config files to target different hosting environments.  For example you may have one environment hosted on VMware, and another environment hosted on Proxmox.
@@ -69,20 +69,26 @@ You can use alternate config files to target different hosting environments.  Fo
 1. create the config file using the main config as a reference
    ```
    cp vars/main.yml vars/altconfig.yml
-   make configure altconfig
+   make configure config=altconfig
    ```
 2. use the alternate config in the make commands
    ```
    make prep lab_test config:altconfig
-   make lab_test config:altconfig
+   make lab lab_test config=altconfig
 
 ### Building a portion of a blueprint
-You may want to only build a portion of a blueprint, as shown in these examples:
+You may want to limit the built only a portion of a blueprint, as shown in these examples:
 ```
-make lab_test -- -l server01
-make lab_test config:altconfig -- -l server02,router01
+make lab_test limit=server01
+make lab_test config=altconfig limit=server02,router01
 ```
 everything after the -- is forwarded to ansible-playbook as cli parameters.
+
+### Overriding the datastore in the blueprint
+You may want to build the VMs in a datastore other than the one specified in the blueprint:
+```
+make lab lab_test datastore=datastore1
+```
 
 ### Printing the inventory graph of a blueprint
 You may print a list of VMs included in a blueprint using make graph:

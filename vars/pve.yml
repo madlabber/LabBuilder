@@ -39,11 +39,11 @@ ontap_vol_size_gb: 500
 ontap_aggregate: "ots10_01_SSD_1"
 
 # This table maps lab datastores to proxmox datastores
-pve_datastores:
-  "lab_test2":       'local-lvm1'
-  "lab_vlan126":     'local-lvm1'
-  "lab_ansible_v2a": 'local-lvm1'
-  "lab_proxmox84":   'local-lvm1'
+# pve_datastores:
+#   "lab_test2":       'local-lvm1'
+#   "lab_vlan126":     'local-lvm1'
+#   "lab_ansible_v2a": 'local-lvm1'
+#   "lab_proxmox84":   'local-lvm1'
 
 # This table maps portgroup names to proxmox bridge and vlan
 pve_networks:
