@@ -13,6 +13,7 @@ boot_timer: 90
 
 # defaults
 vm_name: "pfsense"
+vm_network:
 vm_password_new: "P@ssw0rd"
 vm_network_wan: "VM Network"
 vm_network_lan: ""

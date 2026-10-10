@@ -32,6 +32,9 @@ iso_datastore: "ISOs"
 ## Default vswitch for new portgroups
 esxi_vswitch: "vSwitch1"
 
+## Default network for new VMs
+vm_network: "VM Network"
+
 ## VLAN Pool for building lab pod portgroups
 vlan_start: 1000
 vlan_count: 1000
