@@ -4,8 +4,12 @@ state: "present"
 #install_iso_url: "https://atxfiles.netgate.com/mirror/downloads/pfSense-CE-2.7.0-RELEASE-amd64.iso.gz"
 
 #2.7.1
-install_iso: "pfSense-CE-2.7.1-RELEASE-amd64.iso"
-install_iso_url: "https://atxfiles.netgate.com/mirror/downloads/pfSense-CE-2.7.1-RELEASE-amd64.iso.gz"
+#install_iso: "pfSense-CE-2.7.1-RELEASE-amd64.iso"
+#install_iso_url: "https://atxfiles.netgate.com/mirror/downloads/pfSense-CE-2.7.1-RELEASE-amd64.iso.gz"
+
+#2.7.2
+install_iso: "pfSense-CE-2.7.2-RELEASE-amd64.iso"
+install_iso_url: "https://atxfiles.netgate.com/mirror/downloads/pfSense-CE-2.7.2-RELEASE-amd64.iso.gz"
 
 # How long to wait while pfSense installs from ISO
 install_timer: 60
@@ -13,11 +17,23 @@ boot_timer: 90
 
 # defaults
 vm_name: "pfsense"
+vm_hostname: "pfsense"
+vm_domain: "home.arpa"
 vm_network:
+lan_address: 192.168.0.1
+lan_netmask: 24
+lan_dhcp_start: 192.168.0.100
+lan_dhcp_end: 192.168.0.200
+rdp_jumphost: 192.168.0.11
 vm_password_new: "P@ssw0rd"
 vm_network_wan: "VM Network"
 vm_network_lan: ""
 vm_network_opt1: ""
+vm_network_opt2: ""
+vm_network_opt3: ""
+vm_network_opt4: ""
+vm_network_opt5: ""
+vm_network_opt6: ""
 vm_disk_gb: 10
 vm_memory_mb: 1024
 vm_num_cpus: 1
@@ -28,3 +44,32 @@ pve_address: ""
 esxi_address: ""
 vcenter_address: ""
 vcenter_cluster: ""
+
+network_device_type: e1000
+# Default network port layout
+ethernet_ports:
+  wan:  "{{ vm_network_wan }}"
+  lan:  "{{ vm_network_lan }}"
+  opt1: "{{ vm_network_opt1 }}"
+  opt2: "{{ vm_network_opt2 }}"
+  opt3: "{{ vm_network_opt3 }}"
+  opt4: "{{ vm_network_opt4 }}"
+  opt5: "{{ vm_network_opt5 }}"
+  opt6: "{{ vm_network_opt6 }}"
+
+# nat_rules:
+#   - name: "Inbound RDP Forward"
+#     external_port: "3389"
+#     internal_port: "3389"
+#     protocol: "tcp"
+#     target_ip: "192.168.0.11"
+dns_acls:
+  - name: "Allow All"
+    action: "allow"
+    network: "0.0.0.0"
+    mask: "0"
+    row_desc: "all"
+# dns_overrides:
+#   - domain: "lab.local"
+#     target_ip: "192.168.0.11"
+#     desc: "Forward lan domain"

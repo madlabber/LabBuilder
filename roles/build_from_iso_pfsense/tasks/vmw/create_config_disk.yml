@@ -1,0 +1,17 @@
+
+- name: Copy pfsense_config-flat.vmdk to staging area
+  ansible.builtin.copy:
+    src: "{{role_path}}/files/pfsense_config-flat.vmdk"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/pfsense_config-flat.vmdk"
+  delegate_to: localhost
+
+- name: Copy pfsense_config.vmdk to staging area
+  ansible.builtin.copy:
+    src: "{{role_path}}/files/pfsense_config.vmdk"
+    dest: "{{ playbook_dir }}/files/{{vm_name}}/pfsense_config.vmdk"
+  delegate_to: localhost
+
+- name: Copy the config into the raw image cleanly without mounting via mcopy
+  shell:
+    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{vm_name}}/pfsense_config-flat.vmdk@@32s {{ playbook_dir }}/files/{{vm_name}}/config.xml ::/config.xml"
+  delegate_to: localhost

@@ -19,11 +19,49 @@ all:
     pfsense:
       hosts:
         gateway:
-          state: force
-          #ip_address: 192.168.0.1
-          vm_network_wan: "{{lab_wan_portgroup}}"
-          vm_network_lan: "{{lab_lan1_portgroup}}"
-          config_xml_file: "files/pfsense/config.xml"
+          # present=create vm, absent=delete vm, force=delete and re-create vm
+          state: present
+
+          ## For a completely custom configuration, provide a config.xml file:
+          # config_xml_file: "files/pfsense/config.xml"
+
+          ## Otherwise, configure the lan interface
+          lan_address:      "{{ lab_lan1_gateway }}"
+          lan_netmask_cidr: "{{ lab_lan1_netmask_cidr }}"
+
+          ## name resolution for the lan domain can be forwarded here
+          lan_dns_server:   "{{ lab_dc01_ip }}"
+          ## Alternatively, define an explicit list of domain overrides:
+          # dns_overrides:
+          #   - domain: "{{ vm_domain }}"
+          #     target_ip: "{{ lan_dns_server }}"
+          #     desc: "Forward lan domain"
+
+          ## The DHCP start/end range can be specified
+          lan_dhcp_start:   192.168.0.150
+          lan_dhcp_end:     192.168.0.200
+
+          ## RDP will be forwarded to the specified jumphost 
+          rdp_jumphost:     192.168.0.11
+          ## Alternatively, define an explicit NAT rule list
+          # nat_rules:
+          #   - name: "Inbound RDP Forward"
+          #     external_port: "3389"
+          #     internal_port: "3389"
+          #     protocol: "tcp"
+          #     target_ip: "{{rdp_jumphost}}"
+
+          ## This section defines the ethernet port and networks they are connected to
+          ## wan and lan are required.  opt1-opt6 are optional.
+          ethernet_ports:
+            wan: "{{lab_wan_portgroup}}"
+            lan: "{{lab_lan1_portgroup}}"
+            # opt1: "{{ lab_lan1_portgroup }}"
+            # opt2: "{{ lab_lan1_portgroup }}"
+            # opt3: "{{ lab_lan1_portgroup }}"
+            # opt4: "{{ lab_lan1_portgroup }}"
+            # opt5: "{{ lab_lan1_portgroup }}"
+            # opt6: "{{ lab_lan1_portgroup }}"     
 
     dc:
       hosts:

@@ -6,7 +6,7 @@
       password: '{{ vcenter_password }}'
       validate_certs: no
 
-- name: Create VM with 2 interfaces
+- name: Create VM 
   community.vmware.vmware_guest:
     <<: *vmw_login
     datacenter: "{{vcenter_datacenter}}"
@@ -29,55 +29,15 @@
       memory_mb: '{{ vm_memory_mb |int}}'
       num_cpus: '{{ vm_num_cpus |int}}'
       scsi: lsilogicsas
-    networks:
-    - name: '{{ vm_network_wan }}'
-      device_type: e1000
-    - name: '{{ vm_network_lan }}'
-      device_type: e1000
+    networks: "{{ networks }}"
     wait_for_ip_address: no
   delegate_to: localhost
   ignore_errors: true
   register: deploy_vm
   when: vm_network_opt1 == ""
 
-- name: Create VM with 3 interfaces
-  community.vmware.vmware_guest:
-    <<: *vmw_login
-    datacenter: "{{vcenter_datacenter}}"
-    cluster: '{{vcenter_cluster|default(omit)}}'    
-    folder: /
-    name: '{{ vm_name }}'
-    state: present
-    guest_id: centos7_64Guest
-    cdrom:
-        - controller_number: 0
-          unit_number: 0
-          state: present
-          type: iso
-          iso_path: '[{{ iso_datastore }}] {{ install_iso }}'
-    disk:
-    - size_gb: '{{ vm_disk_gb |int }}'
-      type: thin
-      datastore: '{{ vm_datastore }}'
-    hardware:
-      memory_mb: '{{ vm_memory_mb |int}}'
-      num_cpus: '{{ vm_num_cpus |int}}'
-      scsi: lsilogicsas
-    networks:
-    - name: '{{ vm_network_wan }}'
-      device_type: e1000
-    - name: '{{ vm_network_lan }}'
-      device_type: e1000
-    - name: '{{ vm_network_opt1 }}'
-      device_type: e1000
-    wait_for_ip_address: no
-  delegate_to: localhost
-  ignore_errors: true
-  register: deploy_vm
-  when: vm_network_opt1 != ""
-
 - name: upload config disk
-  include_tasks: vmw_upload_config_disk.yml
+  include_tasks: upload_config_disk.yml
 
 - name: attach config disk
   community.vmware.vmware_guest_disk:
@@ -196,23 +156,6 @@
       - ""
     when: vmtools_after_install is failed
 
-# push config file
-- name: copy file to vm 
-  community.vmware.vmware_guest_file_operation:
-    <<: *vmw_login
-    #datacenter: "{{ datacenter_name }}"
-    vm_id: '{{ vm_name }}'
-    vm_username: "admin"
-    vm_password: "pfsense" # defaults are still in effect at this point
-    copy:
-        src: "{{ config_xml_file }}"
-        dest: "/cf/conf/config.xml"
-        overwrite: True
-  delegate_to: localhost
-  register: copyconfig
-  when: config_xml_file != ""
-  ignore_errors: true
-
 # prevent the default config from being reapplied after every reboot
 - name: detach config disk
   community.vmware.vmware_guest_disk:
@@ -225,48 +168,3 @@
       unit_number: 1
   delegate_to: localhost
 
-- block:
-  - name: Reboot-Guest
-    community.vmware.vmware_guest_powerstate:
-      <<: *vmw_login
-      name: '{{ vm_name }}'
-      state: reboot-guest
-    delegate_to: localhost
-    register: deploy
-  - name: Wait for 30 seconds
-    wait_for: timeout=30
-    delegate_to: localhost
-    when: config_xml_file != ""
-
-  - name: Wait for VMware tools to become available by name
-    community.vmware.vmware_guest_tools_wait:
-      <<: *vmw_login
-      name: '{{ vm_name }}'
-    delegate_to: localhost
-    retries: 3
-    delay: 15
-    register: result           
-    until: result is succeeded 
-    when: config_xml_file != ""
-  when: copyconfig is succeeded
-
-# Any additional packages required need to be installed 
-# - name: Run shell commands via vm_shell
-#   community.vmware.vmware_vm_shell:
-#     <<: *vmw_login
-#     vm_username: "root"
-#     vm_password: '{{ vm_password_new }}'
-#     vm_id: '{{ vm_name }}'
-#     vm_shell: '/bin/sh'
-#     vm_shell_args: " -c \"{{item}}\""
-#     wait_for_process: true
-#   delegate_to: localhost  
-#   retries: 3
-#   delay: 10
-#   register: result
-#   until: result is succeeded
-#   ignore_errors: true
-#   loop:
-#     - "pkg-static install -y pfSense-pkg-tftpd"
-
- 

@@ -1,0 +1,35 @@
+- name: Creating staging directory
+  file:
+    path: "{{ playbook_dir }}/files/{{ vm_name }}"
+    state: directory
+  delegate_to: localhost
+
+- name: Calculate bcrypt password hash for pfSense admin account
+  set_fact:
+    pfsense_hashed_password: "{{ vm_password | password_hash('blowfish', ident='2b', rounds=10) }}"
+  delegate_to: localhost
+
+- name: set nat_rule for rdp_jumphost
+  set_fact:
+    nat_rules:
+      - name: "Inbound RDP Forward"
+        external_port: "3389"
+        internal_port: "3389"
+        protocol: "tcp"
+        target_ip: "{{rdp_jumphost}}"
+  when: rdp_jumphost|default('') != ''
+
+- name: set dns_overrides for lan_domain
+  set_fact:
+    dns_overrides:
+      - domain: "{{ vm_domain }}"
+        target_ip: "{{ lan_dns_server }}"
+        desc: "Forward lan domain"
+  when: lan_dns_server | default('') != ""
+
+- name: create config file from template
+  ansible.builtin.template:
+    src: "{{role_path}}/templates/config.j2"
+    dest: "{{ playbook_dir }}/files/{{ vm_name }}/config.xml"
+  delegate_to: localhost 
+

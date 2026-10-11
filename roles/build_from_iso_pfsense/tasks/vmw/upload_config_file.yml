@@ -1,0 +1,49 @@
+- name: setup login vars
+  set_fact:
+    vmw_login: &vmw_login
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'
+      validate_certs: no
+
+# push config file
+- name: copy file to vm 
+  community.vmware.vmware_guest_file_operation:
+    <<: *vmw_login
+    #datacenter: "{{ datacenter_name }}"
+    vm_id: '{{ vm_name }}'
+    vm_username: "admin"
+    vm_password: "pfsense" # defaults are still in effect at this point
+    copy:
+        src: "{{ config_xml_file }}"
+        dest: "/cf/conf/config.xml"
+        overwrite: True
+  delegate_to: localhost
+  register: copyconfig
+  when: config_xml_file != ""
+  ignore_errors: true
+
+- block:
+  - name: Reboot-Guest
+    community.vmware.vmware_guest_powerstate:
+      <<: *vmw_login
+      name: '{{ vm_name }}'
+      state: reboot-guest
+    delegate_to: localhost
+    register: deploy
+  - name: Wait for 30 seconds
+    wait_for: timeout=30
+    delegate_to: localhost
+    when: config_xml_file != ""
+
+  - name: Wait for VMware tools to become available by name
+    community.vmware.vmware_guest_tools_wait:
+      <<: *vmw_login
+      name: '{{ vm_name }}'
+    delegate_to: localhost
+    retries: 3
+    delay: 15
+    register: result           
+    until: result is succeeded 
+    when: config_xml_file != ""
+  when: copyconfig is succeeded

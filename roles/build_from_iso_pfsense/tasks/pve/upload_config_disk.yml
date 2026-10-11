@@ -1,0 +1,5 @@
+- name: Copy disks to temporary storage
+  copy:
+    src: "{{ playbook_dir }}/files/{{vm_name}}/pfsense_config.raw"
+    dest: "{{ import_path }}/{{ vm_name }}-config.raw"
+  delegate_to: temp_host

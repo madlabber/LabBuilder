@@ -28,6 +28,9 @@ lab:
 	if [ -n "$(limit)" ]; then \
 		EXTRA_ARGS="$$EXTRA_ARGS -l $(limit)"; \
 	fi; \
+	if [ -n "$(state)" ]; then \
+		EXTRA_ARGS="$$EXTRA_ARGS -e state=$(state)"; \
+	fi; \
 	ansible-playbook main.yml -i inventories/$$INV.yml $$EXTRA_ARGS
 
 prep:

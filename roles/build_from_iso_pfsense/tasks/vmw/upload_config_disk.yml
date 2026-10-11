@@ -5,7 +5,7 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'
     validate_certs: no
-    src: "{{role_path}}/files/pfsense_config-flat.vmdk"
+    src: "{{ playbook_dir }}/files/{{vm_name}}/pfsense_config-flat.vmdk"
     datacenter: "{{ vcenter_datacenter }}"
     datastore: "{{ vm_datastore }}"
     path: "{{ vm_name }}/pfsense_config-flat.vmdk"
@@ -18,7 +18,7 @@
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'
     validate_certs: no
-    src: "{{role_path}}/files/pfsense_config.vmdk"
+    src: "{{ playbook_dir }}/files/{{vm_name}}/pfsense_config.vmdk"
     datacenter: "{{ vcenter_datacenter }}"
     datastore: "{{ vm_datastore }}"
     path: "{{ vm_name }}/pfsense_config.vmdk"

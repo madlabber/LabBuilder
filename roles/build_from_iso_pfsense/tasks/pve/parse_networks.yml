@@ -1,0 +1,47 @@
+- name: Add Network Adapter lan and wan
+  set_fact:
+    networks:
+      net0: "{{ network_device_type }},bridge={{ pve_networks[ethernet_ports.wan|default(vm_network_wan)].bridge }}{{ (pve_networks[ethernet_ports.wan|default(vm_network_wan)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.wan|default(vm_network_wan)].vlan | default('')), '') }}"
+      net1: "{{ network_device_type }},bridge={{ pve_networks[ethernet_ports.lan|default(vm_network_lan)].bridge }}{{ (pve_networks[ethernet_ports.lan|default(vm_network_lan)].vlan is defined) | ternary(',tag=' ~ (pve_networks[ethernet_ports.lan|default(vm_network_lan)].vlan | default('')), '') }}"
+
+- name: Add opt1 if provided
+  set_fact:
+    networks: "{{ networks | combine({
+      'net2': network_device_type ~ ',bridge=' ~ pve_networks[ethernet_ports.opt1].bridge ~ ((',tag=' ~ pve_networks[ethernet_ports.opt1].vlan) if pve_networks[ethernet_ports.opt1].vlan is defined else '') }) }}"
+  when: ethernet_ports.opt1|default('') != ''
+
+- name: Add opt2 if provided
+  set_fact:
+    networks: "{{ networks | combine({
+      'net3': network_device_type ~ ',bridge=' ~ pve_networks[ethernet_ports.opt2].bridge ~ ((',tag=' ~ pve_networks[ethernet_ports.opt2].vlan) if pve_networks[ethernet_ports.opt2].vlan is defined else '') }) }}"
+  when: ethernet_ports.opt2|default('') != ''
+
+- name: Add opt3 if provided
+  set_fact:
+    networks: "{{ networks | combine({
+      'net4': network_device_type ~ ',bridge=' ~ pve_networks[ethernet_ports.opt3].bridge ~ ((',tag=' ~ pve_networks[ethernet_ports.opt3].vlan) if pve_networks[ethernet_ports.opt3].vlan is defined else '') }) }}"
+  when: ethernet_ports.opt3|default('') != ''
+
+- name: Add opt4 if provided
+  set_fact:
+    networks: "{{ networks | combine({
+      'net5': network_device_type ~ ',bridge=' ~ pve_networks[ethernet_ports.opt4].bridge ~ ((',tag=' ~ pve_networks[ethernet_ports.opt4].vlan) if pve_networks[ethernet_ports.opt4].vlan is defined else '') }) }}"
+  when: ethernet_ports.opt4|default('') != ''
+
+- name: Add opt5 if provided
+  set_fact:
+    networks: "{{ networks | combine({
+      'net6': network_device_type ~ ',bridge=' ~ pve_networks[ethernet_ports.opt5].bridge ~ ((',tag=' ~ pve_networks[ethernet_ports.opt5].vlan) if pve_networks[ethernet_ports.opt5].vlan is defined else '') }) }}"
+  when: ethernet_ports.opt5|default('') != ''
+
+- name: Add opt6 if provided
+  set_fact:
+    networks: "{{ networks | combine({
+      'net7': network_device_type ~ ',bridge=' ~ pve_networks[ethernet_ports.opt6].bridge ~ ((',tag=' ~ pve_networks[ethernet_ports.opt6].vlan) if pve_networks[ethernet_ports.opt6].vlan is defined else '') }) }}"
+  when: ethernet_ports.opt6|default('') != ''
+
+- name: Debug Networks
+  debug:
+    msg:
+      - "{{ networks }}"
+

@@ -21,7 +21,10 @@
       vars:
         vm_name:         "{{lab_prefix | default('')}}{{inventory_hostname}}"
         vm_datastore:    "{{lab_vm_datastore}}"
-        vm_password_new: "{{lab_password}}"
+        vm_password: "{{lab_password}}"
+        vm_hostname: "{{inventory_hostname}}"
+        vm_domain:   "{{lab_domain_name}}"
+
 
 - name: Build DC
   hosts: dc

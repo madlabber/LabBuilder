@@ -1,0 +1,84 @@
+- name: Add Network Adapter for WAN and LAN
+  set_fact:
+    networks:
+      - name: "{{ ethernet_ports.wan | default( vm_network_wan ) }}"
+        device_type: "{{ network_device_type }}"
+      - name: "{{ ethernet_ports.lan | default( vm_network_lan ) }}"
+        device_type: "{{ network_device_type }}"
+
+- name: Add Network Adapter opt1
+  set_fact:
+    networks: "{{ networks + [ item ] }}"
+  with_items:
+      - name: "{{ ethernet_ports.opt1 | default( vm_network_opt1 ) }}"
+        device_type: "{{ network_device_type }}"
+  when: >
+    ethernet_ports.opt1|default('') != '' or
+    ethernet_ports.opt2|default('') != '' or 
+    ethernet_ports.opt3|default('') != '' or 
+    ethernet_ports.opt4|default('') != '' or 
+    ethernet_ports.opt5|default('') != '' or 
+    ethernet_ports.opt6|default('') != ''
+
+- name: Add Network Adapter opt2
+  set_fact:
+    networks: "{{ networks + [ item ] }}"
+  with_items:
+      - name: "{{ ethernet_ports.opt2 | default( vm_network_opt2 ) }}"
+        device_type: "{{ network_device_type }}"
+  when: >
+    ethernet_ports.opt2|default('') != '' or 
+    ethernet_ports.opt3|default('') != '' or 
+    ethernet_ports.opt4|default('') != '' or 
+    ethernet_ports.opt5|default('') != '' or 
+    ethernet_ports.opt6|default('') != ''
+
+- name: Add Network Adapter opt3
+  set_fact:
+    networks: "{{ networks + [ item ] }}"
+  with_items:
+      - name: "{{ ethernet_ports.opt3 | default( vm_network_opt3 ) }}"
+        device_type: "{{ network_device_type }}"
+  when: >
+    ethernet_ports.opt3|default('') != '' or 
+    ethernet_ports.opt4|default('') != '' or 
+    ethernet_ports.opt5|default('') != '' or 
+    ethernet_ports.opt6|default('') != ''
+
+- name: Add Network Adapter opt4
+  set_fact:
+    networks: "{{ networks + [ item ] }}"
+  with_items:
+      - name: "{{ ethernet_ports.opt4 | default( vm_network_opt4 ) }}"
+        device_type: "{{ network_device_type }}"
+  when: >
+    ethernet_ports.opt4|default('') != '' or 
+    ethernet_ports.opt5|default('') != '' or 
+    ethernet_ports.opt6|default('') != ''
+
+- name: Add Network Adapter opt5
+  set_fact:
+    networks: "{{ networks + [ item ] }}"
+  with_items:
+      - name: "{{ ethernet_ports.opt5 | default( vm_network_opt5 ) }}"
+        device_type: "{{ network_device_type }}"
+  when: >
+    ethernet_ports.opt5|default('') != '' or 
+    ethernet_ports.opt6|default('') != ''
+
+- name: Add Network Adapter opt6
+  set_fact:
+    networks: "{{ networks + [ item ] }}"
+  with_items:
+      - name: "{{ ethernet_ports.opt6 | default( vm_network_opt6 ) }}"
+        device_type: "{{ network_device_type }}"
+  when: >
+    ethernet_ports.opt6|default('') != ''
+
+- name: debug networks
+  debug:
+    msg:
+      - "{{ networks }}"
+
+
+

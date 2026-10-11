@@ -1,0 +1,49 @@
+
+- name: Create config ISO
+  community.general.iso_create:
+    dest_iso: "{{ role_path }}/files/{{vm_name}}_config.iso"    
+    src_files:
+      - "{{ config_xml_file }}"
+    interchange_level: 4
+    joliet: 3
+    vol_ident: cidata
+  delegate_to: localhost
+
+- name: Copy install iso to datastore
+  copy:
+    src: "{{ role_path }}/files/{{vm_name}}_config.iso"
+    dest: "{{ iso_path }}/{{vm_name}}_config.iso"
+  delegate_to: temp_host
+
+- name: Attach config ISO
+  community.general.proxmox_disk:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    validate_certs: false
+    #vmid: "{{ create_vm.vmid }}"
+    name: '{{ vm_name|replace("_", "-") }}'
+    disk: ide2
+    media: cdrom
+    iso_image: "{{iso_datastore}}:iso/{{vm_name}}_config.iso"
+  delegate_to: localhost
+
+- name: invoke install-qemu-guest-agent
+  command:
+    cmd: "qm guest exec {{ create_vm.vmid }} -- {{item}}"
+  delegate_to: temp_host
+  loop_control:
+    pause: 5
+  loop: 
+    - "mount_cd9660 /dev/cd0 /media"
+    - "cp /media/config.xml /conf/config.xml"
+
+- name: Restart VM
+  community.general.proxmox_kvm:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    validate_certs: false
+    state: restarted
+    name: '{{ vm_name|replace("_", "-") }}'
+  delegate_to: localhost
