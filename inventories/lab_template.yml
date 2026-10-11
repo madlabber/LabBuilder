@@ -18,10 +18,27 @@ all:
     pfsense:
       hosts:
         gateway:
-          #ip_address: 192.168.0.1
-          vm_network_wan: "{{ lab_wan_portgroup }}"
-          vm_network_lan: "{{ lab_lan1_portgroup }}"
-          config_xml_file: "files/pfsense/config.xml"
+          lan_address:      192.168.0.1
+          lan_netmask_cidr: 24
+          lan_domain:       demo.com
+          lan_dns_server:   192.168.0.11
+          lan_dhcp_start:   192.168.0.150
+          lan_dhcp_end:     192.168.0.200
+          nat_rules:
+            - name: "RDP to Jumphost"
+              external_port: "3389"
+              internal_port: "3389"
+              protocol: "tcp"
+              target_ip: 192.168.0.11
+          ethernet_ports:
+            wan: "{{lab_wan_portgroup}}"
+            lan: "{{lab_lan1_portgroup}}"
+            # opt1: "{{ lab_opt1_portgroup }}"
+            # opt2: "{{ lab_opt2_portgroup }}"
+            # opt3: "{{ lab_opt3_portgroup }}"
+            # opt4: "{{ lab_opt4_portgroup }}"
+            # opt5: "{{ lab_opt5_portgroup }}"
+            # opt6: "{{ lab_opt6_portgroup }}"    
     dc:
       hosts:
         dc01:

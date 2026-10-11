@@ -29,6 +29,9 @@ all:
           lan_address:      "{{ lab_lan1_gateway }}"
           lan_netmask_cidr: "{{ lab_lan1_netmask_cidr }}"
 
+          ## The domain name defaults to the lab_domain_Name but can be overriden here
+          # lan_domain: demo.lab
+
           ## name resolution for the lan domain can be forwarded here
           lan_dns_server:   "{{ lab_dc01_ip }}"
           ## Alternatively, define an explicit list of domain overrides:

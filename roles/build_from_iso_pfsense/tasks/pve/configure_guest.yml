@@ -37,7 +37,7 @@
     # Set the hostname
     - qm guest exec {{ create_vm.vmid }} -- sed -i '' -e '/<system>/,/\/system>/s/<hostname>.*<\/hostname>/<hostname>{{vm_hostname}}<\/hostname>/' /cf/conf/config.xml
     # Set the domain name
-    - qm guest exec {{ create_vm.vmid }} -- sed -i '' -e '/<system>/,/\/system>/s/<domain>.*<\/domain>/<domain>{{vm_domain}}<\/domain>/' /cf/conf/config.xml
+    - qm guest exec {{ create_vm.vmid }} -- sed -i '' -e '/<system>/,/\/system>/s/<domain>.*<\/domain>/<domain>{{lan_domain}}<\/domain>/' /cf/conf/config.xml
 
     # Disable the startup setup wizard
     - qm guest exec {{ create_vm.vmid }} -- rm /conf/trigger_initial_wizard
@@ -64,7 +64,7 @@
     #- qm guest exec {{ create_vm.vmid }} -- sed -i '' -e 's|<\/unbound>|<acls><aclid>0<\/aclid><aclname><![CDATA[Allow All]]></aclname><aclaction>allow<\/aclaction><description><\/description><row><acl_network>0.0.0.0<\/acl_network><mask>0<\/mask><description><![CDATA[all]]></description><\/row><\/acls><\/unbound>|' /cf/conf/config.xml
 
     # UNBOUND DNS ACL & DOMAIN OVERRIDE INJECTION: Appends the ACL block AND the domain forwarder inside the closing </unbound> tag
-    - qm guest exec {{ create_vm.vmid }} -- sed -i '' -e 's|<\/unbound>|<acls><aclid>0<\/aclid><aclname><![CDATA[Allow All]]></aclname><aclaction>allow<\/aclaction><description><\/description><row><acl_network>0.0.0.0<\/acl_network><mask>0<\/mask><description><![CDATA[all]]></description><\/row><\/acls><domainoverrides><domain>{{vm_domain}}<\/domain><ip>{{lan_dns_server|default(lan_address)}}<\/ip><descr><![CDATA[Forward lab.local]]></descr><\/domainoverrides><\/unbound>|' /cf/conf/config.xml
+    - qm guest exec {{ create_vm.vmid }} -- sed -i '' -e 's|<\/unbound>|<acls><aclid>0<\/aclid><aclname><![CDATA[Allow All]]></aclname><aclaction>allow<\/aclaction><description><\/description><row><acl_network>0.0.0.0<\/acl_network><mask>0<\/mask><description><![CDATA[all]]></description><\/row><\/acls><domainoverrides><domain>{{lan_domain}}<\/domain><ip>{{lan_dns_server|default(lan_address)}}<\/ip><descr><![CDATA[Forward lab.local]]></descr><\/domainoverrides><\/unbound>|' /cf/conf/config.xml
 
     # Delete the cache and reload the config
     - qm guest exec {{ create_vm.vmid }} -- rm -f /tmp/config.cache

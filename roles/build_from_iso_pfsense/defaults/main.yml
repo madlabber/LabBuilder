@@ -20,8 +20,9 @@ vm_name: "pfsense"
 vm_hostname: "pfsense"
 vm_domain: "home.arpa"
 vm_network:
+lan_domain: "home.arpa"
 lan_address: 192.168.0.1
-lan_netmask: 24
+lan_netmask_cidr: 24
 lan_dhcp_start: 192.168.0.100
 lan_dhcp_end: 192.168.0.200
 rdp_jumphost: 192.168.0.11

@@ -5,7 +5,7 @@
 	<system>
 		<optimization>normal</optimization>
 		<hostname>{{ vm_hostname | default('gateway') }}</hostname>
-		<domain>{{ vm_domain | default('lab.local') }}</domain>
+		<domain>{{ lan_domain | default('lab.local') }}</domain>
 		<dnsallowoverride></dnsallowoverride>
 		<group>
 			<name>all</name>

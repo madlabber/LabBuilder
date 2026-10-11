@@ -23,7 +23,8 @@
         vm_datastore:    "{{lab_vm_datastore}}"
         vm_password: "{{lab_password}}"
         vm_hostname: "{{inventory_hostname}}"
-        vm_domain:   "{{lab_domain_name}}"
+        # allow the lan domain to be specified, otherwise default to lab_domain_name
+        lan_domain:   "{{ hostvars[inventory_hostname]['lan_domain'] | default(lab_domain_name) }}"
 
 
 - name: Build DC

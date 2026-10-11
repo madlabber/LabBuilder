@@ -221,3 +221,15 @@
     media: cdrom
     state: detached
   delegate_to: localhost
+
+- name: Detach config disk
+  community.general.proxmox_disk:
+    api_user: '{{ pve_username }}@pam'
+    api_password: '{{ pve_password }}'
+    api_host: '{{ pve_address }}'
+    validate_certs: false
+    #vmid: "{{ create_vm.vmid }}"
+    name: '{{ vm_name|replace("_", "-") }}'
+    disk: virtio1
+    state: detached
+  delegate_to: localhost

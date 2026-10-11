@@ -22,7 +22,7 @@
 - name: set dns_overrides for lan_domain
   set_fact:
     dns_overrides:
-      - domain: "{{ vm_domain }}"
+      - domain: "{{ lan_domain }}"
         target_ip: "{{ lan_dns_server }}"
         desc: "Forward lan domain"
   when: lan_dns_server | default('') != ""
