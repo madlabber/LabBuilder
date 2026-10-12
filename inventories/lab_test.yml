@@ -56,7 +56,7 @@ all:
 
           ## This section defines the ethernet port and networks they are connected to
           ## wan and lan are required.  opt1-opt6 are optional.
-          ethernet_ports:
+          interfaces:
             wan: "{{lab_wan_portgroup}}"
             lan: "{{lab_lan1_portgroup}}"
             # opt1: "{{ lab_lan1_portgroup }}"

@@ -20,11 +20,12 @@ vm_name: "pfsense"
 vm_hostname: "pfsense"
 vm_domain: "home.arpa"
 vm_network:
-lan_domain: "home.arpa"
-lan_address: 192.168.0.1
-lan_netmask_cidr: 24
-lan_dhcp_start: 192.168.0.100
-lan_dhcp_end: 192.168.0.200
+lan:
+  domain: "home.arpa"
+  address: 192.168.0.1
+  netmask_cidr: 24
+  dhcp_start: 192.168.0.100
+  dhcp_end: 192.168.0.200
 rdp_jumphost: 192.168.0.11
 vm_password_new: "P@ssw0rd"
 vm_network_wan: "VM Network"
@@ -48,7 +49,7 @@ vcenter_cluster: ""
 
 network_device_type: e1000
 # Default network port layout
-ethernet_ports:
+interfaces:
   wan:  "{{ vm_network_wan }}"
   lan:  "{{ vm_network_lan }}"
   opt1: "{{ vm_network_opt1 }}"

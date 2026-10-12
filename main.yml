@@ -24,7 +24,9 @@
         vm_password: "{{lab_password}}"
         vm_hostname: "{{inventory_hostname}}"
         # allow the lan domain to be specified, otherwise default to lab_domain_name
-        lan_domain:   "{{ hostvars[inventory_hostname]['lan_domain'] | default(lab_domain_name) }}"
+        lan.address:  "{{ hostvars[inventory_hostname]['lan.address'] | default(lab_lan1_gateway) }}"
+        lan.netmask_cidr: "{{ hostvars[inventory_hostname]['lan.netmask_cidr'] | default(lab_lan1_netmask_cidr) }}"
+        lan.domain:   "{{ hostvars[inventory_hostname]['lan.domain'] | default(lab_domain_name) }}"
 
 
 - name: Build DC

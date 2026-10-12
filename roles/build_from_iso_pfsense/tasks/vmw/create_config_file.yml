@@ -19,13 +19,13 @@
         target_ip: "{{rdp_jumphost}}"
   when: rdp_jumphost|default('') != ''
 
-- name: set dns_overrides for lan_domain
+- name: set dns_overrides for lan.domain
   set_fact:
     dns_overrides:
-      - domain: "{{ lan_domain }}"
-        target_ip: "{{ lan_dns_server }}"
+      - domain: "{{ lan.domain }}"
+        target_ip: "{{ lan.dns_server }}"
         desc: "Forward lan domain"
-  when: lan_dns_server | default('') != ""
+  when: lan.dns_server | default('') != ""
 
 - name: create config file from template
   ansible.builtin.template:

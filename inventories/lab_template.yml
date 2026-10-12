@@ -8,32 +8,39 @@ all:
     lab_vm_datastore: "{{ lab_name }}"
     lab_wan_portgroup: "{{ vm_network }}"
     lab_lan1_portgroup: "{{ lab_name }}_net1"
+    lab_lan2_portgroup: "{{ lab_name }}_net2"
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
     lab_lan1_dns_ip: "192.168.0.11"
-    lab_domain_name:   "lab.internal"
+    lab_domain_name:   "lab.test"
     lab_domain_controller: "dc01"
   children:
     pfsense:
       hosts:
         gateway:
-          lan_address:      192.168.0.1
-          lan_netmask_cidr: 24
-          lan_domain:       demo.com
-          lan_dns_server:   192.168.0.11
-          lan_dhcp_start:   192.168.0.150
-          lan_dhcp_end:     192.168.0.200
+          lan:
+            address:      192.168.0.1
+            netmask_cidr: 24
+            domain:       lab.test
+            dns_server:   192.168.0.11
+            dhcp_start:   192.168.0.150
+            dhcp_end:     192.168.0.200
+          opt1:
+            address:      192.168.10.1
+            netmask_cidr: 24
+            dhcp_start:   192.168.10.100
+            dhcp_end:     192.168.10.199
           nat_rules:
-            - name: "RDP to Jumphost"
-              external_port: "3389"
-              internal_port: "3389"
-              protocol: "tcp"
-              target_ip: 192.168.0.11
-          ethernet_ports:
+          - name: "RDP to Jumphost"
+            external_port: "3389"
+            internal_port: "3389"
+            protocol: "tcp"
+            target_ip: 192.168.0.11
+          interfaces:
             wan: "{{lab_wan_portgroup}}"
             lan: "{{lab_lan1_portgroup}}"
-            # opt1: "{{ lab_opt1_portgroup }}"
+            opt1: "{{ lab_lan2_portgroup }}"
             # opt2: "{{ lab_opt2_portgroup }}"
             # opt3: "{{ lab_opt3_portgroup }}"
             # opt4: "{{ lab_opt4_portgroup }}"

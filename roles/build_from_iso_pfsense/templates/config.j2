@@ -4,8 +4,8 @@
 	<lastchange></lastchange>
 	<system>
 		<optimization>normal</optimization>
-		<hostname>{{ vm_hostname | default('gateway') }}</hostname>
-		<domain>{{ lan_domain | default('lab.local') }}</domain>
+		<hostname>{{ vm_hostname | default('pfsense') }}</hostname>
+		<domain>{{ lan.domain | default('home.arpa') }}</domain>
 		<dnsallowoverride></dnsallowoverride>
 		<group>
 			<name>all</name>
@@ -75,8 +75,8 @@
 		<lan>
 			<enable></enable>
 			<if>em1</if>
-			<ipaddr>{{ lan_address | default('192.168.0.1') }}</ipaddr>
-			<subnet>{{ lan_netmask_cidr | default('24') }}</subnet>
+			<ipaddr>{{ lan.address | default('192.168.1.1') }}</ipaddr>
+			<subnet>{{ lan.netmask_cidr | default('24') }}</subnet>
 			<ipaddrv6>track6</ipaddrv6>
 			<subnetv6>64</subnetv6>
 			<media></media>
@@ -84,18 +84,164 @@
 			<track6-interface>wan</track6-interface>
 			<track6-prefix-id>0</track6-prefix-id>
 		</lan>
+		{% if opt1.address is defined and opt1.netmask_cidr is defined %}
+		<opt1>
+			<enable></enable>
+			<if>em2</if>
+			<ipaddr>{{ opt1.address | default('192.168.10.1') }}</ipaddr>
+			<subnet>{{ opt1.netmask_cidr | default('24') }}</subnet>
+			<ipaddrv6>track6</ipaddrv6>
+			<subnetv6>64</subnetv6>
+			<media></media>
+			<mediaopt></mediaopt>
+			<track6-interface>wan</track6-interface>
+			<track6-prefix-id>0</track6-prefix-id>
+		</opt1>
+		{% endif %}
+		{% if opt2.address is defined and opt2.netmask_cidr is defined %}
+		<opt2>
+			<enable></enable>
+			<if>em3</if>
+			<ipaddr>{{ opt2.address | default('192.168.20.1') }}</ipaddr>
+			<subnet>{{ opt2.netmask_cidr | default('24') }}</subnet>
+			<ipaddrv6>track6</ipaddrv6>
+			<subnetv6>64</subnetv6>
+			<media></media>
+			<mediaopt></mediaopt>
+			<track6-interface>wan</track6-interface>
+			<track6-prefix-id>0</track6-prefix-id>
+		</opt2>
+		{% endif %}
+		{% if opt3.address is defined and opt3.netmask_cidr is defined %}
+		<opt3>
+			<enable></enable>
+			<if>em4</if>
+			<ipaddr>{{ opt3.address | default('192.168.30.1') }}</ipaddr>
+			<subnet>{{ opt3.netmask_cidr | default('24') }}</subnet>
+			<ipaddrv6>track6</ipaddrv6>
+			<subnetv6>64</subnetv6>
+			<media></media>
+			<mediaopt></mediaopt>
+			<track6-interface>wan</track6-interface>
+			<track6-prefix-id>0</track6-prefix-id>
+		</opt3>
+		{% endif %}
+		{% if opt4.address is defined and opt4.netmask_cidr is defined %}
+		<opt4>
+			<enable></enable>
+			<if>em5</if>
+			<ipaddr>{{ opt4.address | default('192.168.40.1') }}</ipaddr>
+			<subnet>{{ opt4.netmask_cidr | default('24') }}</subnet>
+			<ipaddrv6>track6</ipaddrv6>
+			<subnetv6>64</subnetv6>
+			<media></media>
+			<mediaopt></mediaopt>
+			<track6-interface>wan</track6-interface>
+			<track6-prefix-id>0</track6-prefix-id>
+		</opt4>
+		{% endif %}
+		{% if opt5.address is defined and opt5.netmask_cidr is defined %}
+		<opt5>
+			<enable></enable>
+			<if>em6</if>
+			<ipaddr>{{ opt5.address | default('192.168.50.1') }}</ipaddr>
+			<subnet>{{ opt5.netmask_cidr | default('24') }}</subnet>
+			<ipaddrv6>track6</ipaddrv6>
+			<subnetv6>64</subnetv6>
+			<media></media>
+			<mediaopt></mediaopt>
+			<track6-interface>wan</track6-interface>
+			<track6-prefix-id>0</track6-prefix-id>
+		</opt5>
+		{% endif %}
+		{% if opt6.address is defined and opt6.netmask_cidr is defined %}
+		<opt6>
+			<enable></enable>
+			<if>em7</if>
+			<ipaddr>{{ opt6.address | default('192.168.60.1') }}</ipaddr>
+			<subnet>{{ opt6.netmask_cidr | default('24') }}</subnet>
+			<ipaddrv6>track6</ipaddrv6>
+			<subnetv6>64</subnetv6>
+			<media></media>
+			<mediaopt></mediaopt>
+			<track6-interface>wan</track6-interface>
+			<track6-prefix-id>0</track6-prefix-id>
+		</opt6>
+		{% endif %}
 	</interfaces>
 	<staticroutes>
 	</staticroutes>
 	<dhcpd>
+	    {% if lan.dhcp_start is defined and lan.dhcp_end is defined and lan.address is defined %}
 		<lan>
 			<enable></enable>
 			<range>
-				<from>{{ lan_dhcp_start | default('192.168.0.100') }}</from>
-				<to>{{ lan_dhcp_end | default('192.168.0.200') }}</to>
+				<from>{{ lan.dhcp_start }}</from>
+				<to>{{ lan.dhcp_end }}</to>
 			</range>
-			<gateway>{{ lan_address | default('192.168.0.1') }}</gateway>
+			<gateway>{{ lan.address }}</gateway>
 		</lan>
+		{% endif %}
+	    {% if opt1.dhcp_start is defined and opt1.dhcp_end is defined and opt1.address is defined %}
+		<opt1>
+			<enable></enable>
+			<range>
+				<from>{{ opt1.dhcp_start }}</from>
+				<to>{{ opt1.dhcp_end }}</to>
+			</range>
+			<gateway>{{ opt1.address }}</gateway>
+		</opt1>
+		{% endif %}
+	    {% if opt2.dhcp_start is defined and opt2.dhcp_end is defined and opt2.address is defined %}
+		<opt2>
+			<enable></enable>
+			<range>
+				<from>{{ opt2.dhcp_start }}</from>
+				<to>{{ opt2.dhcp_end }}</to>
+			</range>
+			<gateway>{{ opt2.address }}</gateway>
+		</opt2>
+		{% endif %}
+	    {% if opt3.dhcp_start is defined and opt3.dhcp_end is defined and opt3.address is defined %}
+		<opt3>
+			<enable></enable>
+			<range>
+				<from>{{ opt3.dhcp_start }}</from>
+				<to>{{ opt3.dhcp_end }}</to>
+			</range>
+			<gateway>{{ opt3.address }}</gateway>
+		</opt3>
+		{% endif %}
+	    {% if opt4.dhcp_start is defined and opt4.dhcp_end is defined and opt4.address is defined %}
+		<opt4>
+			<enable></enable>
+			<range>
+				<from>{{ opt4.dhcp_start }}</from>
+				<to>{{ opt4.dhcp_end }}</to>
+			</range>
+			<gateway>{{ opt4.address }}</gateway>
+		</opt4>
+		{% endif %}
+	    {% if opt5.dhcp_start is defined and opt5.dhcp_end is defined and opt5.address is defined %}
+		<opt5>
+			<enable></enable>
+			<range>
+				<from>{{ opt5.dhcp_start }}</from>
+				<to>{{ opt5.dhcp_end }}</to>
+			</range>
+			<gateway>{{ opt5.address }}</gateway>
+		</opt5>
+		{% endif %}
+	    {% if opt6.dhcp_start is defined and opt6.dhcp_end is defined and opt6.address is defined %}
+		<opt6>
+			<enable></enable>
+			<range>
+				<from>{{ opt6.dhcp_start }}</from>
+				<to>{{ opt6.dhcp_end }}</to>
+			</range>
+			<gateway>{{ opt6.address }}</gateway>
+		</opt6>
+		{% endif %}
 	</dhcpd>
 	<dhcpdv6>
 		<lan>
@@ -173,6 +319,174 @@
 				<any></any>
 			</destination>
 		</rule>
+	    {% if opt1.address is defined %}
+		<rule>
+			<type>pass</type>
+			<ipprotocol>inet</ipprotocol>
+			<descr><![CDATA[Default allow OPT1 to any rule]]></descr>
+			<interface>opt1</interface>
+			<tracker>0100000201</tracker>
+			<source>
+				<network>opt1</network>
+			</source>
+			<destination>
+				<any></any>
+			</destination>
+		</rule>
+		<rule>
+			<type>pass</type>
+			<ipprotocol>inet6</ipprotocol>
+			<descr><![CDATA[Default allow OPT1 IPv6 to any rule]]></descr>
+			<interface>opt1</interface>
+			<tracker>0100000202</tracker>
+			<source>
+				<network>opt1</network>
+			</source>
+			<destination>
+				<any></any>
+			</destination>
+		</rule>
+		{% endif %}
+	    {% if opt2.address is defined %}
+		<rule>
+			<type>pass</type>
+			<ipprotocol>inet</ipprotocol>
+			<descr><![CDATA[Default allow OPT2 to any rule]]></descr>
+			<interface>opt2</interface>
+			<tracker>0100000301</tracker>
+			<source>
+				<network>opt2</network>
+			</source>
+			<destination>
+				<any></any>
+			</destination>
+		</rule>
+		<rule>
+			<type>pass</type>
+			<ipprotocol>inet6</ipprotocol>
+			<descr><![CDATA[Default allow OPT2 IPv6 to any rule]]></descr>
+			<interface>opt2</interface>
+			<tracker>0100000302</tracker>
+			<source>
+				<network>opt2</network>
+			</source>
+			<destination>
+				<any></any>
+			</destination>
+		</rule>
+		{% endif %}
+	    {% if opt3.address is defined %}
+		<rule>
+			<type>pass</type>
+			<ipprotocol>inet</ipprotocol>
+			<descr><![CDATA[Default allow OPT3 to any rule]]></descr>
+			<interface>opt3</interface>
+			<tracker>0100000401</tracker>
+			<source>
+				<network>opt3</network>
+			</source>
+			<destination>
+				<any></any>
+			</destination>
+		</rule>
+		<rule>
+			<type>pass</type>
+			<ipprotocol>inet6</ipprotocol>
+			<descr><![CDATA[Default allow OPT3 IPv6 to any rule]]></descr>
+			<interface>opt3</interface>
+			<tracker>0100000402</tracker>
+			<source>
+				<network>opt3</network>
+			</source>
+			<destination>
+				<any></any>
+			</destination>
+		</rule>
+		{% endif %}
+	    {% if opt4.address is defined %}
+		<rule>
+			<type>pass</type>
+			<ipprotocol>inet</ipprotocol>
+			<descr><![CDATA[Default allow OPT4 to any rule]]></descr>
+			<interface>opt4</interface>
+			<tracker>0100000501</tracker>
+			<source>
+				<network>opt4</network>
+			</source>
+			<destination>
+				<any></any>
+			</destination>
+		</rule>
+		<rule>
+			<type>pass</type>
+			<ipprotocol>inet6</ipprotocol>
+			<descr><![CDATA[Default allow OPT4 IPv6 to any rule]]></descr>
+			<interface>opt4</interface>
+			<tracker>0100000502</tracker>
+			<source>
+				<network>opt4</network>
+			</source>
+			<destination>
+				<any></any>
+			</destination>
+		</rule>
+		{% endif %}
+	    {% if opt5.address is defined %}
+		<rule>
+			<type>pass</type>
+			<ipprotocol>inet</ipprotocol>
+			<descr><![CDATA[Default allow OPT5 to any rule]]></descr>
+			<interface>opt5</interface>
+			<tracker>0100000601</tracker>
+			<source>
+				<network>opt5</network>
+			</source>
+			<destination>
+				<any></any>
+			</destination>
+		</rule>
+		<rule>
+			<type>pass</type>
+			<ipprotocol>inet6</ipprotocol>
+			<descr><![CDATA[Default allow OPT5 IPv6 to any rule]]></descr>
+			<interface>opt5</interface>
+			<tracker>0100000602</tracker>
+			<source>
+				<network>opt5</network>
+			</source>
+			<destination>
+				<any></any>
+			</destination>
+		</rule>
+		{% endif %}
+	    {% if opt6.address is defined %}
+		<rule>
+			<type>pass</type>
+			<ipprotocol>inet</ipprotocol>
+			<descr><![CDATA[Default allow OPT6 to any rule]]></descr>
+			<interface>opt6</interface>
+			<tracker>0100000701</tracker>
+			<source>
+				<network>opt6</network>
+			</source>
+			<destination>
+				<any></any>
+			</destination>
+		</rule>
+		<rule>
+			<type>pass</type>
+			<ipprotocol>inet6</ipprotocol>
+			<descr><![CDATA[Default allow OPT6 IPv6 to any rule]]></descr>
+			<interface>opt6</interface>
+			<tracker>0100000702</tracker>
+			<source>
+				<network>opt6</network>
+			</source>
+			<destination>
+				<any></any>
+			</destination>
+		</rule>
+		{% endif %}
 	</filter>
 	<shaper>
 	</shaper>
