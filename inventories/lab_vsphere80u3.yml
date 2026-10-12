@@ -11,15 +11,28 @@ all:
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
     lab_lan1_dns_ip: "192.168.0.1"
-    lab_domain_name:   "lab.local"
+    lab_domain_name:   "lab.test"
     lab_domain_controller: "dc01"
   children:
     pfsense:
-      hosts:
         gateway:
-          vm_network_wan: "{{lab_wan_portgroup}}"
-          vm_network_lan: "{{lab_lan1_portgroup}}"
-          config_xml_file: "files/pfsense/config.xml"
+          lan:
+            address:      192.168.0.1
+            netmask_cidr: 24
+            domain:       lab.test
+            dns_server:   192.168.0.11
+            dhcp_start:   192.168.0.150
+            dhcp_end:     192.168.0.200
+          nat_rules:
+          - name: "RDP to Jumphost"
+            external_port: "3389"
+            internal_port: "3389"
+            protocol: "tcp"
+            target_ip: 192.168.0.11
+          interfaces:
+            wan: "{{lab_wan_portgroup}}"
+            lan: "{{lab_lan1_portgroup}}"
+
     dc:
       hosts:
         dc01:

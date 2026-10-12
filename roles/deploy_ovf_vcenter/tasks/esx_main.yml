@@ -18,7 +18,7 @@
     wait_for_ip_address: false
     inject_ovf_env: true
     properties:
-      DeploymentOption.value: '{{vm_deployment_size}}' # vCenter t-shirt size: tiny,small,medium,large, or infrastructure 
+      DeploymentOption.value: '{{deployment_option}}' # vCenter t-shirt size: tiny,small,medium,large, or infrastructure 
       guestinfo.cis.appliance.net.addr.family: 'ipv4' # ipv4 or ipv6
       guestinfo.cis.appliance.net.mode: '{{vm_net_mode}}' # static or dhcp
       guestinfo.cis.appliance.net.addr: '{{ vm_address }}' 

@@ -4,7 +4,7 @@ SHELL := /bin/bash
 %::
 	@:
 
-.PHONY: configure install lab prep graph
+.PHONY: configure install lab prep graph build
 
 configure:
 	@mkdir -p vars; \
@@ -15,6 +15,25 @@ install:
 	@ansible-playbook install-requirements.yml
 
 lab:
+	@INV="$(word 2, $(MAKECMDGOALS))"; \
+	[ -z "$$INV" ] && INV="$(firstword $(MAKECMDGOALS))"; \
+	[ "$$INV" = "lab" ] && INV="$(word 2, $(MAKECMDGOALS))"; \
+	EXTRA_ARGS=""; \
+	if [ -n "$(config)" ]; then \
+		EXTRA_ARGS="$$EXTRA_ARGS -e mainvars=$(config).yml"; \
+	fi; \
+	if [ -n "$(datastore)" ]; then \
+		EXTRA_ARGS="$$EXTRA_ARGS -e lab_vm_datastore=$(datastore)"; \
+	fi; \
+	if [ -n "$(limit)" ]; then \
+		EXTRA_ARGS="$$EXTRA_ARGS -l $(limit)"; \
+	fi; \
+	if [ -n "$(state)" ]; then \
+		EXTRA_ARGS="$$EXTRA_ARGS -e state=$(state)"; \
+	fi; \
+	ansible-playbook main.yml -i inventories/$$INV.yml $$EXTRA_ARGS
+
+build:
 	@INV="$(word 2, $(MAKECMDGOALS))"; \
 	[ -z "$$INV" ] && INV="$(firstword $(MAKECMDGOALS))"; \
 	[ "$$INV" = "lab" ] && INV="$(word 2, $(MAKECMDGOALS))"; \

@@ -72,6 +72,15 @@ versions:
       install_iso_url:    "https://dl.rockylinux.org/vault/rocky/8.3/isos/x86_64/Rocky-8.3-x86_64-dvd1.iso"
 
   "alma":
+    "9":
+      install_iso:        "AlmaLinux-9.4-x86_64-dvd.iso"
+      install_iso_url:    "https://vault.almalinux.org/9.4/isos/x86_64/AlmaLinux-9.4-x86_64-dvd.iso"
+    "9.8":
+      install_iso:        "AlmaLinux-9.8-x86_64-dvd.iso"
+      install_iso_url:    "https://ftp.ucsb.edu/almalinux/9.8/isos/x86_64/AlmaLinux-9.8-x86_64-dvd.iso"
+    "9.4":
+      install_iso:        "AlmaLinux-9.4-x86_64-dvd.iso"
+      install_iso_url:    "https://vault.almalinux.org/9.4/isos/x86_64/AlmaLinux-9.4-x86_64-dvd.iso"
     "8":
       install_iso:        "AlmaLinux-8.8-x86_64-dvd.iso"  
       install_iso_url:    "http://ftp.ucsb.edu/pub/mirrors/linux/almalinux/8.8/isos/x86_64/AlmaLinux-8.8-x86_64-dvd.iso"
