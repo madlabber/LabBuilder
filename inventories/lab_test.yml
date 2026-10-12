@@ -12,7 +12,7 @@ all:
     lab_lan1_gateway: "192.168.0.1"
     lab_lan1_dns_ip: "192.168.0.11"
     lab_lan2_portgroup: "{{ lab_prefix }}net2"
-    lab_domain_name: "lab.local"
+    lab_domain_name: "lab.test"
     lab_dc01_hostname: "dc01"
     lab_dc01_ip: "192.168.0.11"
   children:
@@ -26,25 +26,28 @@ all:
           # config_xml_file: "files/pfsense/config.xml"
 
           ## Otherwise, configure the lan interface
-          lan_address:      "{{ lab_lan1_gateway }}"
-          lan_netmask_cidr: "{{ lab_lan1_netmask_cidr }}"
+          lan:
+            address:      "{{ lab_lan1_gateway }}"
+            netmask_cidr: "{{ lab_lan1_netmask_cidr }}"
+            domain:       "{{ lab_domain_name }}"
+            dns_server:   "{{ lab_lan1_dns_ip }}"
+            dhcp_start:   192.168.0.150
+            dhcp_end:     192.168.0.200
 
-          ## The domain name defaults to the lab_domain_Name but can be overriden here
-          # lan_domain: demo.lab
+          ## opt1, etc, can be similarly configured
+          opt1:
+            address:      192.168.10.1
+            netmask_cidr: 24
+            dhcp_start:   192.168.10.100
+            dhcp_end:     192.168.10.199
 
-          ## name resolution for the lan domain can be forwarded here
-          lan_dns_server:   "{{ lab_dc01_ip }}"
-          ## Alternatively, define an explicit list of domain overrides:
+          ## You can also define an explicit list of domain overrides:
           # dns_overrides:
           #   - domain: "{{ vm_domain }}"
           #     target_ip: "{{ lan_dns_server }}"
           #     desc: "Forward lan domain"
 
-          ## The DHCP start/end range can be specified
-          lan_dhcp_start:   192.168.0.150
-          lan_dhcp_end:     192.168.0.200
-
-          ## RDP will be forwarded to the specified jumphost 
+          ## RDP can be forwarded to a designated jumphost 
           rdp_jumphost:     192.168.0.11
           ## Alternatively, define an explicit NAT rule list
           # nat_rules:
@@ -59,7 +62,7 @@ all:
           interfaces:
             wan: "{{lab_wan_portgroup}}"
             lan: "{{lab_lan1_portgroup}}"
-            # opt1: "{{ lab_lan1_portgroup }}"
+            opt1: "{{ lab_lan2_portgroup }}"
             # opt2: "{{ lab_lan1_portgroup }}"
             # opt3: "{{ lab_lan1_portgroup }}"
             # opt4: "{{ lab_lan1_portgroup }}"
