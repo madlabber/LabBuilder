@@ -1,20 +1,21 @@
 # LabBuilder
 A collection of playbooks and tooling for building labs
 
-main.yml - provisions labs from inventory files
+## About
+This project uses ansible to build and configure virtual machines as defined in a lab blueprint.  The lab blueprint describes the lab environment's networking and virtual machine topology in ansible inventory yaml format.  Blueprints are stored in the inventories folder.
 
-vars/main.yml - variable related to the lab hosting environment
+There are two ways to use this library:
+1. Write a playbook that calls the roles and tasks to assemble a lab, 
+2. Write an inventory file that describes a lab and pass it to main.yml
+    ```
+    ansible-playbook -i inventories/lab_mylabblueprint.yml main.yml
+    ```
+   or use the makefile shortcut:
 
-defaults/ - task level default variables
-
-test_ - playbooks that demonstrate how to use the tasks
-
-
-2 ways to use this library:
-1. build a playbook that calls the roles and tasks to assemble a lab, 
-2. build an inventory file that describes a lab and pass it to main.yml
-   
-   ansible-playbook -i inventories/lab_mylabblueprint.yml main.yml
+   ```
+   make lab lab_mylabbueprint
+   ```
+There are numerous example lab blueprints in the inventories folder.
 
 
 # requirements
@@ -42,11 +43,14 @@ ESXi host(s)
 vCenter Server
 
 # Usage 
+--------
 ## Using make
 1. Install ansible, then make install:
     ``` 
     make install 
     ```
+    Note: this will attempt to install the requirements listed above, but ymmv.
+
 2. Configure your virtualization hosting environment variables in the main vars file:
     ```
     make configure
@@ -63,7 +67,7 @@ vCenter Server
     ```
     make lab lab_test
     ```
-### using an alternate config
+### Using an alternate config
 You can use alternate config files to target different hosting environments.  For example you may have one environment hosted on VMware, and another environment hosted on Proxmox.
 
 1. create the config file using the main config as a reference
@@ -77,12 +81,11 @@ You can use alternate config files to target different hosting environments.  Fo
    make lab lab_test config=altconfig
 
 ### Building a portion of a blueprint
-You may want to limit the built only a portion of a blueprint, as shown in these examples:
+You may want to limit the build to only a portion of a blueprint, as shown in these examples:
 ```
 make lab_test limit=server01
 make lab_test config=altconfig limit=server02,router01
 ```
-everything after the -- is forwarded to ansible-playbook as cli parameters.
 
 ### Overriding the datastore in the blueprint
 You may want to build the VMs in a datastore other than the one specified in the blueprint:
