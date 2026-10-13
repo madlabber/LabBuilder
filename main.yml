@@ -1,13 +1,11 @@
 ---
 # - name: print vars
-#   hosts: all
+#   hosts: pfsense
 #   gather_facts: false
 #   tasks:
 #   - debug:
 #       msg:
-#         - "lab_vm_datastore: {{ lab_vm_datastore }}"
-#         - "{{inventory_hostname}}.{{lab_domain_name}}"
-#         - "{{ip_address|default('')}}"
+#       - "{{hostvars[inventory_hostname]['lan']['dhcp_start']}}"
 
 - name: Build pfSense VMs
   hosts: pfsense
@@ -24,12 +22,12 @@
         vm_password:    "{{lab_password}}"
         vm_hostname:    "{{inventory_hostname}}"
         lan:
-          address:      "{{ hostvars[inventory_hostname]['lan.address'] | default(lab_lan1_gateway) }}"
-          netmask_cidr: "{{ hostvars[inventory_hostname]['lan.netmask_cidr'] | default(lab_lan1_netmask_cidr) }}"
-          domain:       "{{ hostvars[inventory_hostname]['lan.domain'] | default(lab_domain_name) }}"
-          dns_server:   "{{ hostvars[inventory_hostname]['lan.dns_server'] | default(lab_lan1_dns_ip) }}"
-          dhcp_start:   "{{ hostvars[inventory_hostname]['lan.dhcp_start'] | default(omit) }}"
-          dhcp_end:     "{{ hostvars[inventory_hostname]['lan.dhcp_end'] | default(omit) }}"
+          address:      "{{ hostvars[inventory_hostname]['lan']['address'] | default(lab_lan1_gateway) }}"
+          netmask_cidr: "{{ hostvars[inventory_hostname]['lan']['netmask_cidr'] | default(lab_lan1_netmask_cidr) }}"
+          domain:       "{{ hostvars[inventory_hostname]['lan']['domain'] | default(lab_domain_name) }}"
+          dns_server:   "{{ hostvars[inventory_hostname]['lan']['dns_server'] | default(lab_lan1_dns_ip) }}"
+          dhcp_start:   "{{ hostvars[inventory_hostname]['lan']['dhcp_start'] | default('') }}"
+          dhcp_end:     "{{ hostvars[inventory_hostname]['lan']['dhcp_end'] | default('') }}"
 
 - name: Build DC
   hosts: dc
