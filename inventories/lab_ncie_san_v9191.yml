@@ -1,0 +1,103 @@
+all:
+  hosts:
+  vars:
+    lab_name: lab_ncie_san_v9191
+    lab_prefix: "{{ lab_name }}_"
+    lab_netmask: 255.255.255.0
+    lab_password: P@ssw0rd
+    lab_vm_datastore: "{{lab_name}}"
+    lab_wan_portgroup: "VM Network"
+    lab_lan1_portgroup: "{{lab_prefix}}net1"
+    lab_lan2_portgroup: "{{lab_prefix}}net2"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.11"
+    lab_domain_name:   "lab.test"
+    lab_domain_controller: "dc01"
+  children:
+    pfsense:
+      hosts:
+        gateway:
+          lan:
+            address:      "{{lab_lan1_gateway}}"
+            netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+            domain:       "{{lab_domain_name}}"
+            dns_server:   "{{lab_lan1_dns_ip}}"
+            dhcp_start:   192.168.0.150
+            dhcp_end:     192.168.0.200
+          rdp_jumphost:   "{{lab_lan1_dns_ip}}"
+          interfaces:
+            wan: "{{lab_wan_portgroup}}"
+            lan: "{{lab_lan1_portgroup}}" 
+    dc:
+      hosts:
+        dc01:
+          version: "Server2025eval"
+          ip_address: "{{lab_lan1_dns_ip}}"
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+            - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
+          extra_commands:
+            - MsiExec.exe /i E:\files\putty-64bit-0.83-installer.msi /qn
+            - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
+            
+    winservers:
+      hosts:
+        win1:
+          ip_address: 192.168.0.12
+          version: "Server2025eval"
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
+          vm_disk_gb: 80
+    centos:
+      hosts:
+        linux1:
+          ip_address: 192.168.0.14
+          distro: "alma"
+          version: "9"
+          install_xrdp: true
+          install_ansible: true
+      # vars:
+    vsims:
+      hosts:
+        # Cluster1 will be a 4-node with 2 HA pairs
+        cluster1-01:
+          partner:      "cluster1-02"
+          cluster_name: "cluster1"
+          ovf_version:  "9.19.1"
+          cluster_mgmt_ip: 192.168.0.90
+          ip_address:      192.168.0.91
+          partner_ip:      192.168.0.92
+          disk_model: "vscsi"
+          shelf0_disk_size: 8192
+          shelf0_disk_count: 12
+          shelf1_disk_size: 8192
+          shelf1_disk_count: 12
+          fake_ssd_disk_size: 8192
+          adp_enabled: "true"
+        cluster1-03:
+          partner:      "cluster1-04"
+          ovf_version:  "9.19.1"
+          ip_address:      192.168.0.93
+          partner_ip:      192.168.0.94
+          disk_model: "vscsi"
+          shelf0_disk_size: 8192
+          shelf0_disk_count: 12
+          shelf1_disk_size: 8192
+          shelf1_disk_count: 12
+          fake_ssd_disk_size: 8192
+          adp_enabled: "true"
+        # Cluster2 will be a single node cluster
+        cluster2-01:
+          cluster_name: "cluster2"
+          ovf_version:  "9.19.1"
+          cluster_mgmt_ip: 192.168.0.80
+          ip_address:      192.168.0.81
+          disk_model: "vscsi"
+          shelf0_disk_size: 8192
+          shelf0_disk_count: 12
+          shelf1_disk_size: 8192
+          shelf1_disk_count: 12
+          fake_ssd_disk_size: 8192
+          adp_enabled: "true"

@@ -47,15 +47,19 @@ ontap_aggregate: "ots10_01_SSD_1"
 
 # This table maps portgroup names to proxmox bridge and vlan
 pve_networks:
-    "vmbr0":             { "bridge": "vmbr0" }
-    "vmbr1":             { "bridge": "vmbr1" }
-    "VM Network":        { "bridge": "vmbr0" }
-    "VLAN121":           { "bridge": "vlan121" }
-    "VLAN126":           { "bridge": "vlan126" }
-    "lab_vlan126_net2":  { "bridge": "vmbr0", "vlan": 2126 }
-    "Cluster Network":   { "bridge": "vmbr1" }
-    "lab_pvetest_net1":  { "bridge": "vmbr1", "vlan": 1001 }
-    "lab_pvetest_net2":  { "bridge": "vmbr1", "vlan": 1002 }
-    "lab_test_net1":     { "bridge": "vmbr1", "vlan": 1003 }
-    "lab_test_net2":     { "bridge": "vmbr1", "vlan": 1004 }    
+    vmbr0:             { bridge: vmbr0 }
+    vmbr1:             { bridge: vmbr1 }
+    "VM Network":      { bridge: vmbr0 }
+    VLAN121:           { bridge: vlan121 }
+    VLAN126:           { bridge: vlan126 }
+    lab_vlan126_net2:  { bridge: vmbr0, vlan: 2126 }
+    Cluster Network:   { bridge: vmbr1 }
+    lab_pvetest_net1:  { bridge: vmbr1, vlan: 1001 }
+    lab_pvetest_net2:  { bridge: vmbr1, vlan: 1002 }
+    lab_test_net1:     { bridge: vmbr1, vlan: 1003 }
+    lab_test_net2:     { bridge: vmbr1, vlan: 1004 }    
+    lab_select2n_vmw80u3_net1: { bridge: vmbr1, vlan: 1005 }
+    lab_select2n_vmw80u3_net2: { bridge: vmbr1, vlan: 1006 }
+    lab_ncie_san_v9191_net1:   { bridge: vmbr1, vlan: 1007 }
+    lab_ncie_san_v9191_net2:   { bridge: vmbr1, vlan: 1008 }
 
