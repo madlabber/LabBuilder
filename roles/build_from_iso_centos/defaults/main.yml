@@ -30,7 +30,19 @@ versions:
   rocky:
     "9":
       install_iso:        "Rocky-9.4-x86_64-dvd.iso"
-      install_iso_url:    "https://dl.rockylinux.org/vault/rocky/9.3/isos/x86_64/Rocky-9.4-x86_64-dvd.iso"
+      install_iso_url:    "https://dl.rockylinux.org/vault/rocky/9.4/isos/x86_64/Rocky-9.4-x86_64-dvd.iso"
+    "9.8":
+      install_iso:        "Rocky-9.8-x86_64-dvd.iso"
+      install_iso_url:    "https://dl.rockylinux.org/vault/rocky/9.8/isos/x86_64/Rocky-9.8-x86_64-dvd.iso"
+    "9.7":
+      install_iso:        "Rocky-9.7-x86_64-dvd.iso"
+      install_iso_url:    "https://dl.rockylinux.org/vault/rocky/9.7/isos/x86_64/Rocky-9.7-x86_64-dvd.iso"
+    "9.6":
+      install_iso:        "Rocky-9.6-x86_64-dvd.iso"
+      install_iso_url:    "https://dl.rockylinux.org/vault/rocky/9.6/isos/x86_64/Rocky-9.6-x86_64-dvd.iso"
+    "9.5":
+      install_iso:        "Rocky-9.5-x86_64-dvd.iso"
+      install_iso_url:    "https://dl.rockylinux.org/vault/rocky/9.5/isos/x86_64/Rocky-9.5-x86_64-dvd.iso"
     "9.4":
       install_iso:        "Rocky-9.4-x86_64-dvd.iso"
       install_iso_url:    "https://dl.rockylinux.org/vault/rocky/9.4/isos/x86_64/Rocky-9.4-x86_64-dvd.iso"
