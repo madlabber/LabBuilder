@@ -42,6 +42,22 @@ all:
             # Install Putty
             - "Invoke-WebRequest -Uri http://the.earth.li/~sgtatham/putty/0.73/w64/putty-64bit-0.73-installer.msi -OutFile C:\\Windows\\temp\\putty-64bit-installer.msi"
             - "MsiExec.exe /i C:\\Windows\\temp\\putty-64bit-installer.msi /qn"
+        hv1:
+          ip_address: 192.168.126.61
+          version: "Server2022eval"
+          vm_memory_mb: 32768
+          vm_num_cpus: 6
+          vm_disk_gb: 200
+          nested_virtualization: true
+          disks:
+            - size_gb: 200
+              type: thin
+            - size_gb: 3072
+              type: thin
+          ethernet_ports:
+            eth0:  "{{ lab_lan1_portgroup }}"
+            eth1:  "{{ lab_lan1_portgroup }}"
+
     centos:
       vars:
       hosts:
