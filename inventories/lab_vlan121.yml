@@ -27,3 +27,23 @@ all:
             - MsiExec.exe /i E:\files\putty-64bit-0.83-installer.msi /qn
             - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
 
+    winservers:
+      hosts:
+        rdp:
+          ip_address: 192.168.121.27
+          version: "Server2022eval"
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
+          vm_disk_gb: 80
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+            - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
+            - https://github.com/myrtille-rdp/myrtille/releases/download/v2.9.2/Myrtille_2.9.2_x86_x64_Setup.msi
+          extra_commands:
+            - MsiExec.exe /i E:\files\putty-64bit-0.83-installer.msi /qn
+            - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
+            - MsiExec.exe /i E:\files\Myrtille_2.9.2_x86_x64_Setup.msi /qb
+            - Install-Module PSReadLine -Force -AllowClobber
+
+
+
