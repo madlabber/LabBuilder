@@ -47,5 +47,8 @@
         #disk-list = ["sdb"]
         filter.ID_MODEL = "*"
 
+        [first-boot]
+        source = "from-iso"
+
     delegate_to: localhost
 

@@ -1,6 +1,5 @@
 - name: set workspace variable
   set_fact:
-    #workspace: "/tmp/esxi_iso_workspace"
     workspace: "{{ playbook_dir }}/files/{{ vm_name }}-install"
     custom_iso: "{{ vm_name }}-install.iso"
   delegate_to: localhost

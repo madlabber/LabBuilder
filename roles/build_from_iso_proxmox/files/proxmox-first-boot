@@ -1,0 +1,13 @@
+#!/bin/bash
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+
+VIRT_TYPE=$(systemd-detect-virt)
+if [ "$VIRT_TYPE" = "vmware" ]; then
+    apt-get install -y open-vm-tools
+    systemctl enable --now open-vm-tools
+elif [ "$VIRT_TYPE" = "kvm" ] || [ "$VIRT_TYPE" = "qemu" ]; then
+    apt-get install -y qemu-guest-agent
+    systemctl enable --now qemu-guest-agent
+fi

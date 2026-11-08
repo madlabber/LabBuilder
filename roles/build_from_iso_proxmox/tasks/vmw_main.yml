@@ -19,8 +19,3 @@
 
 - name: Build VM 
   include_tasks: vmw_build_vm.yml
-  when: not autoinstall_iso_exists.failed
-
-- name: Build VM the hard way
-  include_tasks: vmw_build_vm_alt.yml
-  when: autoinstall_iso_exists.failed

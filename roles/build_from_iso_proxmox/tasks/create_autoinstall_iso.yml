@@ -1,0 +1,33 @@
+- name: Check if the base Proxmox ISO is already downloaded
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/files/{{ install_iso }}"
+  register: base_iso_stat
+  delegate_to: localhost
+
+- name: Check if the Autoinstall ISO already exists
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/files/{{ autoinstall_iso }}"
+  register: install_iso_stat
+  delegate_to: localhost
+
+- name: download ISO if necessary
+  get_url:
+    url: "{{ install_iso_url }}"
+    dest: "{{ playbook_dir }}/files/{{install_iso}}"
+    tmp_dest: "{{ playbook_dir }}/files/"
+  delegate_to: localhost
+  ignore_errors: true 
+  when: 
+    - not base_iso_stat.stat.exists
+    - not install_iso_stat.stat.exists
+
+- name: Inject auto-installer-mode.toml into the iso file
+  ansible.builtin.command: >
+    xorriso -dev {{ playbook_dir }}/files/{{install_iso}} \
+            -outdev {{ playbook_dir }}/files/{{autoinstall_iso}} \
+            -boot_image any replay \
+            -map {{role_path}}/files/auto-installer-mode.toml /auto-installer-mode.toml \
+            -map {{ role_path }}/files/proxmox-first-boot /proxmox-first-boot
+  delegate_to: localhost
+  when: 
+    - not install_iso_stat.stat.exists

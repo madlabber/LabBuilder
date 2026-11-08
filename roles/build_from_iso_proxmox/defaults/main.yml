@@ -1,7 +1,12 @@
 #install_iso: "proxmox-ve_8.1-1.iso"
 #install_iso_url: "https://enterprise.proxmox.com/iso/proxmox-ve_8.1-1.iso"
 
-pve_version: "8.4-1"
+# pve_version: "8.4-1"
+# autoinstall_iso: "proxmox-ve_{{pve_version}}-auto-from-partition.iso"
+# install_iso: "proxmox-ve_{{pve_version}}.iso"
+# install_iso_url: "https://enterprise.proxmox.com/iso/proxmox-ve_{{pve_version}}.iso"
+
+pve_version: "9.2-1"
 autoinstall_iso: "proxmox-ve_{{pve_version}}-auto-from-partition.iso"
 install_iso: "proxmox-ve_{{pve_version}}.iso"
 install_iso_url: "https://enterprise.proxmox.com/iso/proxmox-ve_{{pve_version}}.iso"

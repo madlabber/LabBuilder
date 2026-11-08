@@ -11,4 +11,3 @@
   shell:
     cmd: "mcopy -o -i {{ playbook_dir }}/files/{{vm_name}}/autoinstall-flat.vmdk@@32s {{ playbook_dir }}/files/{{vm_name}}/answer.toml ::/answer.toml"
   delegate_to: localhost
-

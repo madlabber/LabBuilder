@@ -1,0 +1,4 @@
+mode = "partition"
+partition_label = "proxmox-ais"
+
+[http]
