@@ -76,23 +76,6 @@ all:
             eth2: "{{ lab_lan2_portgroup }}"
             eth3: "{{ lab_lan2_portgroup }}"
 
-    # nestedesx:
-    #   hosts:
-    #     esx01:
-    #       ip_address: 192.168.0.51
-    #     esx02:
-    #       ip_address: 192.168.0.52
-    #     esx03:
-    #       ip_address: 192.168.0.53
-    #   vars:
-    #       esx_version: "8.0u3"
-    #       ovf_file: "files/Nested_ESXi8.0u3_Appliance_Template_v1.ova"
-    #       vm_memory_mb: 24576
-    #       vm_num_cpus: 6
-    #       vm_disk1_size_gb: 40
-    #       vm_disk2_size_gb: 2600
-    #       create_local_vmfs: 'False'
-    #       enable_ssh: 'True'
     centos:
       hosts:
         ansible:

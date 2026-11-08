@@ -98,8 +98,8 @@ all:
         vm_num_cpus: 2
         vm_disk_gb: 250 
       hosts:
-        # pve01:
-        #   ip_address: 192.168.0.71
+        pve01:
+          ip_address: 192.168.0.71
         # pve02:
         #   ip_address: 192.168.0.52
         # pve03:
