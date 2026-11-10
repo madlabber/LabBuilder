@@ -7,10 +7,15 @@
     state: present
     name: '{{ vm_name|replace("_", "-") }}'
     node: "{{ pve_node }}"
-    net:
-      net0: "virtio,bridge={{pve_networks[vm_network].bridge }}{{ (pve_networks[vm_network].vlan is defined) | ternary(',tag=' ~ (pve_networks[vm_network].vlan | default('')), '') }}"
-    sata:
-      sata0: '{{pve_vm_datastore}}:{{ vm_disk_gb |int }}'
+    net: "{{ networks }}"
+#      net0: "virtio,bridge={{pve_networks[vm_network].bridge }}{{ (pve_networks[vm_network].vlan is defined) | ternary(',tag=' ~ (pve_networks[vm_network].vlan | default('')), '') }}"
+    scsi:
+      scsi0: "{{ (disks[0].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[0].size_gb|default(omit) , omit ) }}"
+      scsi1: "{{ (disks[1].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[1].size_gb|default(omit) , omit ) }}"
+      scsi2: "{{ (disks[2].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[2].size_gb|default(omit) , omit ) }}"
+      scsi3: "{{ (disks[3].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[3].size_gb|default(omit) , omit ) }}"
+      scsi4: "{{ (disks[4].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[4].size_gb|default(omit) , omit ) }}"
+      # sata5: "{{ (disks[5].size_gb|default('') != '') | ternary( pve_vm_datastore~':'~disks[5].size_gb|default(omit) , omit ) }}"
     ide:
       ide2: "{{iso_datastore}}:iso/{{autoinstall_iso}},media=cdrom"
     cpu: host
@@ -44,10 +49,11 @@
 # The disk filter in the autosetup picks the first disk, so it must not be this one.
 - name: Attach disks
   shell:  
-    cmd: "qm set {{ create_vm.vmid }} --sata{{ item }} {{ pve_vm_datastore }}:0,import-from={{ import_path }}/{{ vm_name }}-autoinstall.raw"
+  #  cmd: "qm set {{ create_vm.vmid }} --sata{{ item }} {{ pve_vm_datastore }}:0,import-from={{ import_path }}/{{ vm_name }}-autoinstall.raw"
+    cmd: "qm set {{ create_vm.vmid }} --scsi5 {{ pve_vm_datastore }}:0,import-from={{ import_path }}/{{ vm_name }}-autoinstall.raw"
   delegate_to: temp_host
-  loop:
-   - 1
+  # loop:
+  #  - 1
 
 # Fixme: Configure Serial Ports
 

@@ -28,6 +28,9 @@
 - name: upload autoinstall disk 
   include_tasks: pve_upload_disk.yml
 
+- name: parse networks
+  include_tasks: pve_parse_networks.yml
+
 - name: build vm 
   include_tasks: pve_build_vm.yml 
 

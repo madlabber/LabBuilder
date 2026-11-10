@@ -2,7 +2,7 @@
 - name: remove vm if state is absent or forced (vmw)
   include_tasks: vmw_absent.yml
   when: 
-    - state == "absent" or state == "force"
+    - state == "absent" or state == "force" 
     - vcenter_address ~ esxi_address != ''
     - pve_address == ''
 

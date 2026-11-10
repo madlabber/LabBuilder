@@ -25,3 +25,19 @@ vcenter_address: ""
 vcenter_cluster: ""
 esxi_address: ""
 pve_address: ""
+
+vm_disk_gb: 80
+disk_controller: paravirtual
+default_disks:
+  - size_gb: '{{ vm_disk_gb }}'
+    controller_type: '{{ disk_controller }}'
+    controller_number: 0
+    unit_number: 0
+    type: thin
+disks: "{{default_disks}}"
+
+vm_network: "VM Network"
+network_device_type: "e1000"
+default_networks:
+  - name: "{{ vm_network }}"
+    device_type: "{{ network_device_type }}"

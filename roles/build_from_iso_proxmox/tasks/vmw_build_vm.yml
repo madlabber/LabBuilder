@@ -11,29 +11,25 @@
     name: '{{ vm_name }}'
     state: present
     guest_id: ubuntu64Guest
+    datastore: '{{ vm_datastore }}'
     cdrom:
         - controller_number: 0
           unit_number: 0
           state: present
           type: iso
           iso_path: '[{{ iso_datastore }}] {{ autoinstall_iso }}'
-    disk:
-    - size_gb: '{{ vm_disk_gb | default(40) | string }}'
-      type: thin
-      datastore: '{{ vm_datastore }}'
+    disk: '{{ disks|default(default_disks) }}'
     hardware:
       memory_mb: '{{ vm_memory_mb | default(2048) | string }}'
       num_cpus: '{{ vm_num_cpus | default(2) | string }}'
       nested_virt: '{{ nested_virtualization|default(true) }}'
       scsi: lsilogicsas
-    networks:
-    - name: "{{ vm_network | default('VM Network') }}"
-      device_type: e1000
+    networks: '{{ networks|default(default_networks) }}'
     wait_for_ip_address: no
   delegate_to: localhost
   register: deploy_vm
 
-- name: attach config disk
+- name: attach config disk as last disk on bus
   community.vmware.vmware_guest_disk:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
@@ -43,8 +39,9 @@
     name: '{{ vm_name }}'
     disk:
     - filename: '[{{ vm_datastore }}] {{ vm_name }}/autoinstall.vmdk'
-      scsi_controller: 0
-      unit_number: 1
+      controller_type: '{{ disk_controller }}'
+      controller_number: 0 
+      unit_number: 15
   delegate_to: localhost
 
 - name: Set boot order
