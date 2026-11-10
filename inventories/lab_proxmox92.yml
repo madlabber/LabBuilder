@@ -73,11 +73,6 @@ all:
           install_xrdp: true
           
     proxmox:
-      vars:
-        pve_version: "9.2-1"
-        vm_memory_mb: 16384
-        vm_num_cpus: 2
-        vm_disk_gb: 250 
       hosts:
         pve01:
           ip_address: 192.168.0.51
@@ -85,6 +80,19 @@ all:
           ip_address: 192.168.0.52
         pve03:
           ip_address: 192.168.0.53
+      vars:
+        pve_version: "9.2-1"
+        vm_memory_mb: 16384
+        vm_num_cpus: 2
+        # vm_disk_gb: 250 
+        ethernet_ports:
+          eth0: "{{lab_lan1_portgroup}}"
+          eth1: "{{lab_lan1_portgroup}}"
+        disks:
+        - size_gb: 128
+          type: thin
+        - size_gb: 2600
+          type: thin
 
     ontapselecteval:
       hosts:

@@ -62,4 +62,5 @@ pve_networks:
     lab_select2n_vmw80u3_net2: { bridge: vmbr1, vlan: 1006 }
     lab_ncie_san_v9191_net1:   { bridge: vmbr1, vlan: 1007 }
     lab_ncie_san_v9191_net2:   { bridge: vmbr1, vlan: 1008 }
-
+    lab_proxmox92_net1:        { bridge: vmbr1, vlan: 1009 }
+    lab_proxmox92_net2:        { bridge: vmbr1, vlan: 1010 }
