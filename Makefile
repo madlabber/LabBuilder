@@ -12,8 +12,7 @@ configure:
 	nano vars/$$NAME.yml
 
 install:
-	@ansible-galaxy collection install community.general \
-	ansible-playbook install-requirements.yml
+	@ansible-playbook install-requirements.yml
 
 lab:
 	@INV="$(word 2, $(MAKECMDGOALS))"; \

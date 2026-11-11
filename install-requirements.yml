@@ -1,9 +1,9 @@
 ---
 - name: "Install Requirements"
   hosts: localhost
-  gather_facts: false
+  gather_facts: true
   tasks:
-
+    
   - name: install python modules
     ansible.builtin.pip:
       name: "{{item}}"
@@ -15,44 +15,27 @@
       - jmespath
       - proxmoxer
       - passlib
+      - "bcrypt<5.0.0"
 
   - name: install community.general
     ansible.builtin.command: ansible-galaxy collection install community.general
 
   - name: install remaining collections
-    community.general.ansible_galaxy_install:
-      type: both
-      requirements_file: requirements.yml
+    ansible.builtin.command: ansible-galaxy install -r requirements.yml
 
-  - name: Install mtools
-    ansible.builtin.package:
-      name: mtools
-      state: present
+  - name: Detected package manager
+    ansible.builtin.debug:
+      msg: "This system uses: {{ ansible_pkg_mgr }}"
+      
+  - name: install packages
+    ansible.builtin.command:
+      cmd: "{{ ansible_pkg_mgr }} install -y {{item}}"
     become: True
     become_user: root
-    ignore_errors: True
+    ignore_errors: true
+    with_items:
+      - mtools
+      - qemu-img
+      - qemu-utils
+      - xorriso
 
-  - name: Install qemu-img
-    ansible.builtin.package:
-      name: qemu-img
-      state: present
-    become: True
-    become_user: root
-    ignore_errors: True
-
-# on some platforms this is the one
-  - name: Install qemu-utils
-    ansible.builtin.package:
-      name: qemu-utils
-      state: present
-    become: True
-    become_user: root
-    ignore_errors: True
-
-  - name: Install xorriso
-    ansible.builtin.package:
-      name: xorriso
-      state: present
-    become: True
-    become_user: root
-    ignore_errors: True
