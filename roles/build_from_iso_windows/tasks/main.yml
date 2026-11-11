@@ -20,6 +20,9 @@
 - name: upload config iso
   include_tasks: "{{host_type}}/upload_config_iso.yml"
 
+- name: parse networks
+  include_tasks: "{{host_type}}/parse_networks.yml"
+
 - name: build VM
   include_tasks: "{{host_type}}/build_vm.yml"
 

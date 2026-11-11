@@ -46,9 +46,7 @@
       num_cpus: '{{ vm_num_cpus|int }}'
       nested_virt: '{{ nested_virtualization|default(false) }}'
       scsi: lsilogicsas
-    networks:
-    - name: '{{ vm_network }}'
-      device_type: e1000
+    networks: '{{ networks }}'
     wait_for_ip_address: no
   delegate_to: localhost
   register: deploy_vm

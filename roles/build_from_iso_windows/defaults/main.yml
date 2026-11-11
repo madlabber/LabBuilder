@@ -160,3 +160,4 @@ iso_datastore:
 esxi_hostname:   
 esxi_username:
 esxi_password:
+network_device_type: "vmxnet3"
