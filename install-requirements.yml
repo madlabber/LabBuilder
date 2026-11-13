@@ -15,7 +15,7 @@
       - jmespath
       - proxmoxer
       - passlib
-      - "bcrypt<5.0.0"
+      - "bcrypt<4.0.1"
 
   - name: install community.general
     ansible.builtin.command: ansible-galaxy collection install community.general

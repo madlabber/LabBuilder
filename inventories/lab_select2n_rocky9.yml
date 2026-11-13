@@ -59,7 +59,7 @@ all:
         install_xrdp: true
         install_ansible: true
         distro: "rocky"
-        version: "9.6"
+        version: "9.7"
         nested_virtualization: true
         disks:
           - size_gb: 160
@@ -71,7 +71,5 @@ all:
           eth0: "{{ lab_lan1_portgroup }}"
           eth1: "{{ lab_lan1_portgroup }}"
           eth2: "{{ lab_lan1_portgroup }}"
-        # extra_commands:
-        #   # enable serial console on EL8 variants
-        #   - 'grub2-editenv - set "$(grub2-editenv - list | grep kernelopts) console=tty0 console=ttyS0,115200"'
+
 

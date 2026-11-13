@@ -17,13 +17,26 @@ all:
     pfsense:
       hosts:
         gateway:
-          vm_network_wan: "{{lab_wan_portgroup}}"
-          vm_network_lan: "{{lab_lan1_portgroup}}"
-          config_xml_file: "files/pfsense/config.xml"
+          lan:
+            address:      192.168.0.1
+            netmask_cidr: 24
+            domain:       lab.test
+            dns_server:   192.168.0.11
+            dhcp_start:   192.168.0.150
+            dhcp_end:     192.168.0.200
+          nat_rules:
+          - name: "RDP to Jumphost"
+            external_port: "3389"
+            internal_port: "3389"
+            protocol: "tcp"
+            target_ip: 192.168.0.11
+          interfaces:
+            wan: "{{lab_wan_portgroup}}"
+            lan: "{{lab_lan1_portgroup}}"
     dc:
       hosts:
         dc01:
-          version: "Server2019eval"
+          version: "Server2025eval"
           ip_address: 192.168.0.11
           extra_files_urls:
             - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
@@ -33,31 +46,20 @@ all:
             - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
     ontapselecteval:
       hosts:
-        cluster1:  
-          ontap_version: "9.13.1"           
+        cluster1:         
           ontap_node_mgmt_ip:    192.168.0.111
           ontap_cluster_name:    "cluster1"
           ontap_cluster_mgmt_ip: 192.168.0.110
-          vm_data_disk_gb:       1024
-        cluster2:  
-          ontap_version: "9.13.1"           
+        cluster2:            
           ontap_node_mgmt_ip:    192.168.0.121
           ontap_cluster_name:    "cluster2"
           ontap_cluster_mgmt_ip: 192.168.0.120
-          vm_data_disk_gb:       1024
-        cluster3:  
-          ontap_version: "9.13.1"           
+        cluster3:           
           ontap_node_mgmt_ip:    192.168.0.131
           ontap_cluster_name:    "cluster3"
           ontap_cluster_mgmt_ip: 192.168.0.130
+      vars:
+          ontap_version: "9.19.1"       
+          ovf_file: files/ONTAPSelect_standalone_9191_ESX_NODAR.ova  
+          ontap_deployment_option: ONTAPSelectSmall
           vm_data_disk_gb:       1024
-
-    # centos:
-    #   hosts:
-    #     ansible:
-    #       ip_address: 192.168.0.43
-    #       version: "8"
-    #     centos1:
-    #       ip_address: 192.168.0.44
-    #       version: "7"
-    #   vars:

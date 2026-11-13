@@ -48,13 +48,14 @@ vCenter Server
 1. Install ansible, then make install:
     ``` 
     make install 
+    sudo make install
     ```
-    Note: this will attempt to install the requirements listed above, but ymmv.
 
 2. Configure your virtualization hosting environment variables in the main vars file:
     ```
     make configure
     ```
+
 3. Add the ISOs and OVAs for components you intend to deploy to the files folder on the ansible controller
 
 4. Select or customize a lab blueprint from the inventories folder, i.e. lab_test.yml
@@ -63,10 +64,12 @@ vCenter Server
     ```
     make prep lab_test
     ```
+
 6. Build the lab blueprint
     ```
     make lab lab_test
     ```
+    
 ### Using an alternate config
 You can use alternate config files to target different hosting environments.  For example you may have one environment hosted on VMware, and another environment hosted on Proxmox.
 
