@@ -65,35 +65,22 @@ all:
         cluster1-01:
           partner:      "cluster1-02"
           cluster_name: "cluster1"
-          ovf_version:  "9.19.1"
           cluster_mgmt_ip: 192.168.0.90
           ip_address:      192.168.0.91
           partner_ip:      192.168.0.92
-          disk_model: "vscsi"
-          shelf0_disk_size: 8192
-          shelf0_disk_count: 12
-          shelf1_disk_size: 8192
-          shelf1_disk_count: 12
-          fake_ssd_disk_size: 8192
-          adp_enabled: "true"
         cluster1-03:
           partner:      "cluster1-04"
-          ovf_version:  "9.19.1"
           ip_address:      192.168.0.93
           partner_ip:      192.168.0.94
-          disk_model: "vscsi"
-          shelf0_disk_size: 8192
-          shelf0_disk_count: 12
-          shelf1_disk_size: 8192
-          shelf1_disk_count: 12
-          fake_ssd_disk_size: 8192
-          adp_enabled: "true"
-        # Cluster2 will be a single node cluster
+        # Cluster2 will be a 2-node cluster with 1 HA pair
         cluster2-01:
+          partner:      "cluster2-02"
           cluster_name: "cluster2"
-          ovf_version:  "9.19.1"
           cluster_mgmt_ip: 192.168.0.80
           ip_address:      192.168.0.81
+          partner_ip:      192.168.0.82
+      vars:
+          ovf_version:  "9.19.1"
           disk_model: "vscsi"
           shelf0_disk_size: 8192
           shelf0_disk_count: 12
@@ -101,3 +88,4 @@ all:
           shelf1_disk_count: 12
           fake_ssd_disk_size: 8192
           adp_enabled: "true"
+
