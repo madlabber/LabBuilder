@@ -4,7 +4,7 @@ all:
     lab_name: AdminVMs
     lab_prefix: ""
     lab_netmask: 255.255.255.0
-    lab_password: P@ssw0rd
+    lab_password: "{{ default_lab_password }}"
     lab_vm_datastore: "{{ lab_name }}"
     lab_wan_portgroup: "WAN Network"
     lab_lan1_portgroup: "VLAN121"

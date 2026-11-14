@@ -4,7 +4,7 @@ all:
     lab_name: lab_astra_sandbox
     lab_prefix: "{{ lab_name }}_"
     lab_netmask: 255.255.255.0
-    lab_password: P@ssw0rd
+    lab_password: "{{ default_lab_password }}"
     lab_vm_datastore: "{{ lab_name }}"
     lab_wan_portgroup: "VM Network"
     lab_lan1_portgroup: "{{lab_prefix}}net1"
