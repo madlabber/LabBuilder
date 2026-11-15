@@ -5,13 +5,13 @@ all:
     lab_prefix: "{{ lab_name }}_"
     lab_password: "{{ default_lab_password }}"
     lab_vm_datastore: "{{ lab_name }}"
-    lab_wan_portgroup: "VM Network"
+    lab_wan_portgroup: "{{ vm_network }}"
     lab_lan1_portgroup: "{{ lab_name }}_net1"
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
     lab_lan1_dns_ip: "192.168.0.1"
-    lab_domain_name:   "lab.local"
+    lab_domain_name:   "lab.test"
     lab_domain_controller: "dc01"
   children:
     pfsense:
@@ -48,13 +48,10 @@ all:
         esx04:
           ip_address: 192.168.0.54
       vars:
-          esx_version: "8.0"
           vm_memory_mb: 10240
           vm_num_cpus: 2
           vm_disk1_size_gb: 4
           vm_disk2_size_gb: 40
           create_local_vmfs: 'False'
           enable_ssh: 'True'
-          # ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
-          # ovf_file: "files/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
           install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"

@@ -1,17 +1,17 @@
 all:
   hosts:
   vars:
-    lab_name: lab_vsphere7u1
+    lab_name: lab_vsphere7u3
     lab_prefix: "{{ lab_name }}_"
     lab_password: "{{ default_lab_password }}"
-    lab_vm_datastore: lab_vsphere7u1
-    lab_wan_portgroup: "VM Network"
-    lab_lan1_portgroup: "lab_vsphere7u1_net1"
+    lab_vm_datastore: "{{ lab_name }}"
+    lab_wan_portgroup: "{{ vm_network }}"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
     lab_lan1_dns_ip: "192.168.0.1"
-    lab_domain_name:   "lab.local"
+    lab_domain_name:   "lab.test"
     lab_domain_controller: "dc01"
   children:
     pfsense:
@@ -23,7 +23,7 @@ all:
     dc:
       hosts:
         dc01:
-          version: "Server2019eval"
+          version: "Server2022eval"
           ip_address: 192.168.0.11
           extra_files_urls:
             - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
@@ -48,12 +48,11 @@ all:
         esx04:
           ip_address: 192.168.0.54
       vars:
-          esx_version: "7.0u1"
           vm_memory_mb: 10240
           vm_num_cpus: 2
           vm_disk1_size_gb: 4
           vm_disk2_size_gb: 40
           create_local_vmfs: 'False'
           enable_ssh: 'True'
-          ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi7.0_Appliance_Template_v1.ova"
-          ovf_file: "files/Nested_ESXi7.0_Appliance_Template_v1.ova"
+          install_iso: "VMware-VMvisor-Installer-7.0U3n-21930508.x86_64.iso"
+
