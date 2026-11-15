@@ -37,7 +37,7 @@ all:
           ip_address: 192.168.0.50
           vm_fqdn: "vcsa.lab.local"
           ovf_file: "files/VMware-vCenter-Server-Appliance-7.0.1.00200-17327517_OVF10.ova"
-    nestedesx:
+    esx:
       hosts:
         esx01:
           ip_address: 192.168.0.51
