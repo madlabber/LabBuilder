@@ -2,4 +2,29 @@
   set_fact:
     config_iso:      "{{vm_name}}-ks.iso"
 
-    
+- name: map disk1 vars from nestedesx 
+  set_fact:
+    disks:
+      - size_gb: '{{ vm_disk1_size_gb }}'
+        controller_type: '{{ disk_controller }}'
+        controller_number: 0
+        unit_number: 0
+        type: thin
+  when: vm_disk1_size_gb|default(0) > 0
+
+- name: map disk2 vars from nestedesx 
+  set_fact:
+    disks:
+      - size_gb: '{{ vm_disk1_size_gb }}'
+        controller_type: '{{ disk_controller }}'
+        controller_number: 0
+        unit_number: 0
+        type: thin
+      - size_gb: '{{ vm_disk2_size_gb }}'
+        controller_type: '{{ disk_controller }}'
+        controller_number: 0
+        unit_number: 1
+        type: thin
+  when: 
+    - vm_disk1_size_gb|default(0) > 0
+    - vm_disk2_size_gb|default(0) > 0

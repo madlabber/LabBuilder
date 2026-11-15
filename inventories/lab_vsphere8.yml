@@ -37,7 +37,7 @@ all:
           ip_address: 192.168.0.50
           vm_fqdn: "vcsa.lab.local"
           ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.1.00200-21860503_OVF10.ova"
-    nestedesx:
+    esx:
       hosts:
         esx01:
           ip_address: 192.168.0.51
@@ -55,5 +55,6 @@ all:
           vm_disk2_size_gb: 40
           create_local_vmfs: 'False'
           enable_ssh: 'True'
-          ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
-          ovf_file: "files/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
+          # ovf_url: "https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
+          # ovf_file: "files/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
+          install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
