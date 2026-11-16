@@ -12,7 +12,7 @@ configure:
 	nano vars/$$NAME.yml
 
 install:
-	@ansible-playbook install-requirements.yml
+	@ansible-playbook install-requirements.yml -K
 
 lab:
 	@INV="$(word 2, $(MAKECMDGOALS))"; \

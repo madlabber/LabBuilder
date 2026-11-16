@@ -53,8 +53,8 @@ vCenter Server
 1. Install ansible, then make install:
     ``` 
     make install 
-    sudo make install
     ```
+    The "BECOME Password" prompt will promt for the sudo password.
 
 2. Configure your virtualization hosting environment variables in the main vars file:
     ```

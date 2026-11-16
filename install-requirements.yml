@@ -26,13 +26,13 @@
 
   - name: Detected package manager
     ansible.builtin.debug:
-      msg: "This system uses: {{ ansible_pkg_mgr }}"
+      msg: "This system uses: {{ ansible_facts['pkg_mgr'] }}"
       
   - name: install packages
     ansible.builtin.command:
-      cmd: "{{ ansible_pkg_mgr }} install -y {{item}}"
+      cmd: "{{ ansible_facts['pkg_mgr'] }} install -y {{item}}"
     become: True
-    become_user: root
+    # become_user: root
     ignore_errors: true
     with_items:
       - mtools
