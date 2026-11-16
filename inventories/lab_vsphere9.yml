@@ -10,29 +10,25 @@ all:
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
-    lab_lan1_dns_ip: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.11"
     lab_domain_name:   "lab.test"
     lab_domain_controller: "dc01"
   children:
     pfsense:
       hosts:
         gateway:
-          lan:
-            address:      192.168.0.1
-            netmask_cidr: 24
-            domain:       lab.test
-            dns_server:   192.168.0.11
-            dhcp_start:   192.168.0.150
-            dhcp_end:     192.168.0.200
-          nat_rules:
-          - name: "RDP to Jumphost"
-            external_port: "3389"
-            internal_port: "3389"
-            protocol: "tcp"
-            target_ip: 192.168.0.11
+          ip_address: 192.168.0.1
           interfaces:
             wan: "{{lab_wan_portgroup}}"
             lan: "{{lab_lan1_portgroup}}"
+          lan:
+            address:      192.168.0.1
+            netmask_cidr: 24
+            domain:       "{{lab_domain_name}}"
+            dns_server:   192.168.0.11
+            dhcp_start:   192.168.0.150
+            dhcp_end:     192.168.0.200
+          rdp_jumphost:   192.168.0.11
     dc:
       hosts:
         dc01:
@@ -48,7 +44,7 @@ all:
       hosts:
         vcsa:
           ip_address: 192.168.0.50
-          vm_fqdn: "vcsa.lab.local"
+          vm_fqdn: "vcsa.{{lab_domain_name}}"
           ovf_file: "files/VMware-vCenter-Server-Appliance-9.0.0.0.24755230_OVF10.ova"
     esx:
       hosts:

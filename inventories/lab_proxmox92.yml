@@ -33,7 +33,7 @@ all:
           interfaces:
             wan: "{{lab_wan_portgroup}}"
             lan: "{{lab_lan1_portgroup}}"
-            
+
     dc:
       hosts:
         dc01:
