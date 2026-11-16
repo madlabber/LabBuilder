@@ -16,6 +16,7 @@
       - proxmoxer
       - passlib
       - "bcrypt<4.0.1"
+      - netaddr
 
   - name: install community.general
     ansible.builtin.command: ansible-galaxy collection install community.general

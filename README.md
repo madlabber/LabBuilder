@@ -22,16 +22,21 @@ There are numerous example lab blueprints in the inventories folder.
 ansible 2.17+
 ansible-galaxy collections:
 - community.vmware
+- vmware.vmware
 - community.general
 - netapp.ontap
 - community.proxmox
 
 python libraries
-- pyvmomi
 - pycdlib
 - pywinrm
+- pyvmomi
 - netapp-lib
+- jmespath
 - proxmoxer
+- passlib
+- "bcrypt<4.0.1"
+- netaddr
 
 Additional packages:
 - mtools

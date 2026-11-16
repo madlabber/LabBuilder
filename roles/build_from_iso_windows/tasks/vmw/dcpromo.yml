@@ -130,7 +130,8 @@
       - "Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'"
       # Disable firewall for Domain, Public and Private profiles
       - "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False"
-
+      # Create reverse lookup zone
+      - "Add-DnsServerPrimaryZone -NetworkID {{ (vm_gateway ~ '/' ~ vm_netmask_cidr) | ansible.utils.ipaddr('subnet') }} -ReplicationScope Domain"
   when: checkdc is failed
   
 # scriptlet for adding dns records
