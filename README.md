@@ -110,7 +110,7 @@ make graph lab_test
 ## Using ansible-playbook
 1. Install ansible, then execute the install-requirements.yml playbook:
     ``` 
-    ansible-playbook install-requirements.yml 
+    ansible-playbook install-requirements.yml -K
     ```
 2. Configure your virtualization hosting environment variables in the main vars file:
     ```
