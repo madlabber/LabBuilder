@@ -17,9 +17,22 @@ all:
     pfsense:
       hosts:
         gateway:
-          vm_network_wan: "{{lab_wan_portgroup}}"
-          vm_network_lan: "{{lab_lan1_portgroup}}"
-          config_xml_file: "files/pfsense/config.xml"
+          lan:
+            address:      192.168.0.1
+            netmask_cidr: 24
+            domain:       lab.test
+            dns_server:   192.168.0.11
+            dhcp_start:   192.168.0.150
+            dhcp_end:     192.168.0.200
+          nat_rules:
+          - name: "RDP to Jumphost"
+            external_port: "3389"
+            internal_port: "3389"
+            protocol: "tcp"
+            target_ip: 192.168.0.11
+          interfaces:
+            wan: "{{lab_wan_portgroup}}"
+            lan: "{{lab_lan1_portgroup}}"
     dc:
       hosts:
         dc01:
@@ -48,10 +61,10 @@ all:
         esx04:
           ip_address: 192.168.0.54
       vars:
-          vm_memory_mb: 10240
-          vm_num_cpus: 2
-          vm_disk1_size_gb: 4
-          vm_disk2_size_gb: 40
+          vm_memory_mb: 16348
+          vm_num_cpus: 4
+          vm_disk1_size_gb: 128
+          vm_disk2_size_gb: 512
           create_local_vmfs: 'False'
           enable_ssh: 'True'
           install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
