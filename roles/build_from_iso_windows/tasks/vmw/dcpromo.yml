@@ -132,9 +132,9 @@
       - "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False"
       # Create reverse lookup zone
       - "Add-DnsServerPrimaryZone -NetworkID {{ (vm_gateway ~ '/' ~ vm_netmask_cidr) | ansible.utils.ipaddr('subnet') }} -ReplicationScope Domain"
+      # Clear the server manager dcpromo flag
+      - Get-Process ServerManager -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+      - Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager\Roles\10' -Name 'ConfigurationState' -Value 2 -Type DWord -ErrorAction SilentlyContinue
+      - Remove-Item -Path 'C:\Users\*\AppData\Local\Microsoft\Windows\ServerManager\*' -Recurse -Force -ErrorAction SilentlyContinue
   when: checkdc is failed
-  
-# scriptlet for adding dns records
-#Add-DnsServerResourceRecordA -Name "host23" -ZoneName "contoso.com" -AllowUpdateAny -IPv4Address "172.18.99.23" -TimeToLive 01:00:00
-
 

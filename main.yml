@@ -163,74 +163,6 @@
         ovf_ssh:      "{{enable_ssh|string}}"
         ovf_createvmfs: "{{create_local_vmfs|string}}"
 
-# Build Nested ESX hosts defined in the inventory file
-- name: Build Nested ESXI from OVA
-  hosts: oldnestedesx
-  gather_facts: false
-  vars_files:
-    - defaults/main.yml
-    - "{{ mainvars }}"
-    - "{{ credentials }}"
-  tasks:
-    - set_fact:
-        ovf_file: 'files/Nested_ESXi{{esx_version}}_Appliance_Template_v1.ova'
-      when:
-        - esx_version|default("")|string != ""
-        - ovf_file|default("")|string == ""
-    - set_fact:
-        ovf_url: 'https://download3.vmware.com/software/vmw-tools/nested-esxi/Nested_ESXi{{esx_version}}_Appliance_Template_v1.ova'
-      when:
-        - esx_version|default("")|string != ""
-        - ovf_url|default("")|string == ""
-    - debug:
-        msg:
-          - "ovf_file: {{ovf_file}}"
-          - "ovf_url : {{ovf_url}}"
-    - include_tasks: tasks/Build_Nested_ESXi_from_OVA.yml
-      vars:
-        ovf_version: "{{esx_version}}" #7.0u1, 7.0, 6.7u3, 6.7u2, 6.7u1, 6.7 ... 6.0?
-        #ovf_file: "{{ ovf_file }}"
-        #ovf_url: "{{ ovf_url }}"
-        vm_name:      "{{lab_prefix | default('')}}{{inventory_hostname}}"
-        vm_network:   "{{ lab_lan1_portgroup }}"
-        vm_datastore: "{{ lab_vm_datastore }}"
-        # vm_memory_mb: "{{memory_mb}}"
-        # vm_num_cpus: 2
-        ovf_hostname: "{{ inventory_hostname }}"
-        ovf_address:  "{{ ip_address }}"
-        ovf_netmask:  "{{ lab_lan1_netmask }}"
-        ovf_gateway:  "{{ lab_lan1_gateway }}"
-        ovf_vlan: ""
-        ovf_dns:      "{{ lab_lan1_dns_ip }}"
-        ovf_domain:   "{{lab_domain_name}}"
-        ovf_ntp:      "{{lab_lan1_gateway}}"
-        ovf_syslog: "" # IP of syslog server
-        ovf_password: "{{lab_password}}"
-        ovf_ssh:      "{{enable_ssh|string}}"
-        ovf_createvmfs: "{{create_local_vmfs|string}}"
-
-- name: Build Windows Servers
-  hosts: winservers
-  gather_facts: false
-  vars_files:
-    - defaults/main.yml
-    - "{{ mainvars }}"
-    - "{{ credentials }}"
-  roles:
-    - role: build_from_iso_windows
-      vars:
-        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
-        vm_datastore: "{{lab_vm_datastore}}"
-        vm_network: "{{lab_lan1_portgroup}}"
-        vm_password_new: "{{lab_password}}"
-        vm_hostname: "{{inventory_hostname}}"
-        vm_address: "{{ip_address}}"
-        vm_netmask: "{{lab_lan1_netmask}}"
-        vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
-        vm_gateway: "{{lab_lan1_gateway}}"
-        vm_dns_server: "{{lab_lan1_dns_ip}}"
-        vm_domain: "{{lab_domain_name}}"
-
 - name: Build Centos VMs
   hosts: centos
   gather_facts: false
@@ -562,3 +494,26 @@
     until: result is succeeded
     when: #only run on VMware
       - pve_address|default('') == ''
+
+# We build these last so extra_commands can be used for lab integration automation
+- name: Build Windows Servers
+  hosts: winservers
+  gather_facts: false
+  vars_files:
+    - defaults/main.yml
+    - "{{ mainvars }}"
+    - "{{ credentials }}"
+  roles:
+    - role: build_from_iso_windows
+      vars:
+        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
+        vm_datastore: "{{lab_vm_datastore}}"
+        vm_network: "{{lab_lan1_portgroup}}"
+        vm_password_new: "{{lab_password}}"
+        vm_hostname: "{{inventory_hostname}}"
+        vm_address: "{{ip_address}}"
+        vm_netmask: "{{lab_lan1_netmask}}"
+        vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+        vm_gateway: "{{lab_lan1_gateway}}"
+        vm_dns_server: "{{lab_lan1_dns_ip}}"
+        vm_domain: "{{lab_domain_name}}"

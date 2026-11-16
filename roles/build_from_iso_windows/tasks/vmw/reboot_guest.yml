@@ -27,3 +27,6 @@
   register: tools_result
   until: tools_result is succeeded
 
+- name: Wait for 30 seconds for VMware Tools refresh
+  wait_for: timeout=30
+  delegate_to: localhost

@@ -93,5 +93,10 @@
       - "Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'"
       # Disable firewall for Domain, Public and Private profiles
       - "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False"
+      # Clear the server manager dcpromo flag
+      - Get-Process ServerManager -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+      - Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\ServerManager\Roles\10' -Name 'ConfigurationState' -Value 2 -Type DWord -ErrorAction SilentlyContinue
+      - Remove-Item -Path 'C:\Users\*\AppData\Local\Microsoft\Windows\ServerManager\*' -Recurse -Force -ErrorAction SilentlyContinue
+
   # End of Block
   when: checkdc.results[0].stdout_lines[3].find('2') == -1
