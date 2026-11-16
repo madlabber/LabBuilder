@@ -18,8 +18,10 @@
     power_on: no
     wait_for_ip_address: false
     inject_ovf_env: true
+    enable_hidden_properties: true
+    deployment_option: '{{ deployment_option }}' # vCenter t-shirt size: tiny,small,medium,large, or infrastructure 
     properties:
-      DeploymentOption.value: '{{deployment_option}}' # vCenter t-shirt size: tiny,small,medium,large, or infrastructure 
+      #DeploymentOption.value: '{{deployment_option}}' # vCenter t-shirt size: tiny,small,medium,large, or infrastructure 
       guestinfo.cis.appliance.net.addr.family: 'ipv4' # ipv4 or ipv6
       guestinfo.cis.appliance.net.mode: '{{vm_net_mode}}' # static or dhcp
       guestinfo.cis.appliance.net.addr: '{{ vm_address }}' 
@@ -28,33 +30,36 @@
       guestinfo.cis.appliance.net.gateway: '{{ vm_gateway }}' 
       guestinfo.cis.appliance.net.dns.servers: '{{ vm_dns_server }}' # Comma separated list of IP addresses of DNS servers.
       guestinfo.cis.appliance.root.passwd: '{{ vm_password }}' 
-#      guestinfo.cis.deployment.autoconfig: 'True' # Auto-configure after deployment
+      guestinfo.cis.deployment.autoconfig: '{{vm_autoconfig|string}}' # Auto-configure after deployment
       guestinfo.cis.vmdir.password: '{{ vm_password }}' # SSO Password for administrator@vsphere.local
+      guestinfo.cis.appliance.ssh.enabled: '{{vm_enable_ssh|string}}'
 #      guestinfo.cis.upgrade.import.directory: "/storage/seat/cis-export-folder" #FIX for VCSA 8.0
       domain: '{{ vm_domain }}'
       searchpath: '{{ searchpath }}'
+  retries: 3
+  delay: 45
   delegate_to: localhost
 
-# Set the restricted guestinfo variables
-- name: Patch broken vApp properties
-  community.vmware.vmware_guest:
-    hostname: '{{ vcenter_address }}'
-    username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'
-    validate_certs: no  
-    name: '{{ vm_name }}'
-    state: present
-    vapp_properties:
-      - id: guestinfo.cis.deployment.autoconfig
-        type: boolean
-        value: '{{vm_autoconfig|string}}'
-        userConfigurable: true
-      - id: guestinfo.cis.appliance.ssh.enabled
-        type: boolean
-        value: '{{vm_enable_ssh|string}}'
-        userConfigurable: true      
-  delegate_to: localhost
-  when: vcenter_address != esxi_address
+# # Set the restricted guestinfo variables
+# - name: Patch broken vApp properties
+#   community.vmware.vmware_guest:
+#     hostname: '{{ vcenter_address }}'
+#     username: '{{ vcenter_username }}'
+#     password: '{{ vcenter_password }}'
+#     validate_certs: no  
+#     name: '{{ vm_name }}'
+#     state: present
+#     vapp_properties:
+#       - id: guestinfo.cis.deployment.autoconfig
+#         type: boolean
+#         value: '{{vm_autoconfig|string}}'
+#         userConfigurable: true
+#       - id: guestinfo.cis.appliance.ssh.enabled
+#         type: boolean
+#         value: '{{vm_enable_ssh|string}}'
+#         userConfigurable: true      
+#   delegate_to: localhost
+#   when: vcenter_address != esxi_address
 
 - name: Power On 
   community.vmware.vmware_guest:
