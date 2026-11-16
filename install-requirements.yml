@@ -37,6 +37,17 @@
     with_items:
       - mtools
       - qemu-img
+      - xorriso
+    when: ansible_facts['pkg_mgr'] == "dnf" or ansible_facts['pkg_mgr'] == "yum"
+
+  - name: install packages
+    ansible.builtin.command:
+      cmd: "{{ ansible_facts['pkg_mgr'] }} install -y {{item}}"
+    become: True
+    # become_user: root
+    ignore_errors: true
+    with_items:
+      - mtools
       - qemu-utils
       - xorriso
-
+    when: ansible_facts['pkg_mgr'] == "apt"
