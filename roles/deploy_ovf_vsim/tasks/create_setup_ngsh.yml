@@ -69,10 +69,27 @@
   with_items:
     # Create the cluster
     - cluster create -clustername {{ ontap_cluster_name }}
+    # ensure e0d lands in the correct broadcast domain
+    - network port broadcast-domain add-ports -broadcast-domain Default -ports {{node_name}}:e0d
     # Create the cluster management lif
     - network interface create -vserver {{ ontap_cluster_name }} -lif cluster_mgmt -role cluster-mgmt -home-node {{ node_name }} -home-port e0d -address {{ ontap_cluster_mgmt_ip }} -netmask {{ ontap_netmask }}
   when:
     - ontap_cluster_mgmt_ip|default("") != ""
+    - ethernet_ports.e0a|default(cluster_network) == ethernet_ports.e0d|default(data_network)
+
+- name: Script Cluster Setup
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/files/{{vm_name}}/setup.ngsh"
+    line: "ngsh -c {{item}}"
+  delegate_to: localhost
+  with_items:
+    # Create the cluster
+    - cluster create -clustername {{ ontap_cluster_name }}
+    # Create the cluster management lif
+    - network interface create -vserver {{ ontap_cluster_name }} -lif cluster_mgmt -role cluster-mgmt -home-node {{ node_name }} -home-port e0d -address {{ ontap_cluster_mgmt_ip }} -netmask {{ ontap_netmask }}
+  when:
+    - ontap_cluster_mgmt_ip|default("") != ""
+    - ethernet_ports.e0a|default(cluster_network) != ethernet_ports.e0d|default(data_network)
 
 - name: notify add nodes by serial
   ansible.builtin.lineinfile:

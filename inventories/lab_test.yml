@@ -353,13 +353,18 @@ all:
           # shelf3_disk_size: 1096
           # shelf3_disk_count: 9
           fake_ssd_disk_size: 4096
-          add_nodes_by_serial: "408236-85-08"
+          # add_nodes_by_serial: "408236-85-08"
           bootargs:
             - bootarg.vm.madlabber=true
-          # extra_commands:
-          #   - sleep 180 # give nodes time to join
-          #   - node run vha-01 disk assign all
-          #   - node run vha-02 disk assign all
+          ethernet_ports:
+            e0a: "{{ lab_lan2_portgroup }}"
+            e0b: "{{ lab_lan2_portgroup }}"
+            e0c: "{{ lab_lan1_portgroup }}"
+            e0d: "{{ lab_lan1_portgroup }}"
+          extra_commands:
+            # - sleep 180 # give nodes time to join
+            - storage disk assign -node local -auto
+            - storage aggregate auto-provision -nodes local -skip-confirmation
           #   - storage aggregate create -aggregate aggr1 -diskcount 8 -node vha-01
           #   - storage aggregate create -aggregate aggr2 -diskcount 8 -node vha-02
           # update_package: files/9171RC1_v_image.tgz

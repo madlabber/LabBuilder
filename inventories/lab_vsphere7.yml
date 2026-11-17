@@ -105,7 +105,6 @@ all:
 
     vsims:
       hosts:
-        # Cluster1 will be a 4-node with 2 HA pairs
         ontap9-01:
           partner:      "ontap9-02"
           cluster_name: "ontap9"
@@ -121,12 +120,18 @@ all:
           shelf1_disk_count: 12
           fake_ssd_disk_size: 30720
           adp_enabled: "true"
-          ethernet_ports:
-            e0a: '{{ lab_lan2_portgroup }}'
-            e0b: '{{ lab_lan2_portgroup }}'
-            e0c: '{{ lab_lan1_portgroup }}'
-            e0d: '{{ lab_lan1_portgroup }}'
-            e0e: '{{ lab_lan2_portgroup }}'
+          # ethernet_ports:
+          #   e0a: '{{ lab_lan2_portgroup }}'
+          #   e0b: '{{ lab_lan2_portgroup }}'
+          #   e0c: '{{ lab_lan1_portgroup }}'
+          #   e0d: '{{ lab_lan1_portgroup }}'
+          #   e0e: '{{ lab_lan2_portgroup }}'
+          extra_commands:
+            - sleep 180 # give nodes time to join
+            - storage disk assign -node ontap9-01 -auto
+            - storage disk assign -node ontap9-02 -auto
+            - storage aggregate auto-provision -nodes ontap9-01 -skip-confirmation
+            - storage aggregate auto-provision -nodes ontap9-02 -skip-confirmation
 
     centos:
       hosts:
