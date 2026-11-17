@@ -44,6 +44,13 @@
     - "{{vm_name}}"
     - "{{partner_name}}"
 
+- name: Merge VMs 
+  include_tasks: "{{host_type}}/merge_vms.yml"
+  when:
+    - vm_name != ""
+    - partner_name != ""
+    - vsim_merge_vms|default(true)
+
 - name: Add disks
   include_tasks: "{{host_type}}/add_disks.yml"
   when: 

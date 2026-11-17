@@ -1,0 +1,130 @@
+---
+# - name: Ensure node2_name is powered off before moving datastore files
+#   community.vmware.vmware_guest_powerstate:
+#     hostname: "{{ vcenter_address }}"
+#     username: "{{ vcenter_username }}"
+#     password: "{{ vcenter_password }}"
+#     validate_certs: false
+#     name: "{{ node2_name }}"
+#     state: powered-off
+#   delegate_to: localhost
+
+- name: Unregister node2_name from vCenter inventory 
+  community.vmware.vmware_guest:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: false
+    name: "{{ node2_name }}"
+    state: absent
+    delete_from_inventory: true
+  delegate_to: localhost
+
+- name: Server-side move of node2 vm files into node1 vm folder
+  ansible.builtin.command:
+    cmd: python3 -
+    stdin: |
+      import ssl, sys, time
+      from pyVim.connect import SmartConnect, Disconnect
+      from pyVmomi import vim
+
+      ctx = ssl._create_unverified_context()
+      si = SmartConnect(
+          host="{{ vcenter_address }}",
+          user="{{ vcenter_username }}",
+          pwd="{{ vcenter_password }}",
+          sslContext=ctx,
+      )
+      try:
+          content = si.RetrieveContent()
+          dc = next(
+              (c for c in content.rootFolder.childEntity if isinstance(c, vim.Datacenter) and c.name == "{{ vcenter_datacenter }}"),
+              None,
+          )
+          if not dc:
+              sys.exit("Datacenter not found")
+          fm = content.fileManager
+          files = [
+              "{{ node2_name }}.vmx",
+              "{{ node2_name }}.nvram",
+              "{{ node2_name }}.vmsd",
+              "{{ node2_name }}.vmdk",
+              "{{ node2_name }}-flat.vmdk",
+              "{{ node2_name }}_2.vmdk",
+              "{{ node2_name }}_2-flat.vmdk",
+              "{{ node2_name }}_3.vmdk",
+              "{{ node2_name }}_3-flat.vmdk",
+          ]
+          for f in files:
+              src = "[{{ vm_datastore }}] {{ node2_name }}/" + f
+              dst = "[{{ vm_datastore }}] {{ node1_name }}/" + f
+              try:
+                  task = fm.MoveDatastoreFile_Task(
+                      sourceName=src,
+                      sourceDatacenter=dc,
+                      destinationName=dst,
+                      destinationDatacenter=dc,
+                      force=True,
+                  )
+                  while task.info.state not in [vim.TaskInfo.State.success, vim.TaskInfo.State.error]:
+                      time.sleep(0.2)
+                  if task.info.state == vim.TaskInfo.State.error:
+                      print(f"Warning moving {f}: {task.info.error.msg}")
+              except vim.fault.FileNotFound:
+                  pass
+      finally:
+          Disconnect(si)
+  delegate_to: localhost
+
+- name: Re-register node2 vm
+  community.vmware.vmware_guest_register_operation:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: false
+    datacenter: "{{ vcenter_datacenter }}"
+    folder: "/{{ vcenter_datacenter }}/vm"
+    cluster: "{{ vcenter_cluster }}"
+    name: "{{ node2_name }}"
+    path: "[{{ vm_datastore }}] {{ node1_name }}/{{ node2_name }}.vmx"
+    state: present
+  delegate_to: localhost
+
+# - name: Set unique log.fileName on node2 vm
+#   community.vmware.vmware_guest:
+#     hostname: "{{ vcenter_address }}"
+#     username: "{{ vcenter_username }}"
+#     password: "{{ vcenter_password }}"
+#     validate_certs: false
+#     name: "{{ node2_name }}"
+#     customvalues:
+#       - key: "log.fileName"
+#         value: "{{ node2_name }}.log"
+#   delegate_to: localhost
+
+- name: Delete node2 datastore folder via pyvmomi FileManager
+  ansible.builtin.command:
+    cmd: python3 -
+    stdin: |
+      from pyVim.connect import SmartConnect, Disconnect
+      from pyVim.task import WaitForTask
+
+      si = SmartConnect(
+          host="{{ vcenter_address }}",
+          user="{{ vcenter_username }}",
+          pwd="{{ vcenter_password }}",
+          disableSslCertValidation=True
+      )
+      try:
+          dc = [d for d in si.content.rootFolder.childEntity if d.name == "{{ vcenter_datacenter }}"][0]
+          task = si.content.fileManager.DeleteDatastoreFile_Task(
+              name="[{{ vm_datastore }}] {{ node2_name }}",
+              datacenter=dc
+          )
+          WaitForTask(task)
+      finally:
+          Disconnect(si)
+  delegate_to: localhost
+  changed_when: true
+  ignore_errors: true
+

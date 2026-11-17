@@ -377,9 +377,9 @@ all:
           disk_model: "vscsi"
           shelf0_disk_size: 4096
           shelf0_disk_count: 12
-        demo2-01:
-          partner:      "demo2-02"
-          cluster_name: "demo"
+        demo3-01:
+          partner:      "demo3-02"
+          cluster_name: "demo3"
           version:  "9.16.1"
           #update_package: files/9171RC1_v_image.tgz
           cluster_mgmt_ip: 192.168.0.160
@@ -392,8 +392,6 @@ all:
           shelf1_disk_count: 12
           fake_ssd_disk_size: 4096
           adp_enabled: "true"
-          sys_serial_number: "4082368-50-7"
-          partner_serial: "4034389-06-2"
           # extra_commands:
           #   - cluster ha modify -configured true
 

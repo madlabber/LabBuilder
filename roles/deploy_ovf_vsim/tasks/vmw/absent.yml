@@ -25,5 +25,54 @@
   delegate_to: localhost
   when: state == "absent" or state == "force"
 
-# - meta: end_host
-#   when: state == "absent"
+- name: Delete node1 datastore folder via pyvmomi FileManager
+  ansible.builtin.command:
+    cmd: python3 -
+    stdin: |
+      from pyVim.connect import SmartConnect, Disconnect
+      from pyVim.task import WaitForTask
+
+      si = SmartConnect(
+          host="{{ vcenter_address }}",
+          user="{{ vcenter_username }}",
+          pwd="{{ vcenter_password }}",
+          disableSslCertValidation=True
+      )
+      try:
+          dc = [d for d in si.content.rootFolder.childEntity if d.name == "{{ vcenter_datacenter }}"][0]
+          task = si.content.fileManager.DeleteDatastoreFile_Task(
+              name="[{{ vm_datastore }}] {{ node1_name }}",
+              datacenter=dc
+          )
+          WaitForTask(task)
+      finally:
+          Disconnect(si)
+  delegate_to: localhost
+  changed_when: true
+  ignore_errors: true
+
+- name: Delete node2 datastore folder via pyvmomi FileManager
+  ansible.builtin.command:
+    cmd: python3 -
+    stdin: |
+      from pyVim.connect import SmartConnect, Disconnect
+      from pyVim.task import WaitForTask
+
+      si = SmartConnect(
+          host="{{ vcenter_address }}",
+          user="{{ vcenter_username }}",
+          pwd="{{ vcenter_password }}",
+          disableSslCertValidation=True
+      )
+      try:
+          dc = [d for d in si.content.rootFolder.childEntity if d.name == "{{ vcenter_datacenter }}"][0]
+          task = si.content.fileManager.DeleteDatastoreFile_Task(
+              name="[{{ vm_datastore }}] {{ node2_name }}",
+              datacenter=dc
+          )
+          WaitForTask(task)
+      finally:
+          Disconnect(si)
+  delegate_to: localhost
+  changed_when: true
+  ignore_errors: true
