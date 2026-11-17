@@ -27,6 +27,16 @@
     - "{{vm_name}}"
     - "{{partner_name}}"
 
+- name: inject mfg file 
+  shell:
+    cmd: "mcopy -o -i {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.raw@@66528s {{ playbook_dir }}/files/mfg_l_f ::/"
+  delegate_to: localhost
+  when: item != ''
+  with_items:
+    - "{{vm_name}}"
+    - "{{partner_name}}"
+  ignore_errors: true
+
 - name: Convert boot disk to vmdk
   shell:
     cmd: "qemu-img convert -f raw -o subformat=streamOptimized -O vmdk  {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.raw {{ playbook_dir }}/files/{{item}}/vsim-NetAppDOT-simulate-disk1.vmdk"
