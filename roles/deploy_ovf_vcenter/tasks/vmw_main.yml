@@ -2,6 +2,39 @@
 # When the target is a vcenter server, some parameters are not user configurable
 # So in this scenario the user configurable vars are set during deploy_ovf
 # And the remaining vars are set with vmware_guest
+
+# This is a little underhanded, but the default 10 second timeout is very risky for the vcenter ova
+- name: Locate system community.vmware vmware_deploy_ovf.py path
+  ansible.builtin.command: >
+    python3 -c "import ansible_collections.community.vmware.plugins.modules.vmware_deploy_ovf as m; print(m.__file__)"
+  register: deploy_ovf_module_path
+  changed_when: false
+  delegate_to: localhost
+
+- name: Ensure local playbook library directory exists
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/library"
+    state: directory
+    mode: "0755"
+  delegate_to: localhost
+
+- name: Copy vmware_deploy_ovf.py to local library directory
+  ansible.builtin.copy:
+    src: "{{ deploy_ovf_module_path.stdout | trim }}"
+    dest: "{{ playbook_dir }}/library/vmware_deploy_ovf.py"
+    remote_src: true
+    force: false
+    mode: "0644"
+  delegate_to: localhost
+
+- name: Ensure open_url in local vmware_deploy_ovf.py uses a 600s socket timeout
+  ansible.builtin.replace:
+    path: "{{ playbook_dir }}/library/vmware_deploy_ovf.py"
+    regexp: '(open_url\([^,\n]+,\s*)(?![^)]*timeout=)'
+    replace: '\1timeout=600, '
+  delegate_to: localhost
+
+
 - community.vmware.vmware_deploy_ovf:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
