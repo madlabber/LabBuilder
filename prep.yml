@@ -51,6 +51,41 @@
     when: 
       - host_type == 'pve'
 
+  - name: Gather existing vSwitch info for cluster hosts
+    community.vmware.vmware_vswitch_info:
+      hostname: "{{ vcenter_address | default(esxi_address) }}"
+      username: "{{ vcenter_username | default(esxi_username) }}"
+      password: "{{ vcenter_password | default(esxi_password) }}"
+      validate_certs: false
+      esxi_hostname: "{{ item }}"
+    loop: "{{ cluster_hosts | default([]) }}"
+    register: vswitch_info_results
+    delegate_to: localhost
+    when:
+      - host_type == 'vmw'
+
+  - name: Configure Standard vSwitch with MTU 9000 and Security Policies
+    community.vmware.vmware_vswitch:
+      hostname: "{{ vcenter_address | default(esxi_address) }}"
+      username: "{{ vcenter_username | default(esxi_username) }}"
+      password: "{{ vcenter_password | default(esxi_password) }}"
+      validate_certs: false
+      esxi_hostname: "{{ item.item }}"
+      switch: "{{ esxi_vswitch }}"
+      nics: "{{ (item.hosts_vswitch_info[item.item][esxi_vswitch].pnics | default([])) if (esxi_vswitch in (item.hosts_vswitch_info[item.item] | default({}))) else omit }}"
+      mtu: 9000
+      security:
+        promiscuous_mode: true
+        forged_transmits: true
+        mac_changes: true
+      state: present
+    delegate_to: localhost
+    when: host_type == 'vmw'
+    loop: "{{ vswitch_info_results.results }}"
+    loop_control:
+      label: "{{ item.item }}"
+
+
   - name: Get Portgroup info
     community.vmware.vmware_portgroup_info:
       hostname: "{{ vcenter_address|default(esxi_address) }}"
@@ -75,35 +110,61 @@
       unused_vlans: "{{ all_vlans | difference(used_vlans) | sort }}"
     when: host_type == 'vmw'
 
-  - name: VM Portgroup to all hosts in a cluster
-    community.vmware.vmware_portgroup:
-      hostname: "{{ vcenter_address|default(esxi_address) }}"
-      username: "{{ vcenter_username|default(esxi_username) }}"
-      password: "{{ vcenter_password|default(esxi_password) }}"
-      validate_certs: no
-      cluster_name: "{{ vcenter_cluster|default('') }}"
-      switch: "{{ esxi_vswitch }}"
-      portgroup: "{{ lab_lan1_portgroup }}"
-      vlan_id: "{{ unused_vlans[0] }}"
-    delegate_to: localhost
-    when: 
-     - host_type == 'vmw'
-     - lab_lan1_portgroup|default('') != ""
+  # - name: VM Portgroup to all hosts in a cluster
+  #   community.vmware.vmware_portgroup:
+  #     hostname: "{{ vcenter_address|default(esxi_address) }}"
+  #     username: "{{ vcenter_username|default(esxi_username) }}"
+  #     password: "{{ vcenter_password|default(esxi_password) }}"
+  #     validate_certs: no
+  #     cluster_name: "{{ vcenter_cluster|default('') }}"
+  #     switch: "{{ esxi_vswitch }}"
+  #     portgroup: "{{ lab_lan1_portgroup }}"
+  #     vlan_id: "{{ unused_vlans[0] }}"
+  #   delegate_to: localhost
+  #   when: 
+  #    - host_type == 'vmw'
+  #    - lab_lan1_portgroup|default('') != ""
+
+  - name: Find active lab_lanX_portgroup variables
+    ansible.builtin.set_fact:
+      active_lab_lan_vars: >-
+        {{
+          query('varnames', '^lab_lan[0-9]+_portgroup$')
+          | sort
+        }}
 
   - name: VM Portgroup to all hosts in a cluster
     community.vmware.vmware_portgroup:
-      hostname: "{{ vcenter_address|default(esxi_address) }}"
-      username: "{{ vcenter_username|default(esxi_username) }}"
-      password: "{{ vcenter_password|default(esxi_password) }}"
-      validate_certs: no
-      cluster_name: "{{ vcenter_cluster|default('') }}"
+      hostname: "{{ vcenter_address | default(esxi_address) }}"
+      username: "{{ vcenter_username | default(esxi_username) }}"
+      password: "{{ vcenter_password | default(esxi_password) }}"
+      validate_certs: false
+      cluster_name: "{{ vcenter_cluster | default('') }}"
       switch: "{{ esxi_vswitch }}"
-      portgroup: "{{ lab_lan2_portgroup }}"
-      vlan_id: "{{ unused_vlans[1] }}"
+      portgroup: "{{ vars[item] }}"
+      vlan_id: "{{ unused_vlans[(item | regex_replace('^lab_lan([0-9]+)_portgroup$', '\\1') | int) - 1] }}"
+    loop: "{{ active_lab_lan_vars }}"
+    loop_control:
+      label: "{{ item }} -> {{ vars[item] }}"
     delegate_to: localhost
-    when: 
-     - host_type == 'vmw'
-     - lab_lan2_portgroup|default('') != ""
+    when:
+      - host_type == 'vmw'
+      - vars[item] | default('') | trim != ""
+
+  # - name: VM Portgroup to all hosts in a cluster
+  #   community.vmware.vmware_portgroup:
+  #     hostname: "{{ vcenter_address|default(esxi_address) }}"
+  #     username: "{{ vcenter_username|default(esxi_username) }}"
+  #     password: "{{ vcenter_password|default(esxi_password) }}"
+  #     validate_certs: no
+  #     cluster_name: "{{ vcenter_cluster|default('') }}"
+  #     switch: "{{ esxi_vswitch }}"
+  #     portgroup: "{{ lab_lan2_portgroup }}"
+  #     vlan_id: "{{ unused_vlans[1] }}"
+  #   delegate_to: localhost
+  #   when: 
+  #    - host_type == 'vmw'
+  #    - lab_lan2_portgroup|default('') != ""
 
   - name: Create Lab Volume
     na_ontap_volume:
