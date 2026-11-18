@@ -1,0 +1,139 @@
+# Prepare an affinity rule and vApp to group the lab VMs together
+- name: Configure DRS and vApp
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - defaults/main.yml
+    - "{{ mainvars }}"
+    - "{{ credentials }}"
+
+  vars:
+    lab_vms: "{{ groups['all'] | difference(['localhost']) | map('regex_replace', '^(.*)$', lab_prefix ~ '\\1') | list }}"
+
+  tasks:
+    - block:
+        - name: Create and populate DRS VM Group from prefixed inventory hosts
+          community.vmware.vmware_drs_group:
+            hostname: "{{ vcenter_address }}"
+            username: "{{ vcenter_username }}"
+            password: "{{ vcenter_password }}"
+            validate_certs: false
+            datacenter: "{{ vcenter_datacenter }}"
+            cluster_name: "{{ vcenter_cluster }}"
+            group_name: "{{ lab_name }}_vms"
+            vms: "{{ lab_vms }}"
+            state: present
+
+        - name: Create DRS Host Group
+          community.vmware.vmware_drs_group:
+            hostname: "{{ vcenter_address }}"
+            username: "{{ vcenter_username }}"
+            password: "{{ vcenter_password }}"
+            validate_certs: false
+            datacenter: "{{ vcenter_datacenter }}"
+            cluster_name: "{{ vcenter_cluster }}"
+            group_name: "{{ lab_name }}_host"
+            hosts: "{{ [esxi_hostname] if esxi_hostname is string else esxi_hostname }}"
+            state: present
+
+        - name: Create VM-to-Host DRS Affinity Rule
+          community.vmware.vmware_vm_host_drs_rule:
+            hostname: "{{ vcenter_address }}"
+            username: "{{ vcenter_username }}"
+            password: "{{ vcenter_password }}"
+            validate_certs: false
+            datacenter: "{{ vcenter_datacenter }}"
+            cluster_name: "{{ vcenter_cluster }}"
+            drs_rule_name: "{{ lab_name }}_drs"
+            vm_group_name: "{{ lab_name }}_vms"
+            host_group_name: "{{ lab_name }}_host"
+            affinity_rule: true
+            mandatory: true
+            enabled: true
+            state: present
+
+        - name: Create vApp and move unassigned lab VMs into it
+          ansible.builtin.command:
+            cmd: "{{ ansible_playbook_python }}"
+            stdin: |
+              import ssl
+              import json
+              from pyVim.connect import SmartConnect, Disconnect
+              from pyVmomi import vim
+
+              def get_obj(content, vimtype, name, root=None):
+                  root = root or content.rootFolder
+                  container = content.viewManager.CreateContainerView(root, vimtype, True)
+                  obj = next((item for item in container.view if item.name == name), None)
+                  container.Destroy()
+                  return obj
+
+              def get_unassigned_vm(content, name, root, cluster_rp):
+                  container = content.viewManager.CreateContainerView(root, [vim.VirtualMachine], True)
+                  matched_vm = None
+                  for vm in container.view:
+                      if vm.name == name and vm.parentVApp is None:
+                          # Ensure the VM belongs to the target cluster's resource pool
+                          rp = vm.resourcePool
+                          while rp and rp != cluster_rp:
+                              rp = getattr(rp, 'parent', None)
+                          if rp == cluster_rp:
+                              matched_vm = vm
+                              break
+                  container.Destroy()
+                  return matched_vm
+
+              ctx = ssl._create_unverified_context()
+              si = SmartConnect(
+                  host="{{ vcenter_address }}",
+                  user="{{ vcenter_username }}",
+                  pwd="{{ vcenter_password }}",
+                  sslContext=ctx
+              )
+
+              try:
+                  content = si.RetrieveContent()
+                  dc = get_obj(content, [vim.Datacenter], "{{ vcenter_datacenter }}")
+                  cluster = get_obj(content, [vim.ClusterComputeResource], "{{ vcenter_cluster }}", root=dc.hostFolder)
+
+                  if not dc or not cluster:
+                      raise RuntimeError("Datacenter or Cluster not found")
+
+                  vapp_name = "{{ lab_name }}"
+                  vapp = get_obj(content, [vim.VirtualApp], vapp_name, root=dc.vmFolder)
+
+                  if not vapp:
+                      res_spec = vim.ResourceConfigSpec()
+                      cpu_alloc = vim.ResourceAllocationInfo(reservation=0, limit=-1, expandableReservation=True)
+                      cpu_alloc.shares = vim.SharesInfo(level=vim.SharesInfo.Level.normal)
+                      mem_alloc = vim.ResourceAllocationInfo(reservation=0, limit=-1, expandableReservation=True)
+                      mem_alloc.shares = vim.SharesInfo(level=vim.SharesInfo.Level.normal)
+                      res_spec.cpuAllocation = cpu_alloc
+                      res_spec.memoryAllocation = mem_alloc
+                      config_spec = vim.vApp.VAppConfigSpec()
+                      vapp = cluster.resourcePool.CreateVApp(
+                          name=vapp_name,
+                          resSpec=res_spec,
+                          configSpec=config_spec,
+                          vmFolder=dc.vmFolder
+                      )
+
+                  target_vm_names = json.loads('{{ lab_vms | to_json }}')
+                  vms_to_move = []
+
+                  for name in target_vm_names:
+                      vm = get_unassigned_vm(content, name, dc.vmFolder, cluster.resourcePool)
+                      if vm:
+                          vms_to_move.append(vm)
+
+                  if vms_to_move:
+                      vapp.MoveIntoResourcePool(vms_to_move)
+              finally:
+                  Disconnect(si)
+
+      ignore_errors: true
+      when:
+        - vcenter_address | default('') != ''
+        - esxi_hostname | default('') != ''
+        - vcenter_address | default('') != esxi_hostname | default('')
+        - vcenter_cluster | default('') != ''

@@ -4,7 +4,7 @@ SHELL := /bin/bash
 %::
 	@:
 
-.PHONY: configure install lab prep graph build
+.PHONY: configure install lab prep graph build post
 
 configure:
 	@mkdir -p vars; \
@@ -67,6 +67,22 @@ prep:
 		EXTRA_ARGS="$$EXTRA_ARGS -l $(limit)"; \
 	fi; \
 	ansible-playbook prep.yml -i inventories/$$INV.yml $$EXTRA_ARGS
+
+post:
+	@INV="$(word 2, $(MAKECMDGOALS))"; \
+	[ -z "$$INV" ] && INV="$(firstword $(MAKECMDGOALS))"; \
+	[ "$$INV" = "prep" ] && INV="$(word 2, $(MAKECMDGOALS))"; \
+	EXTRA_ARGS=""; \
+	if [ -n "$(config)" ]; then \
+		EXTRA_ARGS="$$EXTRA_ARGS -e mainvars=$(config).yml"; \
+	fi; \
+	if [ -n "$(datastore)" ]; then \
+		EXTRA_ARGS="$$EXTRA_ARGS -e lab_vm_datastore=$(datastore)"; \
+	fi; \
+	if [ -n "$(limit)" ]; then \
+		EXTRA_ARGS="$$EXTRA_ARGS -l $(limit)"; \
+	fi; \
+	ansible-playbook post.yml -i inventories/$$INV.yml $$EXTRA_ARGS
 
 graph:
 	@INV="$(word 2, $(MAKECMDGOALS))"; \

@@ -2,10 +2,17 @@
 # - name: print vars
 #   hosts: pfsense
 #   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
 #   tasks:
 #   - debug:
 #       msg:
-#       - "{{hostvars[inventory_hostname]['lan']['dhcp_start']}}"
+#         - "vcenter_address: {{ vcenter_address | default('') }}"
+#         - "esxi_hostname: {{ esxi_hostname | default('') }}"
+#         - "vcenter_cluster: {{ vcenter_cluster | default('') }}"
+# #       - "{{hostvars[inventory_hostname]['lan']['dhcp_start']}}"
 
 - name: Build pfSense VMs
   hosts: pfsense
@@ -517,3 +524,4 @@
         vm_gateway: "{{lab_lan1_gateway}}"
         vm_dns_server: "{{lab_lan1_dns_ip}}"
         vm_domain: "{{lab_domain_name}}"
+

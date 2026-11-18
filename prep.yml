@@ -85,32 +85,6 @@
     loop_control:
       label: "{{ item.item }}"
 
-
-  # - name: Get Portgroup info
-  #   community.vmware.vmware_portgroup_info:
-  #     hostname: "{{ vcenter_address|default(esxi_address) }}"
-  #     username: "{{ vcenter_username|default(esxi_username) }}"
-  #     password: "{{ vcenter_password|default(esxi_password) }}"
-  #     validate_certs: no
-  #     cluster_name: "{{ vcenter_cluster|default('') }}"
-  #   run_once: true
-  #   delegate_to: localhost
-  #   register: portgroupinfo
-  #   when: host_type == 'vmw'
-
-  # - name: get used vlans
-  #   set_fact:
-  #     all_vlans:  "{{ lookup('sequence', 'start='+ vlan_start|string +' count='+ vlan_count|string, wantlist=true)|map('int') }}"
-  #     used_vlans: "{{ portgroupinfo.hosts_portgroup_info[portgroupinfo.hosts_portgroup_info|first] |
-  #              selectattr('vswitch', 'eq', esxi_vswitch) |
-  #              map(attribute='vlan_id') }}"
-  #   when: host_type == 'vmw'
-
-  # - name: get unused vlans
-  #   set_fact:
-  #     unused_vlans: "{{ all_vlans | difference(used_vlans) | sort }}"
-  #   run_once: true
-  #   when: host_type == 'vmw'
   - name: Get Portgroup info
     community.vmware.vmware_portgroup_info:
       hostname: "{{ vcenter_address|default(esxi_address) }}"
@@ -340,8 +314,5 @@
   # - name: Create bridge on proxmox if required
   #   community.proxmox.proxmox:
       
-
-
-
 
 
