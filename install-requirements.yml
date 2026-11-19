@@ -55,11 +55,26 @@
   # This is a little underhanded, but the default 10 second timeout is very risky for the vcenter ova
   # OVA deployment is prone to timeouts, and this was the least bad option for fixing it
   # If this breaks the library in a future version, delete the patched version from the library folder
-  - name: Locate system community.vmware vmware_deploy_ovf.py path
-    ansible.builtin.command: >
-      python3 -c "import ansible_collections.community.vmware.plugins.modules.vmware_deploy_ovf as m; print(m.__file__)"
+# This is a little underhanded, but the default 10 second timeout is very risky for the vcenter ova
+# The OVA is prone to timeouts, and this was the least bad option for fixing it
+# - name: Locate system community.vmware vmware_deploy_ovf.py path
+#   ansible.builtin.command: >
+#     python3 -c "import ansible_collections.community.vmware.plugins.modules.vmware_deploy_ovf as m; print(m.__file__)"
+#   register: deploy_ovf_module_path
+#   changed_when: false
+#   delegate_to: localhost
+  - name: Locate community.vmware vmware_deploy_ovf module
+    ansible.builtin.shell: |
+      set -o pipefail
+      ansible-doc -t module -F community.vmware |
+        awk '$1 == "community.vmware.vmware_deploy_ovf" { print $2 }'
+    args:
+      executable: /bin/bash
     register: deploy_ovf_module_path
     changed_when: false
+    failed_when:
+      - deploy_ovf_module_path.rc != 0
+      - deploy_ovf_module_path.stdout | trim == ''
     delegate_to: localhost
 
   - name: Ensure local playbook library directory exists
