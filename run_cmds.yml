@@ -1,0 +1,517 @@
+---
+# - name: Build pfSense VMs
+#   hosts: pfsense
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   roles:
+#     - role: build_from_iso_pfsense
+#       vars:
+#         vm_name:        "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#         vm_datastore:   "{{lab_vm_datastore}}"
+#         vm_password:    "{{lab_password}}"
+#         vm_hostname:    "{{inventory_hostname}}"
+#         lan:
+#           address:      "{{ hostvars[inventory_hostname]['lan']['address'] | default(lab_lan1_gateway) }}"
+#           netmask_cidr: "{{ hostvars[inventory_hostname]['lan']['netmask_cidr'] | default(lab_lan1_netmask_cidr) }}"
+#           domain:       "{{ hostvars[inventory_hostname]['lan']['domain'] | default(lab_domain_name) }}"
+#           dns_server:   "{{ hostvars[inventory_hostname]['lan']['dns_server'] | default(lab_lan1_dns_ip) }}"
+#           dhcp_start:   "{{ hostvars[inventory_hostname]['lan']['dhcp_start'] | default('') }}"
+#           dhcp_end:     "{{ hostvars[inventory_hostname]['lan']['dhcp_end'] | default('') }}"
+
+# - name: Build DC
+#   hosts: dc
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   roles:
+#     - role: build_from_iso_windows
+#       vars:
+#         vm_name:         "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#         vm_datastore:    "{{lab_vm_datastore}}"
+#         vm_network:      "{{lab_lan1_portgroup}}"
+#         vm_password_new: "{{lab_password}}"
+#         vm_hostname:     "{{inventory_hostname}}"
+#         vm_address:      "{{ip_address}}"
+#         vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+#         vm_gateway:      "{{lab_lan1_gateway}}"
+#         vm_dns_server:   "{{lab_lan1_dns_ip}}"
+#         vm_domain:       "{{lab_domain_name}}"
+#         dcpromo: true
+
+# # This play takes all the name/ip pairs from all hosts and adds DNS records on the DC
+# - name: populate DNS records
+#   hosts: all
+#   serial: 1
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   tasks:
+#   - name: Add DNS record via vm shell
+#     community.vmware.vmware_vm_shell:
+#       hostname: '{{ vcenter_address }}'
+#       username: '{{ vcenter_username }}'
+#       password: '{{ vcenter_password }}'
+#       validate_certs: no
+#       vm_username: ".\\Administrator"
+#       vm_password: "{{lab_password}}"
+#       vm_id: "{{lab_prefix | default('')}}{{lab_domain_controller}}"
+#       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+#       vm_shell_args: " -command \"({{item}})\""
+#       wait_for_process: true
+#     delegate_to: localhost
+#     retries: 3
+#     delay: 10
+#     register: result
+#     until: result is succeeded
+#     ignore_errors: yes
+#     loop:
+#       - "Add-DnsServerResourceRecordA -Name {{inventory_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{ip_address}} -TimeToLive 01:00:00"
+#     when: lab_domain_controller|default("") != ""
+
+# # Build vCenter Server(s)
+# - name: Build vCenter
+#   hosts: vcenter
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   roles:
+#     - role: deploy_ovf_vcenter
+#       vars:
+#         #ovf_file: "{{ vcenter_ova }}"
+#         #ovf_file: "{{ ova_file }}"
+#         # vcenter_address: "{{ esxi_address }}"
+#         # vcenter_username: root
+#         vm_name: "{{ lab_prefix | default('') }}{{inventory_hostname}}"
+#         vm_datastore: '{{ lab_vm_datastore }}'
+#         vm_hostname: '{{inventory_hostname}}'
+#         vm_domain: '{{lab_domain_name}}'
+#         vm_network: '{{lab_lan1_portgroup}}'
+#         vm_password: '{{lab_password}}'
+#         vm_net_mode: "static" # static or dhcp
+#         vm_address: '{{ip_address}}'
+#         vm_netmask_cidr: '{{lab_lan1_netmask_cidr}}'
+#         vm_dns_server: '{{lab_lan1_dns_ip}}'
+#         vm_gateway: '{{lab_lan1_gateway}}'
+
+# - name: Build Nested ESX from ISO
+#   hosts: esx
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   tasks:
+#     - include_role:
+#         name: build_from_iso_esx
+#       vars:
+#         vm_hostname: "{{inventory_hostname}}"
+#         vm_address: "{{ip_address}}"
+#         vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#         vm_network: "{{lab_lan1_portgroup}}"
+#         vm_password_new: "{{lab_password}}"
+#         vm_netmask: "{{lab_lan1_netmask}}"
+#         vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+#         vm_gateway: "{{lab_lan1_gateway}}"
+#         vm_dns_server: "{{lab_lan1_dns_ip}}"
+#         vm_domain: "{{lab_domain_name}}"
+#         vm_datastore: "{{lab_vm_datastore}}"
+#         # vm_username: 'root'
+#         vm_password: '{{lab_password}}'
+
+# # Build ESXi Server(s)
+# - name: Build Nested ESXi from OVA
+#   hosts: nestedesx
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   roles:
+#     - role: deploy_ovf_esxi
+#       vars:
+#         ovf_version: "{{esx_version}}" #7.0u1, 7.0, 6.7u3, 6.7u2, 6.7u1, 6.7 ... 6.0?
+#         vm_name:      "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#         vm_network:   "{{ lab_lan1_portgroup }}"
+#         vm_datastore: "{{ lab_vm_datastore }}"
+#         ovf_hostname: "{{ inventory_hostname }}"
+#         ovf_address:  "{{ ip_address }}"
+#         ovf_netmask:  "{{ lab_lan1_netmask }}"
+#         ovf_gateway:  "{{ lab_lan1_gateway }}"
+#         ovf_vlan: ""
+#         ovf_dns:      "{{ lab_lan1_dns_ip }}"
+#         ovf_domain:   "{{lab_domain_name}}"
+#         ovf_ntp:      "{{lab_lan1_gateway}}"
+#         ovf_syslog: "" # IP of syslog server
+#         ovf_password: "{{lab_password}}"
+#         ovf_ssh:      "{{enable_ssh|string}}"
+#         ovf_createvmfs: "{{create_local_vmfs|string}}"
+
+# - name: Build Centos VMs
+#   hosts: centos
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   tasks:
+#     - include_vars: vars/rhsm_secrets.yml
+#       ignore_errors: true
+#     - include_role:
+#         name: build_from_iso_centos
+#       vars:
+#         vm_hostname: "{{inventory_hostname}}"
+#         vm_address: "{{ip_address}}"
+#         vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#         vm_network: "{{lab_lan1_portgroup}}"
+#         vm_password_new: "{{lab_password}}"
+#         vm_netmask: "{{lab_lan1_netmask}}"
+#         vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+#         vm_gateway: "{{lab_lan1_gateway}}"
+#         vm_dns_server: "{{lab_lan1_dns_ip}}"
+#         vm_domain: "{{lab_domain_name}}"
+#         vm_datastore: "{{lab_vm_datastore}}"
+#         # vm_username: 'root'
+#         vm_password: '{{lab_password}}'
+
+# - name: Build Ubuntu VMs
+#   hosts: ubuntu
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   roles:
+#     - role: build_from_iso_ubuntu
+#       vars:
+#         vm_hostname: "{{inventory_hostname}}"
+#         vm_address: "{{ip_address}}"
+#         vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#         vm_network: "{{lab_lan1_portgroup}}"
+#         vm_password_new: "{{lab_password}}"
+#         vm_netmask: "{{lab_lan1_netmask}}"
+#         vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+#         vm_gateway: "{{lab_lan1_gateway}}"
+#         vm_dns_server: "{{lab_lan1_dns_ip}}"
+#         vm_domain: "{{lab_domain_name}}"
+#         vm_datastore: "{{lab_vm_datastore}}"
+#         # vm_username: 'root'
+#         vm_password: '{{lab_password}}'
+
+# - name: Build Proxmox VMs
+#   hosts: proxmox
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   roles:
+#     - role: build_from_iso_proxmox
+#       vars:
+#         vm_hostname: "{{inventory_hostname}}"
+#         vm_address: "{{ip_address}}"
+#         vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#         vm_network: "{{lab_lan1_portgroup}}"
+#         vm_password_new: "{{lab_password}}"
+#         vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+#         vm_gateway: "{{lab_lan1_gateway}}"
+#         vm_dns_server: "{{lab_lan1_dns_ip}}"
+#         vm_domain: "{{lab_domain_name}}"
+#         vm_datastore: "{{lab_vm_datastore}}"
+#         vm_username: 'root'
+#         vm_password: '{{lab_password}}'
+
+# - name: Build XCP-NG VMs
+#   hosts: xcpng
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   roles:
+#     - role: build_from_iso_xcpng
+#       vars:
+#         vm_hostname: "{{inventory_hostname}}"
+#         vm_address: "{{ip_address}}"
+#         vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#         vm_network: "{{lab_lan1_portgroup}}"
+#         vm_password_new: "{{lab_password}}"
+#         vm_netmask: "{{lab_lan1_netmask}}"
+#         vm_gateway: "{{lab_lan1_gateway}}"
+#         vm_dns_server: "{{lab_lan1_dns_ip}}"
+#         vm_domain: "{{lab_domain_name}}"
+#         vm_datastore: "{{lab_vm_datastore}}"
+#         vm_username: 'root'
+#         vm_password: '{{lab_password}}'
+
+# - name: Build ONTAP Simulator from OVA on VMware
+#   hosts: vsims
+#   #strategy: free # this strategy isn't working on PVE
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   tasks:
+#     - set_fact:
+#         partner_name: "{{ lab_name }}_{{ partner }}"
+#       when: partner|default("") != ""
+#     - include_role:
+#         name: deploy_ovf_vsim
+#       vars:
+#         vm_name:         "{{ lab_name }}_{{ inventory_hostname }}"
+#         vm_datastore:    "{{ lab_vm_datastore }}"
+#         data_network:    "{{ lab_lan1_portgroup }}"
+#         cluster_network: "{{ lab_lan2_portgroup | default(lab_lan1_portgroup) }}"
+#         # node setup vars
+#         node_name:          "{{ inventory_hostname }}"
+#         partner_node_name:  "{{ partner|default('') }}"
+#         ontap_node_mgmt_ip: "{{ ip_address }}"
+#         ontap_netmask:      "{{ lab_lan1_netmask }}"
+#         ontap_gateway:      "{{ lab_lan1_gateway }}"
+#         # cluster setup vars
+#         ontap_cluster_mgmt_ip: "{{ cluster_mgmt_ip| default('') }}"
+#         ontap_cluster_name:    "{{ cluster_name | default('ONTAP') }}"
+#         ontap_password:        "{{ lab_password |default('netapp123') }}"
+#         ontap_dns_domain:      "{{ lab_domain_name }}"
+#         ontap_dns_server:      "{{ lab_lan1_dns_ip }}"
+#         ontap_location:        "{{ lab_name }}"
+#       when: 
+#         - vcenter_address|default(esxi_address|default('')) != ''
+#         - pve_address|default('') == ''
+
+# - name: Build ONTAP Simulator from OVA on PVE
+#   hosts: vsims
+#   #strategy: free # this strategy isn't working on PVE
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   tasks:
+#     - set_fact:
+#         partner_name: "{{ lab_name }}_{{ partner }}"
+#       when: partner|default("") != ""
+#     - include_role:
+#         name: deploy_ovf_vsim
+#       vars:
+#         vm_name:         "{{ lab_name }}_{{ inventory_hostname }}"
+#         vm_datastore:    "{{ lab_vm_datastore }}"
+#         data_network:    "{{ lab_lan1_portgroup }}"
+#         cluster_network: "{{ lab_lan2_portgroup | default(lab_lan1_portgroup) }}"
+#         # node setup vars
+#         node_name:          "{{ inventory_hostname }}"
+#         ontap_node_mgmt_ip: "{{ ip_address }}"
+#         ontap_netmask:      "{{ lab_lan1_netmask }}"
+#         ontap_gateway:      "{{ lab_lan1_gateway }}"
+#         # cluster setup vars
+#         ontap_cluster_mgmt_ip: "{{ cluster_mgmt_ip| default('') }}"
+#         ontap_cluster_name:    "{{ cluster_name | default('ONTAP') }}"
+#         ontap_password:        "{{ lab_password |default('netapp123') }}"
+#         ontap_dns_domain:      "{{ lab_domain_name }}"
+#         ontap_dns_server:      "{{ lab_lan1_dns_ip }}"
+#         ontap_location:        "{{ lab_name }}"
+#       when: 
+#         - pve_address|default('') != ''
+
+# - name: Build ONTAP Select eval cluster
+#   hosts: ontapselecteval
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   roles:
+#     - role: deploy_ovf_ontapselecteval
+#       vars:
+#         vm_name:               "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#         vm_datastore:          "{{lab_vm_datastore}}"
+#         vm_network:            "{{lab_lan1_portgroup}}"
+#         ontap_netmask:         "{{lab_lan1_netmask}}"
+#         ontap_gateway:         "{{lab_lan1_gateway}}"
+#         ontap_password:        "{{lab_password |default('netapp123')}}"
+#         ontap_dns_domain:      "{{lab_domain_name}}"
+#         ontap_dns_server:      "{{lab_lan1_dns_ip}}"
+
+# - name: Build StorageGrid from ova
+#   hosts: storagegrid
+#   gather_facts: false
+#   roles:
+#     - role: deploy_ovf_storagegrid
+#       vars:
+#         vm_name:               "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#         ovf_hostname:          "{{inventory_hostname}}"
+#         vm_datastore:          "{{lab_vm_datastore}}"
+#         grid_network_name:     "{{lab_lan1_portgroup}}"
+#         grid_network_config:   "STATIC" # "STATIC", "DHCP"
+#         grid_network_ip:       "{{ip_address}}"
+#         grid_network_mask:     "{{lab_lan1_netmask}}"
+#         grid_network_gateway:  "{{lab_lan1_gateway}}"
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+# - name: Build AIQUM from OVA
+#   hosts: aiqum
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#   tasks:
+#   - include_role:
+#       name: deploy_ovf_aiqum
+#     vars:
+#       # ovf_file: "files/AIQUM/ActiveIQUnifiedManager-9.9.ova"
+#       vm_name:          "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#       vm_fqdn:          "{{inventory_hostname}}.{{lab_domain_name}}"
+#       vm_username:      "admin"
+#       vm_password:      "{{lab_password |default('netapp123')}}"
+#       vm_datastore:     "{{lab_vm_datastore}}"
+#       vm_network:       "{{lab_lan1_portgroup}}"
+#       vm_address:       "{{ip_address}}"
+#       vm_netmask:       "{{lab_lan1_netmask}}"
+#       vm_gateway:       "{{lab_lan1_gateway}}"
+#       vm_primary_dns:   "{{lab_lan1_dns_ip}}"
+#       vm_secondary_dns: "{{lab_lan1_gateway}}"
+#     when: 
+#       - pve_address|default('') == ''
+#       - ovf_file|default('') != ''
+
+# - name: Build AIQUM on linux
+#   hosts: aiqum
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   tasks:
+#     - include_vars: vars/rhsm_secrets.yml
+#       ignore_errors: true
+#     - include_role:
+#         name: build_from_iso_centos
+#       vars:
+#         # regular linux role 
+#         vm_hostname: "{{inventory_hostname}}"
+#         vm_address: "{{ip_address}}"
+#         vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#         vm_network: "{{lab_lan1_portgroup}}"
+#         vm_password_new: "{{lab_password}}"
+#         vm_netmask: "{{lab_lan1_netmask}}"
+#         vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+#         vm_gateway: "{{lab_lan1_gateway}}"
+#         vm_dns_server: "{{lab_lan1_dns_ip}}"
+#         vm_domain: "{{lab_domain_name}}"
+#         vm_datastore: "{{lab_vm_datastore}}"
+#         # vm_username: 'root'
+#         vm_password: '{{lab_password}}'
+#         # AIQUM defaults:
+#         distro: "{{linux_distro | default('rocky') }}"
+#         version: "{{linux_version | default('9.4') }}"
+#         vm_memory_mb: 16384
+#         vm_num_cpus: 4
+#         vm_disk_gb: 200
+#         install_xrdp: true
+#         extra_files:
+#           - "{{ install_file | default('') }}"
+#         extra_commands:
+#           # copy the install from the cdrom
+#           - "mkdir /mnt/cdrom"
+#           - "mount /dev/sr1 /mnt/cdrom"
+#           - "cp /mnt/cdrom/files/* /home/admin/"
+#           - "umount /mnt/cdrom"
+#           - "rm -rf /mnt/cdrom"
+#           - unzip /home/admin/ActiveIQUnifiedManager-*.zip -d /home/admin
+#           - dnf install -y epel-release
+#           - wget  http://repo.mysql.com/yum/mysql-8.4-community/el/8/x86_64/mysql84-community-release-el8-1.noarch.rpm
+#           - dnf install -y mysql84-community-release-el8-1.noarch.rpm
+#           - /home/admin/pre_install_check.sh
+#           - "dnf install -y /home/admin/*.rpm"
+#           # HTTP which redirects to 443
+#           - firewall-cmd --permanent --add-port=80/tcp
+#           # HTTPS for Web UI
+#           - firewall-cmd --permanent --add-port=443/tcp
+#           # Maintenance over ssh/sftp
+#           - firewall-cmd --permanent --add-port=22/tcp
+#           # MySQL connectivity for WFA
+#           - firewall-cmd --permanent --add-port=3306/tcp
+#           # Syslog for EMS messages
+#           - firewall-cmd --permanent --add-port=514/tcp
+#           # REST API
+#           - firewall-cmd --permanent --add-port=9443/tcp
+#           # AMQP QPID Broker
+#           - firewall-cmd --permanent --add-port=56072/tcp
+#           # AMQP QPID Broker WebSocket
+#           - firewall-cmd --permanent --add-port=56080/tcp
+#           - firewall-cmd --permanent --add-port=56443/tcp
+#           - firewall-cmd --reload
+#       when: 
+#         - install_file|default('') != ''
+
+# - name: Deploy OVF files
+#   hosts: ovf
+#   gather_facts: false
+#   vars_files:
+#     - defaults/main.yml
+#     - "{{ mainvars }}"
+#     - "{{ credentials }}"
+#   tasks:
+#   - vmware_deploy_ovf:
+#       hostname: '{{ vcenter_address }}'
+#       username: '{{ vcenter_username }}'
+#       password: '{{ vcenter_password }}'
+#       validate_certs: no
+#       datacenter: '{{ vcenter_datacenter }}'
+#       cluster: '{{ vcenter_cluster }}'
+#       datastore: "{{lab_vm_datastore}}"
+#       name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
+#       ovf: '{{ ovf_file }}'
+#       disk_provisioning: thin
+#       power_on: yes
+#       wait_for_ip_address: false
+#       networks: "{{ovf_networks}}"
+#       inject_ovf_env: true
+#       properties: "{{ovf_properties}}"
+#     delegate_to: localhost
+#     retries: 10
+#     delay: 60
+#     register: result
+#     until: result is succeeded
+#     when: #only run on VMware
+#       - pve_address|default('') == ''
+
+# We build these last so extra_commands can be used for lab integration automation
+# We build these last so extra_commands can be used for lab integration automation
+- name: Run commands in winservers and dc
+  hosts: winservers:dc
+  order: inventory
+  gather_facts: false
+  vars_files:
+    - defaults/main.yml
+    - "{{ mainvars }}"
+    - "{{ credentials }}"
+  tasks:
+    - name: Run extra commands on Windows servers and DCs
+      ansible.builtin.include_role:
+        name: build_from_iso_windows
+        tasks_from: run_commands.yml
+      vars:
+        vm_name: "{{ lab_prefix | default('') }}{{ inventory_hostname }}"
+        vm_datastore: "{{ lab_vm_datastore }}"
+        vm_network: "{{ lab_lan1_portgroup }}"
+        vm_password_new: "{{ lab_password }}"
+        vm_hostname: "{{ inventory_hostname }}"
+        vm_address: "{{ ip_address }}"
+        vm_netmask: "{{ lab_lan1_netmask }}"
+        vm_netmask_cidr: "{{ lab_lan1_netmask_cidr }}"
+        vm_gateway: "{{ lab_lan1_gateway }}"
+        vm_dns_server: "{{ lab_lan1_dns_ip }}"
+        vm_domain: "{{ lab_domain_name }}"
+

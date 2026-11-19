@@ -1,0 +1,6 @@
+---
+- name: parse variables
+  include_tasks: parse_vars.yml
+
+- name: Run extra commands
+  include_tasks: "{{host_type}}/run_extra_commands.yml"
