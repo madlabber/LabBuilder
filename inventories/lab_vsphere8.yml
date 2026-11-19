@@ -52,19 +52,19 @@ all:
             - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
             - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
           extra_commands:
-            - MsiExec.exe /i E:\files\putty-64bit-0.83-installer.msi /qn
-            - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn  
-            # Pre-create some putty sessions
-            - $Session="esx01"; @{HostName=192.168.0.51; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="esx02"; @{HostName=192.168.0.52; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="esx03"; @{HostName=192.168.0.53; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="esx04"; @{HostName=192.168.0.54; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="vc01"; @{HostName=192.168.0.50; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="ontap9"; @{HostName=192.168.0.90; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="ontap9-01"; @{HostName=192.168.0.91; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="ontap9-02"; @{HostName=192.168.0.92; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="ansible"; @{HostName=192.168.0.22; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-
+            - $p = Start-Process msiexec.exe -ArgumentList '/i "E:\files\putty-64bit-0.83-installer.msi" /qn /norestart' -Wait -PassThru; if ($p.ExitCode -notin 0,3010) { exit $p.ExitCode }
+            - $p = Start-Process msiexec.exe -ArgumentList '/i "E:\files\googlechromestandaloneenterprise64.msi" /qn /norestart' -Wait -PassThru; if ($p.ExitCode -notin 0,3010) { exit $p.ExitCode }
+            # Pre-create PuTTY sessions
+            - $Session="esx01"; @{HostName="192.168.0.51"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="esx02"; @{HostName="192.168.0.52"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="esx03"; @{HostName="192.168.0.53"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="esx04"; @{HostName="192.168.0.54"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="vc01"; @{HostName="192.168.0.50"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="ontap9"; @{HostName="192.168.0.90"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="ontap9-01"; @{HostName="192.168.0.91"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="ontap9-02"; @{HostName="192.168.0.92"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="ansible"; @{HostName="192.168.0.22"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+ 
     vcenter:
       hosts:
         vc01:
