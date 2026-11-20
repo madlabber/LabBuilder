@@ -1,16 +1,17 @@
 all:
   hosts:
   vars:
-    lab_name: lab_vsphere9
+    lab_name: "{{ (ansible_inventory_sources[0] | basename | splitext)[0] }}"
     lab_prefix: "{{ lab_name }}_"
     lab_password: "{{ default_lab_password }}"
     lab_vm_datastore: "{{ lab_name }}"
-    lab_wan_portgroup: "VM Network"
+    lab_wan_portgroup: "{{ vm_network }}"
     lab_lan1_portgroup: "{{ lab_name }}_net1"
+    lab_lan2_portgroup: "{{ lab_name }}_net2"
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
-    lab_lan1_dns_ip: "192.168.0.11"
+    lab_lan1_dns_ip: "192.168.0.21"
     lab_domain_name:   "lab.test"
     lab_domain_controller: "dc01"
   children:
@@ -25,27 +26,52 @@ all:
             address:      192.168.0.1
             netmask_cidr: 24
             domain:       "{{lab_domain_name}}"
-            dns_server:   192.168.0.11
+            dns_server:   192.168.0.21
             dhcp_start:   192.168.0.150
             dhcp_end:     192.168.0.200
-          rdp_jumphost:   192.168.0.11
+          rdp_jumphost:   192.168.0.20
     dc:
       hosts:
         dc01:
           version: "Server2022eval"
-          ip_address: 192.168.0.11
+          ip_address: 192.168.0.21
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+          extra_commands:
+            - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
+
+    winservers:
+      hosts:
+        desktop:
+          version: "Server2022eval"
+          ip_address: 192.168.0.20
+          join_domain: true
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
           extra_files_urls:
             - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
             - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
           extra_commands:
-            - MsiExec.exe /i E:\files\putty-64bit-0.83-installer.msi /qn
-            - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
+            - $p = Start-Process msiexec.exe -ArgumentList '/i "E:\files\putty-64bit-0.83-installer.msi" /qn /norestart' -Wait -PassThru; if ($p.ExitCode -notin 0,3010) { exit $p.ExitCode }
+            - $p = Start-Process msiexec.exe -ArgumentList '/i "E:\files\googlechromestandaloneenterprise64.msi" /qn /norestart' -Wait -PassThru; if ($p.ExitCode -notin 0,3010) { exit $p.ExitCode }
+            # Pre-create PuTTY sessions
+            - $Session="esx01"; @{HostName="192.168.0.51"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="esx02"; @{HostName="192.168.0.52"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="esx03"; @{HostName="192.168.0.53"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="esx04"; @{HostName="192.168.0.54"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="vc01"; @{HostName="192.168.0.50"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="ontap9"; @{HostName="192.168.0.90"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="ontap9-01"; @{HostName="192.168.0.91"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="ontap9-02"; @{HostName="192.168.0.92"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+            - $Session="ansible"; @{HostName="192.168.0.22"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
+ 
     vcenter:
       hosts:
-        vcsa:
+        vc01:
           ip_address: 192.168.0.50
-          vm_fqdn: "vcsa.{{lab_domain_name}}"
+          vm_fqdn: "vc01.{{lab_domain_name}}"
           ovf_file: "files/VMware-vCenter-Server-Appliance-9.0.0.0.24755230_OVF10.ova"
+
     esx:
       hosts:
         esx01:
@@ -57,11 +83,69 @@ all:
         esx04:
           ip_address: 192.168.0.54
       vars:
-          install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
-          vm_memory_mb: 16348
-          vm_num_cpus: 4
-          vm_disk1_size_gb: 128
-          vm_disk2_size_gb: 512
+          vm_memory_mb: 24576
+          vm_num_cpus: 6
           create_local_vmfs: 'False'
           enable_ssh: 'True'
+          install_iso: "VMware-VMvisor-Installer-9.0.0.0.24755229.x86_64.iso"
+          ethernet_ports:
+            eth0: '{{ lab_lan1_portgroup }}'
+            eth1: '{{ lab_lan1_portgroup }}'
+            eth2: '{{ lab_lan2_portgroup }}'
+            eth3: '{{ lab_lan2_portgroup }}'
+          disks:
+            # boot disk
+            - size_gb: 128
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 0
+              type: thin
+            # Cache disk
+            - size_gb: 256
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 1
+              type: thin
+            # Data disk
+            - size_gb: 2560
+              controller_type: 'nvme'
+              controller_number: 0
+              unit_number: 2
+              type: thin
+
+    vsims:
+      hosts:
+        ontap9-01:
+          partner:      "ontap9-02"
+          cluster_name: "ontap9"
+          cluster_mgmt_ip: 192.168.0.90
+          ip_address:      192.168.0.91
+          partner_ip:      192.168.0.92
+      vars:
+          ovf_version:  "9.19.1"
+          disk_model: "vscsi"
+          shelf0_disk_size: 30720
+          shelf0_disk_count: 12
+          shelf1_disk_size: 30720
+          shelf1_disk_count: 12
+          fake_ssd_disk_size: 30720
+          adp_enabled: "true"
+          extra_commands:
+            - sleep 180 # give nodes time to join
+            - storage disk assign -node ontap9-01 -auto
+            - storage disk assign -node ontap9-02 -auto
+            - storage aggregate auto-provision -nodes ontap9-01,ontap9-02 -skip-confirmation
+            - cluster ha modify -configured true
+
+    centos:
+      hosts:
+        ansible:
+          ip_address: 192.168.0.22
+          distro: "alma"
+          version: "9"
+          install_xrdp: true
+          install_ansible: true
+          vm_memory_mb: 2048
+          vm_num_cpus: 2
+          vm_disk_gb: 80
 
