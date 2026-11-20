@@ -72,3 +72,7 @@ files/lab_pvetest_pve01/autoinstall-flat.vmdk
 files/lab_pvetest_pve01/autoinstall.vmdk
 files/mfg_l_f
 library/vmware_deploy_ovf.py
+files/vlab/files/googlechromestandaloneenterprise64.msi
+files/vlab/files/ConfigureRemotingForAnsible.ps1
+files/vlab/files/putty-64bit-0.83-installer.msi
+files/vlab/files/VMware_tools.exe
