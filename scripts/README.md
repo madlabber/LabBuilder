@@ -1,1 +1,0 @@
-This directory is intended to house stage2 scripts that run inside a pod to perform out-of-band advanced configuration.

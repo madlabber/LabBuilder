@@ -12,8 +12,8 @@ import yaml
 FONT = "Calibri"
 COLOR_BLUE = "#4472C4"
 COLOR_ORANGE = "#ED7D31"
-COLOR_CARD_BG = "#D9D9D9"
-COLOR_BLACK = "#000000"
+COLOR_CARD_BG = "light-dark(#D9D9D9,#D9D9D9)"
+COLOR_BLACK = "light-dark(#000000,#000000)"
 
 # Bus color palette for multi-LAN topologies (lan1, lan2, lan3, lan4...)
 BUS_PALETTE = [
@@ -50,7 +50,10 @@ ICON_FILES = {
 def load_svg_data_uri(icons_dir: Path, key: str):
     svg_path = icons_dir / ICON_FILES.get(key, "")
     if svg_path.exists():
-        b64 = base64.b64encode(svg_path.read_bytes()).decode("ascii")
+        svg_text = svg_path.read_text(encoding="utf-8")
+        if key == "server_top":
+            svg_text = svg_text.replace("#595959", "#8C8C8C").replace("#595959".lower(), "#8C8C8C")
+        b64 = base64.b64encode(svg_text.encode("utf-8")).decode("ascii")
         # Omit ';base64' so draw.io's style parser doesn't split on the semicolon
         return f"data:image/svg+xml,{b64}"
     return None
@@ -80,13 +83,13 @@ class DrawioBuilder:
             pageScale="1",
             pageWidth="1200",
             pageHeight="850",
+            background="#FFFFFF",
             math="0",
             shadow="0",
         )
         self.root = ET.SubElement(self.model, "root")
         ET.SubElement(self.root, "mxCell", id="0")
         ET.SubElement(self.root, "mxCell", id="1", parent="0")
-
     def next_id(self) -> str:
         val = str(self._id)
         self._id += 1
@@ -119,7 +122,7 @@ class DrawioBuilder:
         if uri:
             style = (
                 "shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;"
-                f"verticalAlign=top;aspect=fixed;imageAspect=0;image={uri};"
+                f"verticalAlign=top;aspect=fixed;imageAspect=1;image={uri};"
             )
             return self.add_box(x, y, w, h, "", style)
         style = fallback_style or (
@@ -165,7 +168,7 @@ class DrawioBuilder:
         if is_ova:
             ova_style = (
                 f"rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor={COLOR_BLACK};"
-                f"strokeColor={COLOR_BLACK};fontColor=#FFFFFF;fontFamily={FONT};fontSize=16;fontStyle=1;"
+                f"strokeColor={COLOR_BLACK};fontColor=light-dark(#FFFFFF,#FFFFFF);fontFamily={FONT};fontSize=16;fontStyle=1;"
             )
             self.add_box(x + 12, y + 82, 60, 38, "OVA", ova_style)
         else:
@@ -219,8 +222,6 @@ def extract_subnets(all_vars: dict) -> list:
             "color": COLOR_BLUE,
         })
     return lans
-
-
 def detect_connected_lans(host_vars: dict, group_vars: dict, total_lans: int) -> list:
     """Determine which LAN buses (1-based indices) a host connects to."""
     merged = {**group_vars, **host_vars}
@@ -355,7 +356,6 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
                 "is_ova": is_ova,
                 "lans": detect_connected_lans(hvars, gvars, total_lans),
             })
-
     # 5. Hypervisors (esx, nested_esx, proxmox, pve, xcpng)
     hypervisor_map = {
         "esx": "esxi",
@@ -412,6 +412,21 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
     first_bus_y = 290
     bus_spacing = 46
 
+    last_bus_y = first_bus_y + ((len(lans) - 1) * bus_spacing)
+    bot_y = last_bus_y + 80
+    box_h = (bot_y + 185) - box_y
+
+    # Full-canvas white background so laptop area & PNG exports are always solid white
+    canvas_bg_style = "rounded=0;whiteSpace=wrap;html=1;fillColor=light-dark(#FFFFFF,#FFFFFF);strokeColor=none;"
+    b.add_box(0, 0, box_x + box_w + 40, box_y + box_h + 40, "", canvas_bg_style)
+
+    # Outer Lab Frame (drawn FIRST with solid white fill so it sits behind bus lines and cards)
+    frame_style = (
+        f"rounded=1;arcSize=5;whiteSpace=wrap;html=1;fillColor=light-dark(#FFFFFF,#FFFFFF);"
+        f"strokeColor={COLOR_BLACK};strokeWidth=1.5;"
+    )
+    b.add_box(box_x, box_y, box_w, box_h, "", frame_style)
+
     for idx, lan in enumerate(lans):
         by = first_bus_y + (idx * bus_spacing)
         lan["y"] = by
@@ -421,26 +436,17 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
         label_str = f"{lan['desc']} ({lan['subnet']})" if (idx > 0 and lan["subnet"]) else lan["desc"]
         b.add_text(label_str, bus_x1 + 65, by + 4, 220, 22, bold=True, size=13, align="left")
 
-    last_bus_y = lans[-1]["y"]
-    bot_y = last_bus_y + 80
-    box_h = (bot_y + 185) - box_y
-
-    # Outer Lab Frame
-    frame_style = (
-        f"rounded=1;arcSize=5;whiteSpace=wrap;html=1;fillColor=none;"
-        f"strokeColor={COLOR_BLACK};strokeWidth=1.5;"
-    )
-    b.add_box(box_x, box_y, box_w, box_h, "", frame_style)
-
     # --- RENDER TOP ROW NODES ---
     top_y = 95
     gateway_right_x = None
     rdp_target_left_x = None
 
     for idx, node in enumerate(top_nodes):
-        cx = box_x + 70 + (idx * col_step)
         if node["role"] == "gateway":
-            b.add_icon("laptop", 25, top_y + 40, 80, 55, "LAPTOP")
+            cx = box_x + 35
+            b.add_icon("laptop", 22, top_y + 42, 84, 55, "LAPTOP")
+            badge_bg = "ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=light-dark(#FFFFFF,#FFFFFF);strokeColor=none;"
+            b.add_box(box_x - 20, top_y + 47, 40, 40, "", badge_bg)
             b.add_icon("arrow_badge", box_x - 20, top_y + 47, 40, 40, "<->")
             r_size = 84
             r_style = (
@@ -457,6 +463,7 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
             b.add_text(octet(node["ip"]), drop_x + 2, top_y + 26 + r_size + 2, 36, 20, bold=True, size=12, align="left")
             gateway_right_x = cx + r_size
         else:
+            cx = box_x + 70 + (idx * col_step)
             mid_x, _, card_bot = b.draw_vm_card(
                 node["name"],
                 cx,
@@ -480,11 +487,13 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
     # Draw RDP Connection between Gateway and Jumphost
     if gateway_right_x and rdp_target_left_x and rdp_target_left_x > gateway_right_x:
         badge_size = 40
-        target_badge_x = rdp_target_left_x - badge_size - 2
+        target_badge_x = rdp_target_left_x - (badge_size // 2)
         b.add_line(gateway_right_x, top_y + 68, target_badge_x, top_y + 68, COLOR_BLACK, 5)
+        badge_bg = "ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=light-dark(#FFFFFF,#FFFFFF);strokeColor=none;"
+        b.add_box(target_badge_x, top_y + 48, badge_size, badge_size, "", badge_bg)
         b.add_icon("arrow_badge", target_badge_x, top_y + 48, badge_size, badge_size, "RDP")
         mid_rdp = (gateway_right_x + target_badge_x) // 2
-        b.add_text("RDP", mid_rdp - 25, top_y + 72, 50, 20, bold=True, size=12)
+        b.add_text("RDP", mid_rdp - 20, top_y + 72, 40, 20, bold=True, size=12)
 
     # --- RENDER BOTTOM ROW NODES (Hypervisors & Storage) ---
     hv_nodes = [n for n in bottom_nodes if n["role"] == "hypervisor"]
@@ -549,7 +558,6 @@ def main():
     files = [src] if src.is_file() else sorted(list(src.glob("*.yml")) + list(src.glob("*.yaml")))
     for f in files:
         generate_diagram(f, out_dir, icons_dir)
-
 
 
 if __name__ == "__main__":
