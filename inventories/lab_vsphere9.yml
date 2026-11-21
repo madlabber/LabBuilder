@@ -10,7 +10,13 @@ all:
     lab_lan1_portgroup: "{{ lab_name }}_net1"
     lab_lan1_vlan: 4095
     lab_lan2_portgroup: "{{ lab_name }}_net2"
-    lab_lan2_vlan: 4094
+    lab_lan2_vlan: 10
+    lab_lan3_portgroup: "{{ lab_name }}_net3"
+    lab_lan3_vlan: 20
+    lab_lan4_portgroup: "{{ lab_name }}_net4"
+    lab_lan4_vlan: 30
+    lab_lan5_portgroup: "{{ lab_name }}_net5"
+    lab_lan5_vlan: 40
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
@@ -21,10 +27,15 @@ all:
     pfsense:
       hosts:
         gateway:
-          ip_address: 192.168.0.1
+          ip_address:   192.168.0.1
+          rdp_jumphost: 192.168.0.20
           interfaces:
-            wan: "{{lab_wan_portgroup}}"
-            lan: "{{lab_lan1_portgroup}}"
+            wan:  "{{lab_wan_portgroup}}"
+            lan:  "{{lab_lan1_portgroup}}"
+            opt1: "{{lab_lan2_portgroup}}"
+            opt2: "{{lab_lan3_portgroup}}"
+            opt3: "{{lab_lan4_portgroup}}"
+            opt4: "{{lab_lan5_portgroup}}"
           lan:
             address:      192.168.0.1
             netmask_cidr: 24
@@ -32,7 +43,27 @@ all:
             dns_server:   192.168.0.21
             dhcp_start:   192.168.0.150
             dhcp_end:     192.168.0.200
-          rdp_jumphost:   192.168.0.20
+          opt1:
+            address:      192.168.10.1
+            netmask_cidr: 24
+            dhcp_start:   192.168.10.100
+            dhcp_end:     192.168.10.200
+          opt2:
+            address:      192.168.20.1
+            netmask_cidr: 24
+            dhcp_start:   192.168.20.100
+            dhcp_end:     192.168.20.200
+          opt3:
+            address:      192.168.30.1
+            netmask_cidr: 24
+            dhcp_start:   192.168.30.100
+            dhcp_end:     192.168.30.200
+          opt4:
+            address:      192.168.40.1
+            netmask_cidr: 24
+            dhcp_start:   192.168.40.100
+            dhcp_end:     192.168.40.200
+
     dc:
       hosts:
         dc01:
