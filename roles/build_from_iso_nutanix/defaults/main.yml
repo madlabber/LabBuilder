@@ -1,0 +1,58 @@
+---
+# Nutanix Community Edition 2.1 (AHV), nested on VMware.
+# See README.md for how the unattended install works.
+
+state: present
+install_iso: "phoenix.x86_64-fnd_5.6.1_patch-aos_6.8.1_ga.iso"
+
+# blank host addresses (set by mainvars)
+pve_address: ""
+esxi_address: ""
+vcenter_address: ""
+vcenter_cluster:
+
+# vm defaults
+vm_name:     ntnx
+vm_hostname: ntnx
+vm_network:  "VM Network"
+
+# The CVM takes half of the node's cores (8 at most) and 20+ GB of RAM;
+# AHV keeps 6 GB. What is left runs guest VMs.
+vm_num_cpus:  8
+vm_memory_mb: 49152
+network_device_type: vmxnet3
+
+# The installer picks its disks by size (VMware paravirtual disks report as SSD):
+#   smallest disk (>= 14 GB)        -> AHV boot
+#   largest SSD (>= 200 GB)         -> CVM boot   (so keep it the largest)
+#   every other disk (>= 200 GB)    -> data
+hyp_disk_gb:  64
+cvm_disk_gb:  500
+data_disk_gb: 250
+
+# Node addresses
+host_address:
+vm_netmask:
+vm_gateway:
+
+# Installer timing, in seconds
+installer_boot_wait:  300   # power-on until the installer screen is up (about 3 minutes)
+installer_image_wait: 1500  # Start until imaging has finished
+
+# Cluster creation (create_cluster.yml)
+nutanix_create_cluster: true           # false: stop once every CVM is up, for the user to create the cluster
+nutanix_group: nutanix                 # inventory group holding the nodes
+nutanix_cluster_name: "ntnx-ce"
+nutanix_cluster_vip: ""                # optional Prism virtual IP
+nutanix_dns_servers: ""                # comma separated
+nutanix_ntp_servers: ""                # comma separated
+nutanix_gateway_vm: "gateway"          # lab gateway VM, forwards SSH to the first CVM
+nutanix_ssh_nat_port: 2222             # gateway WAN port forwarded to the first CVM's port 22
+nutanix_cvm_username: nutanix
+nutanix_cvm_password: "nutanix/4u"     # CE default
+nutanix_admin_password: ""             # new Prism admin password; blank keeps the default
+nutanix_cluster_wait: 5400             # how long to wait for the CVMs, in seconds
+
+# Lab guide: create_cluster.yml writes it as HTML; a Windows VM can list it in
+# extra_files and print it to PDF (see inventories/lab_nutanix.yml).
+nutanix_guide_file: "{{ playbook_dir }}/files/{{ lab_name | default('nutanix') }}_nxguide.htm"

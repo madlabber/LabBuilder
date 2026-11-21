@@ -1,0 +1,121 @@
+all:
+  hosts:
+  vars:
+    lab_name: lab_nutanix
+    lab_prefix: "{{ lab_name }}_"
+    lab_password: "{{ default_lab_password }}"
+    lab_vm_datastore: "{{ lab_name }}"
+    lab_wan_portgroup: "{{ vm_network }}"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.21"
+    lab_domain_name:   "lab.test"
+    lab_domain_controller: "dc01"
+  children:
+    pfsense:
+      hosts:
+        gateway:
+          ip_address: 192.168.0.1
+          interfaces:
+            wan: "{{lab_wan_portgroup}}"
+            lan: "{{lab_lan1_portgroup}}"
+          lan:
+            address:      192.168.0.1
+            netmask_cidr: 24
+            domain:       "{{lab_domain_name}}"
+            dns_server:   192.168.0.21
+            dhcp_start:   192.168.0.150
+            dhcp_end:     192.168.0.200
+          # rdp_jumphost replaces nat_rules, so RDP is listed here instead
+          rdp_jumphost: ""
+          nat_rules:
+            - name: "RDP to desktop"
+              external_port: "3389"
+              internal_port: "3389"
+              protocol: "tcp"
+              target_ip: 192.168.0.20
+            - name: "Prism on the first CVM"
+              external_port: "9440"
+              internal_port: "9440"
+              protocol: "tcp"
+              target_ip: 192.168.0.61
+            - name: "SSH to the first CVM (LabBuilder creates the cluster through this)"
+              external_port: "2222"
+              internal_port: "22"
+              protocol: "tcp"
+              target_ip: 192.168.0.61
+
+    dc:
+      hosts:
+        dc01:
+          version: "Server2025eval"
+          ip_address: 192.168.0.21
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+          extra_commands:
+            - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
+
+    # Nutanix CE 2.1 (AHV). ip_address is the AHV host; cvm_address is its CVM.
+    # Each node: 8 vCPU, 48 GB RAM, thin disks 64 GB (AHV) + 500 GB (CVM) + 250 GB (data).
+    nutanix:
+      hosts:
+        ahv01:
+          ip_address:  192.168.0.51
+          cvm_address: 192.168.0.61
+      vars:
+        nutanix_cluster_name: "ntnx-ce"
+        nutanix_cluster_vip:  192.168.0.60
+
+    winservers:
+      hosts:
+        desktop:
+          version: "Server2025eval"
+          ip_address: 192.168.0.20
+          join_domain: true
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+            - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
+          # the Nutanix lab guide, written by the "Create Nutanix CE cluster" play
+          extra_files:
+            - "{{ playbook_dir }}/files/{{ lab_name }}_nxguide.htm"
+          extra_commands:
+            # PuTTY: wait for the install to finish, and find the MSI by pattern
+            # (the config ISO renames putty-64bit-0.83-installer.msi to PUTTY_64BIT_0_83_INSTALLER.MSI)
+            - |
+              Start-Sleep 60   # let Windows settle after the domain-join reboot
+              $msi = (Get-Item E:\files\putty*.msi).FullName
+              Start-Process msiexec.exe -Wait -ArgumentList "/i $msi /qn /l*v C:\putty-install.log"
+            - Start-Process msiexec.exe -Wait -ArgumentList '/i E:\files\googlechromestandaloneenterprise64.msi /qn /l*v C:\chrome-install.log'
+
+            # PuTTY sessions for every user: saved once to a .reg file, which Windows
+            # imports now and again each time any user signs in
+            - |
+              $sessions = [ordered]@{
+                'ahv01' = '192.168.0.51'
+                'cvm01' = '192.168.0.61'
+                'prism' = '192.168.0.60'
+              }
+              $reg = "Windows Registry Editor Version 5.00`r`n"
+              foreach ($name in $sessions.Keys) {
+                $reg += "`r`n[HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions\$name]`r`n"
+                $reg += "`"HostName`"=`"$($sessions[$name])`"`r`n"
+                $reg += "`"PortNumber`"=dword:00000016`r`n"   # 0x16 = port 22
+                $reg += "`"Protocol`"=`"ssh`"`r`n"
+              }
+              Set-Content -Path C:\ProgramData\putty-sessions.reg -Value $reg -Encoding Unicode
+              New-ItemProperty -Path HKLM:\Software\Microsoft\Windows\CurrentVersion\Run -Name PuTTYSessions `
+                -Value 'reg.exe import C:\ProgramData\putty-sessions.reg' -Force | Out-Null
+              reg.exe import C:\ProgramData\putty-sessions.reg
+
+            # Nutanix lab guide: print the HTML from the config ISO to a PDF on every user's desktop
+            - |
+              $html = (Get-Item E:\files\*nxguide*.htm*).FullName
+              $browser = @("${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
+                           "$env:ProgramFiles\Google\Chrome\Application\chrome.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+              Start-Process $browser -Wait -ArgumentList '--headless', '--disable-gpu', '--no-pdf-header-footer',
+                '--user-data-dir=C:\ProgramData\nxguide-browser', '--print-to-pdf=C:\ProgramData\nxguide.pdf', "file:///$($html -replace '\\', '/')"
+              Copy-Item C:\ProgramData\nxguide.pdf 'C:\Users\Public\Desktop\Nutanix Lab Guide.pdf' -Force

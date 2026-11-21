@@ -1,0 +1,138 @@
+---
+# Creates the Nutanix cluster from the first CVM. Run once (run_once) after
+# every node is installed. The lab network is isolated, so the CVM is reached
+# through the lab gateway, which forwards {{ nutanix_ssh_nat_port }} on its WAN
+# address to the first CVM's port 22 (see nat_rules in the inventory).
+
+- name: Collect the CVM addresses
+  ansible.builtin.set_fact:
+    nutanix_cvm_ips: "{{ groups[nutanix_group] | map('extract', hostvars, 'cvm_address') | list }}"
+    nutanix_lan_prefix: "{{ (vm_gateway.split('.'))[:3] | join('.') }}."
+
+- name: Find the lab gateway's WAN address
+  community.vmware.vmware_guest_info:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: "{{ vcenter_datacenter }}"
+    name: '{{ nutanix_gateway_vm }}'
+  delegate_to: localhost
+  register: gateway_info
+  until: >-
+    gateway_info.instance is defined and
+    (gateway_info.instance | dict2items | selectattr('key', 'match', '^hw_eth')
+     | map(attribute='value.ipaddresses') | select | flatten
+     | select('match', '^[0-9.]+$') | reject('match', '^' ~ nutanix_lan_prefix | regex_escape) | list | length) > 0
+  retries: 30
+  delay: 20
+
+- name: Set the gateway WAN address
+  ansible.builtin.set_fact:
+    nutanix_gateway_wan_ip: >-
+      {{ gateway_info.instance | dict2items | selectattr('key', 'match', '^hw_eth')
+         | map(attribute='value.ipaddresses') | select | flatten
+         | select('match', '^[0-9.]+$') | reject('match', '^' ~ nutanix_lan_prefix | regex_escape) | first }}
+
+# The CVM commands run on this host through files/cvm_ssh.py (paramiko), which
+# reconnects and retries until the command succeeds: the CVM reboots once
+# during its first boot, so SSH can drop between one task and the next.
+- name: Set the CVM SSH helper
+  ansible.builtin.set_fact:
+    cvm_ssh: >-
+      {{ [ansible_playbook_python, role_path ~ '/files/cvm_ssh.py',
+          nutanix_gateway_wan_ip, nutanix_ssh_nat_port | string, nutanix_cvm_username] }}
+
+- name: Wait for genesis on every CVM ({{ nutanix_gateway_wan_ip }}:{{ nutanix_ssh_nat_port }})
+  ansible.builtin.command:
+    argv: "{{ cvm_ssh + [nutanix_cluster_wait | string,
+            'for ip in ' ~ (nutanix_cvm_ips | join(' ')) ~ '; do timeout 3 bash -c \"</dev/tcp/$ip/2100\" || exit 1; done'] }}"
+  environment:
+    CVM_PASSWORD: "{{ nutanix_cvm_password }}"
+  delegate_to: localhost
+  changed_when: false
+
+- name: Check whether the cluster already exists
+  ansible.builtin.command:
+    argv: "{{ cvm_ssh + ['600', 'bash -lc \"cluster status 2>&1 | head -20\"; true'] }}"
+  environment:
+    CVM_PASSWORD: "{{ nutanix_cvm_password }}"
+  delegate_to: localhost
+  register: cluster_status
+  changed_when: false
+
+- name: Create the cluster
+  ansible.builtin.command:
+    argv: "{{ cvm_ssh + ['0', 'bash -lc ' ~ (create_cmd | quote)] }}"
+  vars:
+    create_cmd: >-
+      cluster -s {{ nutanix_cvm_ips | join(',') }}
+      {{ '--redundancy_factor=1' if nutanix_cvm_ips | length == 1 else '' }}
+      --cluster_name={{ nutanix_cluster_name }}
+      {{ ('--cluster_external_ip=' ~ nutanix_cluster_vip) if nutanix_cluster_vip else '' }}
+      {{ ('--dns_servers=' ~ nutanix_dns_servers) if nutanix_dns_servers else '' }}
+      {{ ('--ntp_servers=' ~ nutanix_ntp_servers) if nutanix_ntp_servers else '' }}
+      create
+  environment:
+    CVM_PASSWORD: "{{ nutanix_cvm_password }}"
+  delegate_to: localhost
+  register: cluster_create
+  when:
+    - nutanix_create_cluster | bool
+    - "'unconfigured' in cluster_status.stdout"
+
+- name: Show the cluster create output
+  ansible.builtin.debug:
+    msg: "{{ cluster_create.stdout_lines[-15:] }}"
+  when: cluster_create is changed
+
+# Prism's rules are stricter than the four character classes (no dictionary
+# words, no more than 2 identical characters in a row...). If it refuses the
+# password, admin keeps the CE default and Prism asks for a new one at sign-in.
+- name: Set the Prism admin password
+  ansible.builtin.command:
+    argv: "{{ cvm_ssh + ['300', 'bash -lc ' ~ (('ncli user reset-password user-name=admin password=' ~ (nutanix_admin_password | quote)) | quote)] }}"
+  environment:
+    CVM_PASSWORD: "{{ nutanix_cvm_password }}"
+  delegate_to: localhost
+  register: admin_password
+  failed_when: false
+  no_log: true
+  when:
+    - nutanix_admin_password | default('') != ''
+    - cluster_create is changed
+
+- name: Report a refused Prism password
+  ansible.builtin.debug:
+    msg:
+      - "Prism refused the new admin password, so admin keeps the CE default (nutanix/4u)."
+      - "{{ (admin_password.stderr | default('')).splitlines() | select('match', '.*(Error|requirement|Should).*') | first | default('') }}"
+  when:
+    - admin_password is not skipped
+    - admin_password.rc | default(0) != 0
+
+- name: Write the lab guide ({{ nutanix_guide_file }})
+  ansible.builtin.template:
+    src: nutanix_guide.html.j2
+    dest: "{{ nutanix_guide_file }}"
+  vars:
+    nutanix_nodes: "{{ groups[nutanix_group] | map('extract', hostvars) | list }}"
+    nutanix_cluster_exists: "{{ (cluster_create is changed) or ('unconfigured' not in cluster_status.stdout) }}"
+    nutanix_admin_password_changed: "{{ (admin_password is defined) and (admin_password is not skipped) and (admin_password.rc | default(1) == 0) }}"
+  delegate_to: localhost
+
+- name: Cluster ready
+  ansible.builtin.debug:
+    msg:
+      - "Prism: https://{{ nutanix_cluster_vip or nutanix_cvm_ips[0] }}:9440 (inside the lab)"
+      - "Prism through the gateway: https://{{ nutanix_gateway_wan_ip }}:9440 (if the gateway forwards 9440)"
+      - "First sign-in asks for a Nutanix .NEXT (my.nutanix.com) account; the cluster needs internet access for that."
+  when: nutanix_create_cluster | bool
+
+- name: Nodes ready for cluster creation
+  ansible.builtin.debug:
+    msg:
+      - "Every CVM is up and waiting ({{ nutanix_cvm_ips | join(', ') }}). The cluster was left for you to create."
+      - "From a CVM (nutanix / nutanix/4u): cluster -s {{ nutanix_cvm_ips | join(',') }} create"
+      - "Step-by-step guide: {{ nutanix_guide_file }} (also on the lab desktop as a PDF)"
+  when: not (nutanix_create_cluster | bool)

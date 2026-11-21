@@ -1,0 +1,33 @@
+---
+- name: remove if absent or forced
+  include_tasks: vmw/absent.yml
+  when: state == "absent" or state == "force"
+
+- name: Check whether the node VM already exists
+  community.vmware.vmware_guest_info:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: "{{ vcenter_datacenter }}"
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  register: existing_vm
+  failed_when: false
+  when: state == "present" or state == "force"
+
+# An installed node is left alone: re-running the playbook doesn't reconfigure
+# it or type into its console. Use state=force to rebuild it.
+- name: Build and install a new node
+  when:
+    - state == "present" or state == "force"
+    - existing_vm.instance is not defined
+  block:
+    - name: upload install iso
+      include_tasks: vmw/upload_install_iso.yml
+
+    - name: Build VM
+      include_tasks: vmw/build_vm.yml
+
+    - name: Run the CE installer
+      include_tasks: vmw/run_installer.yml
