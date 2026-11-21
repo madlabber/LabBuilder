@@ -9,6 +9,7 @@
   - name: set vmw vars
     set_fact:
       host_type: "vmw"
+      vswitch: "{{ lab_vswitch | default(esxi_vswitch)}}"
     when:
       - vcenter_address|default('') ~ esxi_address|default('') != ''
 
@@ -71,8 +72,8 @@
       password: "{{ vcenter_password | default(esxi_password) }}"
       validate_certs: false
       esxi_hostname: "{{ item.item }}"
-      switch: "{{ esxi_vswitch }}"
-      nics: "{{ (item.hosts_vswitch_info[item.item][esxi_vswitch].pnics | default([])) if (esxi_vswitch in (item.hosts_vswitch_info[item.item] | default({}))) else omit }}"
+      switch: "{{ vswitch }}"
+      nics: "{{ (item.hosts_vswitch_info[item.item][vswitch].pnics | default([])) if (vswitch in (item.hosts_vswitch_info[item.item] | default({}))) else omit }}"
       mtu: 9000
       security:
         promiscuous_mode: true
@@ -103,14 +104,14 @@
       used_vlans: >-
         {{
           portgroupinfo.hosts_portgroup_info[portgroupinfo.hosts_portgroup_info|first]
-          | selectattr('vswitch', 'eq', esxi_vswitch)
+          | selectattr('vswitch', 'eq', vswitch)
           | map(attribute='vlan_id')
           | list
         }}
       existing_pg_vlans: >-
         {{
           portgroupinfo.hosts_portgroup_info[portgroupinfo.hosts_portgroup_info|first]
-          | selectattr('vswitch', 'eq', esxi_vswitch)
+          | selectattr('vswitch', 'eq', vswitch)
           | items2dict(key_name='portgroup', value_name='vlan_id')
         }}
     when: host_type == 'vmw'
@@ -128,9 +129,9 @@
       password: "{{ vcenter_password|default(esxi_password) }}"
       validate_certs: false
       cluster_name: "{{ vcenter_cluster|default('') }}"
-      switch: "{{ esxi_vswitch }}"
+      switch: "{{ vswitch }}"
       portgroup: "{{ lab_lan1_portgroup }}"
-      vlan_id: "{{ existing_pg_vlans[lab_lan1_portgroup] | default(unused_vlans[0]) }}"
+      vlan_id: "{{ (lab_lan1_vlan | default('', true)) or (existing_pg_vlans[lab_lan1_portgroup] | default(unused_vlans[0])) }}"
     delegate_to: localhost
     when:
       - host_type == 'vmw'
@@ -143,9 +144,9 @@
       password: "{{ vcenter_password|default(esxi_password) }}"
       validate_certs: false
       cluster_name: "{{ vcenter_cluster|default('') }}"
-      switch: "{{ esxi_vswitch }}"
+      switch: "{{ vswitch }}"
       portgroup: "{{ lab_lan2_portgroup }}"
-      vlan_id: "{{ existing_pg_vlans[lab_lan2_portgroup] | default(unused_vlans[1]) }}"
+      vlan_id: "{{ (lab_lan2_vlan | default('', true)) or (existing_pg_vlans[lab_lan2_portgroup] | default(unused_vlans[1])) }}"
     delegate_to: localhost
     when:
       - host_type == 'vmw'
@@ -158,9 +159,9 @@
       password: "{{ vcenter_password|default(esxi_password) }}"
       validate_certs: false
       cluster_name: "{{ vcenter_cluster|default('') }}"
-      switch: "{{ esxi_vswitch }}"
+      switch: "{{ vswitch }}"
       portgroup: "{{ lab_lan3_portgroup }}"
-      vlan_id: "{{ existing_pg_vlans[lab_lan3_portgroup] | default(unused_vlans[2]) }}"
+      vlan_id: "{{ (lab_lan3_vlan | default('', true)) or (existing_pg_vlans[lab_lan3_portgroup] | default(unused_vlans[2])) }}"
     delegate_to: localhost
     when:
       - host_type == 'vmw'
@@ -173,9 +174,9 @@
       password: "{{ vcenter_password|default(esxi_password) }}"
       validate_certs: false
       cluster_name: "{{ vcenter_cluster|default('') }}"
-      switch: "{{ esxi_vswitch }}"
+      switch: "{{ vswitch }}"
       portgroup: "{{ lab_lan4_portgroup }}"
-      vlan_id: "{{ existing_pg_vlans[lab_lan4_portgroup] | default(unused_vlans[3]) }}"
+      vlan_id: "{{ (lab_lan4_vlan | default('', true)) or (existing_pg_vlans[lab_lan4_portgroup] | default(unused_vlans[3])) }}"
     delegate_to: localhost
     when:
       - host_type == 'vmw'
@@ -188,9 +189,9 @@
       password: "{{ vcenter_password|default(esxi_password) }}"
       validate_certs: false
       cluster_name: "{{ vcenter_cluster|default('') }}"
-      switch: "{{ esxi_vswitch }}"
+      switch: "{{ vswitch }}"
       portgroup: "{{ lab_lan5_portgroup }}"
-      vlan_id: "{{ existing_pg_vlans[lab_lan5_portgroup] | default(unused_vlans[4]) }}"
+      vlan_id: "{{ (lab_lan5_vlan | default('', true)) or (existing_pg_vlans[lab_lan5_portgroup] | default(unused_vlans[4])) }}"
     delegate_to: localhost
     when:
       - host_type == 'vmw'
@@ -203,9 +204,9 @@
       password: "{{ vcenter_password|default(esxi_password) }}"
       validate_certs: false
       cluster_name: "{{ vcenter_cluster|default('') }}"
-      switch: "{{ esxi_vswitch }}"
+      switch: "{{ vswitch }}"
       portgroup: "{{ lab_lan6_portgroup }}"
-      vlan_id: "{{ existing_pg_vlans[lab_lan6_portgroup] | default(unused_vlans[5]) }}"
+      vlan_id: "{{ (lab_lan6_vlan | default('', true)) or (existing_pg_vlans[lab_lan6_portgroup] | default(unused_vlans[5])) }}"
     delegate_to: localhost
     when:
       - host_type == 'vmw'
@@ -218,9 +219,9 @@
       password: "{{ vcenter_password|default(esxi_password) }}"
       validate_certs: false
       cluster_name: "{{ vcenter_cluster|default('') }}"
-      switch: "{{ esxi_vswitch }}"
+      switch: "{{ vswitch }}"
       portgroup: "{{ lab_lan7_portgroup }}"
-      vlan_id: "{{ existing_pg_vlans[lab_lan7_portgroup] | default(unused_vlans[6]) }}"
+      vlan_id: "{{ (lab_lan7_vlan | default('', true)) or (existing_pg_vlans[lab_lan7_portgroup] | default(unused_vlans[6])) }}"
     delegate_to: localhost
     when:
       - host_type == 'vmw'
@@ -233,9 +234,9 @@
       password: "{{ vcenter_password|default(esxi_password) }}"
       validate_certs: false
       cluster_name: "{{ vcenter_cluster|default('') }}"
-      switch: "{{ esxi_vswitch }}"
+      switch: "{{ vswitch }}"
       portgroup: "{{ lab_lan8_portgroup }}"
-      vlan_id: "{{ existing_pg_vlans[lab_lan8_portgroup] | default(unused_vlans[7]) }}"
+      vlan_id: "{{ (lab_lan8_vlan | default('', true)) or (existing_pg_vlans[lab_lan8_portgroup] | default(unused_vlans[7])) }}"
     delegate_to: localhost
     when:
       - host_type == 'vmw'
@@ -249,7 +250,7 @@
   #     password: "{{ vcenter_password|default(esxi_password) }}"
   #     validate_certs: no
   #     cluster_name: "{{ vcenter_cluster|default('') }}"
-  #     switch: "{{ esxi_vswitch }}"
+  #     switch: "{{ vswitch }}"
   #     portgroup: "{{ lab_lan2_portgroup }}"
   #     vlan_id: "{{ unused_vlans[1] }}"
   #   delegate_to: localhost

@@ -5,9 +5,12 @@ all:
     lab_prefix: "{{ lab_name }}_"
     lab_password: "{{ default_lab_password }}"
     lab_vm_datastore: "{{ lab_name }}"
+    lab_vswitch: "{{ lab_name }}"
     lab_wan_portgroup: "{{ vm_network }}"
     lab_lan1_portgroup: "{{ lab_name }}_net1"
+    lab_lan1_vlan: 4095
     lab_lan2_portgroup: "{{ lab_name }}_net2"
+    lab_lan2_vlan: 4094
     lab_lan1_netmask_cidr: "24"
     lab_lan1_netmask: "255.255.255.0"
     lab_lan1_gateway: "192.168.0.1"
@@ -52,19 +55,40 @@ all:
             - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
             - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
           extra_commands:
-            - $p = Start-Process msiexec.exe -ArgumentList '/i "E:\files\putty-64bit-0.83-installer.msi" /qn /norestart' -Wait -PassThru; if ($p.ExitCode -notin 0,3010) { exit $p.ExitCode }
-            - $p = Start-Process msiexec.exe -ArgumentList '/i "E:\files\googlechromestandaloneenterprise64.msi" /qn /norestart' -Wait -PassThru; if ($p.ExitCode -notin 0,3010) { exit $p.ExitCode }
-            # Pre-create PuTTY sessions
-            - $Session="esx01"; @{HostName="192.168.0.51"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="esx02"; @{HostName="192.168.0.52"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="esx03"; @{HostName="192.168.0.53"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="esx04"; @{HostName="192.168.0.54"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="vc01"; @{HostName="192.168.0.50"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="ontap9"; @{HostName="192.168.0.90"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="ontap9-01"; @{HostName="192.168.0.91"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="ontap9-02"; @{HostName="192.168.0.92"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
-            - $Session="ansible"; @{HostName="192.168.0.22"; PortNumber=22; Protocol="ssh"}.GetEnumerator() | % -Begin { $k = New-Item HKCU:\Software\SimonTatham\PuTTY\Sessions\$Session -Force } -Process { $k | New-ItemProperty -Name $_.Key -Value $_.Value -Force } | Out-Null
- 
+            # PuTTY: wait for the install to finish, and find the MSI by pattern
+            # (the config ISO renames putty-64bit-0.83-installer.msi to PUTTY_64BIT_0_83_INSTALLER.MSI)
+            - |
+              Start-Sleep 60    # let Windows settle after the domain-join reboot
+              $msi = (Get-Item E:\files\putty*.msi).FullName
+              Start-Process msiexec.exe -Wait -ArgumentList "/i $msi /qn /l*v C:\putty-install.log"
+            - Start-Process msiexec.exe -Wait -ArgumentList '/i E:\files\googlechromestandaloneenterprise64.msi /qn /l*v C:\chrome-install.log'
+
+            # PuTTY sessions for every user: saved once to a .reg file, which Windows
+            # imports now and again each time any user signs in
+            - |
+              $sessions = [ordered]@{
+                'esx01'     = '192.168.0.51'
+                'esx02'     = '192.168.0.52'
+                'esx03'     = '192.168.0.53'
+                'esx04'     = '192.168.0.54'
+                'vc01'      = '192.168.0.50'
+                'ontap9'    = '192.168.0.90'
+                'ontap9-01' = '192.168.0.91'
+                'ontap9-02' = '192.168.0.92'
+                'ansible'   = '192.168.0.22'
+              }
+              $reg = "Windows Registry Editor Version 5.00`r`n"
+              foreach ($name in $sessions.Keys) {
+                $reg += "`r`n[HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions\$name]`r`n"
+                $reg += "`"HostName`"=`"$($sessions[$name])`"`r`n"
+                $reg += "`"PortNumber`"=dword:00000016`r`n"    # 0x16 = port 22
+                $reg += "`"Protocol`"=`"ssh`"`r`n"
+              }
+              Set-Content -Path C:\ProgramData\putty-sessions.reg -Value $reg -Encoding Unicode
+              New-ItemProperty -Path HKLM:\Software\Microsoft\Windows\CurrentVersion\Run -Name PuTTYSessions `
+                -Value 'reg.exe import C:\ProgramData\putty-sessions.reg' -Force | Out-Null
+              reg.exe import C:\ProgramData\putty-sessions.reg 
+
     vcenter:
       hosts:
         vc01:
@@ -91,8 +115,8 @@ all:
           ethernet_ports:
             eth0: '{{ lab_lan1_portgroup }}'
             eth1: '{{ lab_lan1_portgroup }}'
-            eth2: '{{ lab_lan2_portgroup }}'
-            eth3: '{{ lab_lan2_portgroup }}'
+            eth2: '{{ lab_lan1_portgroup }}'
+            eth3: '{{ lab_lan1_portgroup }}'
           disks:
             # boot disk
             - size_gb: 128
