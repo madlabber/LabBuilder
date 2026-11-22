@@ -50,6 +50,7 @@
   delegate_to: localhost
   changed_when: true
   ignore_errors: true
+  when: node1_name|default('') != ''
 
 - name: Delete node2 datastore folder via pyvmomi FileManager
   ansible.builtin.command:
@@ -76,3 +77,4 @@
   delegate_to: localhost
   changed_when: true
   ignore_errors: true
+  when: node2_name|default('') != ''
