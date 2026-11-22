@@ -1,6 +1,15 @@
-- name: variable defaults
+- name: set vmw vars
   set_fact:
-    config_iso:      "{{vm_name}}-ks.iso"
+    host_type: "vmw"
+  when:
+    - vcenter_address ~ esxi_address != ''
+
+- name: set pve vars
+  set_fact:
+    host_type: "pve"
+    pve_vm_datastore: "{{ pve_datastores[vm_datastore]|default(vm_datastore) }}"
+  when:
+    - pve_address != ''    
 
 - name: map disk1 vars from nestedesx 
   set_fact:
@@ -28,3 +37,7 @@
   when: 
     - vm_disk1_size_gb|default(0) > 0
     - vm_disk2_size_gb|default(0) > 0
+
+  # Parse host specific vars
+- name: Process vars
+  include_tasks: "{{host_type}}/parse_vars.yml"

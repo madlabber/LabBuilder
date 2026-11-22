@@ -5,4 +5,11 @@
     vcenter_password: "{{ esxi_password }}"
     vcenter_datacenter: "ha-datacenter"
   delegate_to: localhost
+  when: 
+    - state == "present" or state == "force"
+    - vcenter_address|default(esxi_address) == esxi_address
+
+- name: variable defaults
+  set_fact:
+    config_iso:      "{{vm_name}}-ks.iso"
 

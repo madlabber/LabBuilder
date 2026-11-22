@@ -22,16 +22,14 @@ Virtual Machine Configuration Variables:
 | vm_name       | vm101               | the virtual machine name |
 | vm_password   | ChangeMe2!          | The root password |
 | vm_network    | "VM Network"        | portgroup or bridge name |
-| vm_disk_gb    | 128 | VM boot disk size |
-| vm_num_nics   | 2 | Number of network adapters |
-| vm_num_cpus   | 2 | Number of vCPUs |
-| vm_memory_mb  | 8192 | virtual memory in MB |
-| ethernet_ports |  | list of ports eth0-eth7 mapping each to a specific vm network |
-| disks | | list of disks to create on the VM |
-| enable_ssh | true | Enable/Disable root ssh access |
-| create_local_vmfs | false | Enable/Disable creation of default local datastore |
-
-
+| vm_disk_gb    | 128                 | VM boot disk size |
+| vm_num_nics   | 2                   | Number of network adapters |
+| vm_num_cpus   | 2                   | Number of vCPUs |
+| vm_memory_mb  | 8192                | virtual memory in MB |
+| ethernet_ports |                    | list of ports eth0-eth7 mapping each to a specific vm network |
+| disks         |                     | list of disks to create on the VM |
+| enable_ssh    | true                | Enable/Disable root ssh access |
+| create_local_vmfs | false           | Enable/Disable creation of default local datastore |
 
 
 vsphere host variables:
@@ -58,14 +56,14 @@ standalone esxi host variables:
 
 proxmox host variables:
 ========================
-| variable    |             |   |
-|-------------|-------------|---|
-| pve_address  | 10.10.0.50 | Proxmox host address |
-| pve_username | root       | Proxmox username |
-| pve_password | ChangeMe2! | Proxmox password |
-| vm_datastore | local-lvm  | Proxmox storage name |
-| iso_datastore | local     | Proxmox ISO storage name | 
-| iso_path | /var/lib/vz/template/iso | Path to the ISO folder on the Proxmox host |
+| variable      |             |   |
+|---------------|-------------|---|
+| pve_address   | 10.10.0.50  | Proxmox host address |
+| pve_username  | root        | Proxmox username |
+| pve_password  | ChangeMe2!  | Proxmox password |
+| vm_datastore  | local-lvm   | Proxmox storage name |
+| iso_datastore | local       | Proxmox ISO storage name | 
+| iso_path      | /var/lib/vz/template/iso | Path to the ISO folder on the Proxmox host |
 
 
 

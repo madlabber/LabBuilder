@@ -11,5 +11,6 @@
   delegate_to: localhost
   when: state == "absent" or state == "force"
 
-# - meta: end_host
-#   when: state == "absent"
+- name: end play for this host if state is absent
+  ansible.builtin.meta: end_host
+  when: state == "absent"

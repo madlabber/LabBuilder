@@ -1,4 +1,3 @@
----
 - name: Create Config ISO
   community.general.iso_create:
     src_files:
