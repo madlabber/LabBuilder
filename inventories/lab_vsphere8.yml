@@ -121,7 +121,7 @@ all:
         vc01:
           ip_address: 192.168.0.50
           vm_fqdn: "vc01.{{lab_domain_name}}"
-          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.01200-25934264_OVF10.ova"
 
     esx:
       hosts:
@@ -138,7 +138,7 @@ all:
           vm_num_cpus: 6
           create_local_vmfs: 'False'
           enable_ssh: 'True'
-          install_iso: VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso
+          install_iso: VMware-VMvisor-Installer-8.0U3m-25926933.x86_64.iso
           ethernet_ports:
             eth0: '{{ lab_lan1_portgroup }}'
             eth1: '{{ lab_lan1_portgroup }}'
