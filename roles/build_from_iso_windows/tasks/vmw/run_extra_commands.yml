@@ -2,7 +2,7 @@
   set_fact:
     vm_username: "administrator@{{domain}}"
   when:
-    join_domain|default(false) or dcpromo|default(false)
+    - join_domain|default(false) # or dcpromo|default(false)
 
 - name: Fix PSReadLine module issue
   community.vmware.vmware_vm_shell:
