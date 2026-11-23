@@ -90,6 +90,29 @@
       - "Add-DnsServerResourceRecordA -Name {{inventory_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{ip_address}} -TimeToLive 01:00:00"
     when: lab_domain_controller|default("") != ""
 
+# Build Windows Server VMs
+- name: Build Windows Servers
+  hosts: winservers
+  gather_facts: false
+  vars_files:
+    - defaults/main.yml
+    - "{{ mainvars }}"
+    - "{{ credentials }}"
+  roles:
+    - role: build_from_iso_windows
+      vars:
+        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
+        vm_datastore: "{{lab_vm_datastore}}"
+        vm_network: "{{lab_lan1_portgroup}}"
+        vm_password_new: "{{lab_password}}"
+        vm_hostname: "{{inventory_hostname}}"
+        vm_address: "{{ip_address}}"
+        vm_netmask: "{{lab_lan1_netmask}}"
+        vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+        vm_gateway: "{{lab_lan1_gateway}}"
+        vm_dns_server: "{{lab_lan1_dns_ip}}"
+        vm_domain: "{{lab_domain_name}}"
+
 # Build vCenter Server(s)
 - name: Build vCenter
   hosts: vcenter
@@ -502,26 +525,5 @@
     when: #only run on VMware
       - pve_address|default('') == ''
 
-# We build these last so extra_commands can be used for lab integration automation
-- name: Build Windows Servers
-  hosts: winservers
-  gather_facts: false
-  vars_files:
-    - defaults/main.yml
-    - "{{ mainvars }}"
-    - "{{ credentials }}"
-  roles:
-    - role: build_from_iso_windows
-      vars:
-        vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"
-        vm_datastore: "{{lab_vm_datastore}}"
-        vm_network: "{{lab_lan1_portgroup}}"
-        vm_password_new: "{{lab_password}}"
-        vm_hostname: "{{inventory_hostname}}"
-        vm_address: "{{ip_address}}"
-        vm_netmask: "{{lab_lan1_netmask}}"
-        vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
-        vm_gateway: "{{lab_lan1_gateway}}"
-        vm_dns_server: "{{lab_lan1_dns_ip}}"
-        vm_domain: "{{lab_domain_name}}"
+
 
