@@ -3,10 +3,13 @@
   include_tasks: absent.yml
   when: state == "absent" or state == "force"
 
+- name: extract ova from iso file
+  include_tasks: iso_to_ova.yml
+  when: install_iso|default('') != ''
+
 - name: deploy to vcenter
   include_tasks: vmw_main.yml
   when: 
-    - state != "absent"
     - vcenter_address|default('') != ''
     - vcenter_address != esxi_address
     - pve_address|default('') == ''
@@ -14,13 +17,11 @@
 - name: deploy to esxi
   include_tasks: esx_main.yml
   when: 
-    - state != "absent"
     - vcenter_address|default('') == '' or vcenter_address == esxi_address
     - pve_address|default('') == ''
 
 - name: deploy to proxmox
   include_tasks: pve_main.yml 
   when: 
-    - state != "absent"
     - pve_address|default('') != ''
   

@@ -421,4 +421,5 @@ all:
           state: force
           ip_address: 192.168.0.50
           vm_fqdn: "vcsa.lab.local"
-          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
+          #ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
+          install_iso: "VMware-VCSA-all-8.0.3-25934264.iso"

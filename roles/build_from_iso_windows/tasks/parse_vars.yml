@@ -15,6 +15,8 @@
       - E:\files\VMware_tools.exe /S /v"/qn REBOOT=R"
       - powershell -command "new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ vm_address }} -prefixlength {{vm_netmask_cidr}} -defaultgateway {{ vm_gateway }}"
       - powershell -command "Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }}"
+      - powershell -command "New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -PropertyType DWord -Force"
+
     when:
     - vcenter_address ~ esxi_address != ''
 

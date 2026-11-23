@@ -1,0 +1,94 @@
+---
+- name: Resolve and verify VCSA ISO path on controller
+  ansible.builtin.stat:
+    path: "{{ install_iso if install_iso.startswith('/') else (playbook_dir + '/files/' + install_iso) }}"
+  register: _iso_stat
+  delegate_to: localhost
+  run_once: true
+
+- name: Ensure the VCSA ISO file actually exists
+  ansible.builtin.assert:
+    that:
+      - _iso_stat.stat.exists
+      - _iso_stat.stat.size > 0
+    fail_msg: >-
+      Cannot find VCSA ISO at {{ install_iso if install_iso.startswith('/') else (playbook_dir + '/files/' + install_iso) }}.
+  delegate_to: localhost
+  run_once: true
+
+- name: List files inside /vcsa directory of the VCSA ISO
+  ansible.builtin.command:
+    argv:
+      - xorriso
+      - -report_about
+      - WARNING
+      - -indev
+      - "{{ _iso_stat.stat.path }}"
+      - -find
+      - /vcsa
+      - -type
+      - f
+      - --
+  register: _xorriso_list
+  changed_when: false
+  delegate_to: localhost
+  run_once: true
+
+- name: Filter for OVA files inside /vcsa
+  ansible.builtin.set_fact:
+    _matched_ovas: >-
+      {{
+        _xorriso_list.stdout_lines
+
+        | map('regex_replace', "^'|'$", '')
+        | select('match', '(?i).*\.ova$')
+        | list
+      }}
+  delegate_to: localhost
+  run_once: true
+
+- name: Ensure an OVA file was found in /vcsa
+  ansible.builtin.assert:
+    that:
+      - _matched_ovas | length > 0
+    fail_msg: "No .ova file found in /vcsa inside {{ _iso_stat.stat.path }}"
+  delegate_to: localhost
+  run_once: true
+
+- name: Set internal ISO path and relative target path
+  ansible.builtin.set_fact:
+    _ova_iso_path: "{{ _matched_ovas | first }}"
+    ovf_file: "files/{{ (_matched_ovas | first) | basename }}"
+  delegate_to: localhost
+  run_once: true
+
+- name: Extract the OVA file from the ISO to the files directory
+  ansible.builtin.command:
+    argv:
+      - xorriso
+      - -osirrox
+      - "on"
+      - -report_about
+      - WARNING
+      - -indev
+      - "{{ _iso_stat.stat.path }}"
+      - -extract
+      - "{{ _ova_iso_path }}"
+      - "{{ playbook_dir }}/{{ ovf_file }}"
+    creates: "{{ playbook_dir }}/{{ ovf_file }}"
+  delegate_to: localhost
+  run_once: true
+
+- name: Ensure extracted OVA file has owner write permissions
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/{{ ovf_file }}"
+    mode: "0644"
+  delegate_to: localhost
+  run_once: true
+
+
+- name: debug
+  debug:
+    msg:
+     - "ISO: {{install_iso}}"
+     - "OVA: {{ovf_file}}"

@@ -9,4 +9,8 @@
   include_tasks: pve/absent.yml
   when:
     - pve_address != ''
-    
+
+- name: end play for this host if state is absent
+  ansible.builtin.meta: end_host
+  when: state == "absent"
+  
