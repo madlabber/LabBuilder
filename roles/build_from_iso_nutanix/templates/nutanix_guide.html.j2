@@ -1,0 +1,275 @@
+{#- Lab guide for a Nutanix CE lab. Rendered by create_cluster.yml; a Windows VM
+    in the lab prints it to PDF with Edge (see the lab inventory). -#}
+{%- set n = nutanix_nodes | length -%}
+{%- set rf = 1 if n == 1 else 2 -%}
+{%- set prism = nutanix_cluster_vip or nutanix_cvm_ips[0] -%}
+{%- set cvm1 = nutanix_cvm_ips[0] -%}
+{%- set desktop_ip = hostvars['desktop'].ip_address if 'desktop' in hostvars else '' -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nutanix Lab Guide - {{ lab_name }}</title>
+<style>
+  @page { size: Letter; margin: 0.6in 0.65in; }
+  body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.45; color: #1d2530; }
+  h1 { font-size: 21pt; margin: 0 0 2pt; color: #024da1; }
+  .sub { color: #5a6472; margin: 0 0 14pt; font-size: 10.5pt; }
+  h2 { font-size: 14pt; color: #024da1; border-bottom: 2px solid #d5e3f3; padding-bottom: 3pt; margin: 20pt 0 8pt; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; margin: 14pt 0 5pt; page-break-after: avoid; }
+  table { border-collapse: collapse; width: 100%; margin: 4pt 0 10pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #c9d3df; padding: 4pt 7pt; text-align: left; vertical-align: top; }
+  th { background: #eef3f9; font-weight: 600; }
+  code, pre { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; }
+  code { background: #f1f4f8; padding: 0 3px; border-radius: 3px; }
+  pre { background: #10233b; color: #e8eef6; padding: 8pt 10pt; border-radius: 5px; white-space: pre-wrap; page-break-inside: avoid; margin: 4pt 0 10pt; }
+  .note { background: #fff7e0; border-left: 4px solid #e8a400; padding: 6pt 10pt; margin: 8pt 0; page-break-inside: avoid; }
+  .ok   { background: #e8f6ec; border-left: 4px solid #2f9e55; padding: 6pt 10pt; margin: 8pt 0; page-break-inside: avoid; }
+  ol li, ul li { margin-bottom: 3pt; }
+  .step { page-break-inside: avoid; }
+  .small { font-size: 9pt; color: #5a6472; }
+</style>
+</head>
+<body>
+
+<h1>Nutanix Community Edition Lab</h1>
+<p class="sub">{{ lab_name }} &middot; {{ 'single-node AHV cluster' if n == 1 else n ~ '-node AHV cluster' }} &middot; Nutanix CE 2.1 (AOS 6.8.1)</p>
+
+{% if nutanix_create_cluster | bool %}
+<div class="ok"><b>Status:</b> the {{ 'node is' if n == 1 else 'nodes are' }} installed and the cluster <b>{{ nutanix_cluster_name }}</b> has been created. Start at <a href="#access">Signing in</a>.</div>
+{% else %}
+<div class="note"><b>Status:</b> all {{ n }} nodes are installed and their CVMs are running, but <b>no cluster exists yet</b>. Creating it is your first task: follow <a href="#create">Create the cluster</a> step by step.</div>
+{% endif %}
+
+<h2>What was built</h2>
+<table>
+  <tr><th>Item</th><th>Value</th></tr>
+  <tr><td>Cluster name</td><td>{{ nutanix_cluster_name }}{% if not (nutanix_create_cluster | bool) %} (suggested; you choose it when you create the cluster){% endif %}</td></tr>
+  <tr><td>Prism (cluster virtual IP)</td><td><code>https://{{ prism }}:9440</code></td></tr>
+  <tr><td>Redundancy factor</td><td>RF{{ rf }}{% if rf == 1 %} (one copy of the data: no protection against a node or disk failure){% else %} (two copies of all data, on different nodes){% endif %}</td></tr>
+  <tr><td>Hypervisor</td><td>AHV (el8.nutanix.20230302)</td></tr>
+  <tr><td>Lab network</td><td>{{ (lab_lan1_gateway.split('.'))[:3] | join('.') }}.0 / {{ lab_lan1_netmask }}, gateway {{ lab_lan1_gateway }}</td></tr>
+  <tr><td>DNS / NTP</td><td>{{ nutanix_dns_servers or lab_lan1_dns_ip }} (domain controller, {{ lab_domain_name }}) / {{ nutanix_ntp_servers or lab_lan1_gateway }} (lab gateway)</td></tr>
+</table>
+
+<h3>Nodes</h3>
+<table>
+  <tr><th>Node</th><th>AHV host IP</th><th>CVM IP</th><th>Size (nested VM)</th></tr>
+{% for node in nutanix_nodes %}
+  <tr><td>{{ node.inventory_hostname }}</td><td>{{ node.ip_address }}</td><td>{{ node.cvm_address }}</td><td>{{ vm_num_cpus }} vCPU, {{ (vm_memory_mb | int) // 1024 }} GB RAM</td></tr>
+{% endfor %}
+</table>
+<p>Each node has three virtual disks: {{ hyp_disk_gb }} GB for AHV, {{ cvm_disk_gb }} GB for the CVM (also part of the storage pool) and {{ data_disk_gb }} GB of data. The CVM (Controller VM) runs on every node and provides the storage and management services. Prism runs on the CVMs.</p>
+
+<h3>Other lab machines</h3>
+<table>
+  <tr><th>Machine</th><th>IP</th><th>Use</th></tr>
+  <tr><td>gateway</td><td>{{ lab_lan1_gateway }}</td><td>pfSense: routing, NAT, NTP. Forwards RDP to the desktop, plus Prism (9440) and SSH (2222) to the first CVM.</td></tr>
+  <tr><td>{{ lab_domain_controller }}</td><td>{{ lab_lan1_dns_ip }}</td><td>Active Directory and DNS for {{ lab_domain_name }}</td></tr>
+{% if desktop_ip %}
+  <tr><td>desktop</td><td>{{ desktop_ip }}</td><td>This jump desktop: Chrome, PuTTY (saved sessions for the nodes and CVMs)</td></tr>
+{% endif %}
+</table>
+
+<h2 id="access">Signing in</h2>
+<table>
+  <tr><th>What</th><th>Where</th><th>User</th><th>Password</th></tr>
+  <tr><td>Prism Element</td><td><code>https://{{ prism }}:9440</code></td><td>admin</td><td>{% if nutanix_admin_password_changed | bool %}the lab password{% else %}<code>nutanix/4u</code> (you're asked to change it at first sign-in){% endif %}</td></tr>
+  <tr><td>CVM (SSH)</td><td>{{ nutanix_cvm_ips | join(', ') }}</td><td>nutanix</td><td><code>nutanix/4u</code></td></tr>
+  <tr><td>AHV host (SSH)</td><td>{{ nutanix_nodes | map(attribute='ip_address') | join(', ') }}</td><td>root</td><td><code>nutanix/4u</code></td></tr>
+  <tr><td>Windows machines</td><td>{{ lab_domain_name }}</td><td>Administrator</td><td>the lab password</td></tr>
+</table>
+<p class="small">The <code>nutanix/4u</code> passwords are the Community Edition defaults. Changing them is one of the day-2 tasks below.</p>
+
+{% if not (nutanix_create_cluster | bool) %}
+<h2 id="create">Create the cluster</h2>
+<p>On real hardware the nodes arrive imaged from the factory or from Foundation, and the cluster is formed from one of the CVMs. That's where this lab starts: AHV and a CVM are installed on all {{ n }} nodes, and each CVM is waiting to join a cluster.</p>
+
+<div class="step">
+<h3>1. Open an SSH session to the first CVM</h3>
+<p>Open PuTTY on this desktop and load the <b>cvm01</b> saved session, or connect to <code>{{ cvm1 }}</code> on port 22. Sign in as <code>nutanix</code> with the password <code>nutanix/4u</code>.</p>
+</div>
+
+<div class="step">
+<h3>2. Check that every CVM is ready</h3>
+<p>Each CVM runs <b>genesis</b>, the service that forms the cluster. On the first CVM, run:</p>
+<pre>genesis status | head -5
+cluster status</pre>
+<p><code>cluster status</code> should say the cluster is <b>unconfigured</b>. Then check that the other CVMs answer:</p>
+<pre>{% for ip in nutanix_cvm_ips %}ping -c 2 {{ ip }}
+{% endfor %}</pre>
+<p>If one doesn't answer, give it a few more minutes. A CVM reboots once during its first boot.</p>
+</div>
+
+<div class="step">
+<h3>3. Create the cluster</h3>
+<p>Run this on the first CVM. One command forms the cluster from all {{ n }} CVMs and sets its name, virtual IP, DNS and NTP:</p>
+<pre>cluster -s {{ nutanix_cvm_ips | join(',') }} \
+  --cluster_name={{ nutanix_cluster_name }} \
+{% if nutanix_cluster_vip %}  --cluster_external_ip={{ nutanix_cluster_vip }} \
+{% endif %}  --dns_servers={{ nutanix_dns_servers or lab_lan1_dns_ip }} \
+  --ntp_servers={{ nutanix_ntp_servers or lab_lan1_gateway }} \
+  create</pre>
+<ul>
+  <li><code>-s</code> lists the CVM IPs that make up the cluster.</li>
+  <li>With {{ n }} nodes the cluster uses <b>RF{{ rf }}</b> by default. (A single-node cluster needs <code>--redundancy_factor=1</code>.)</li>
+  <li>It takes about 10 to 20 minutes. Services start one by one, and the output ends with a list of services, all <b>UP</b>.</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>4. Check the cluster</h3>
+<pre>cluster status | grep -v UP      # only the CVM lines should be left
+ncli cluster info                # name, virtual IP, node count = {{ n }}
+ncli host list | grep -E "Name|Hypervisor Address"</pre>
+<p>If you left out a setting in step 3, add it now:</p>
+<pre>ncli cluster edit-params new-name={{ nutanix_cluster_name }}
+ncli cluster set-external-ip-address external-ip-address={{ nutanix_cluster_vip or '&lt;virtual IP&gt;' }}
+ncli cluster add-to-name-servers servers={{ nutanix_dns_servers or lab_lan1_dns_ip }}
+ncli cluster add-to-ntp-servers servers={{ nutanix_ntp_servers or lab_lan1_gateway }}</pre>
+</div>
+
+<div class="note"><b>If the create fails:</b> read the last lines of the output, then <code>~/data/logs/genesis.out</code> on the CVM. Usual causes: a CVM that isn't up yet (wait, then run the command again) or a typo in an IP. Run <code>cluster status</code> before you retry. If the cluster was partly created, ask before you destroy anything.</div>
+{% endif %}
+
+<h2>First sign-in to Prism</h2>
+<ol>
+  <li>Open Chrome on this desktop and go to <code>https://{{ prism }}:9440</code>. Accept the certificate warning: the cluster uses a self-signed certificate.</li>
+  <li>Sign in as <code>admin</code>.{% if not (nutanix_admin_password_changed | bool) %} The password is <code>nutanix/4u</code>, and Prism asks you to set a new one. Prism requires at least 8 characters with upper case, lower case, a digit and a symbol, no dictionary words, and no more than 2 identical characters in a row.{% endif %}</li>
+  <li>Community Edition then asks for your <b>Nutanix .NEXT account</b> (my.nutanix.com). That check needs internet access, which the lab gets through the gateway.</li>
+  <li>Accept or decline Pulse (telemetry). For a lab, declining is fine.</li>
+  <li>On the Home dashboard, check <b>Cluster Health</b>, <b>Data Resiliency Status</b> ({% if rf == 1 %}a single-node cluster always shows it can't tolerate a failure; that's expected{% else %}it should be <b>OK</b> and able to tolerate 1 node failure{% endif %}) and <b>Alerts</b>.</li>
+</ol>
+
+<h2>Next steps: get the cluster ready for workloads</h2>
+
+<div class="step">
+<h3>1. Look at the storage</h3>
+<p>Go to <b>Storage &gt; Table</b>. Creating the cluster made a storage pool from every disk, plus default containers. Create your own container for lab VMs:</p>
+<ul>
+  <li><b>Storage &gt; + Storage Container</b>, name it <code>lab-vms</code>, and leave the defaults.</li>
+  <li>Under <b>Advanced Settings</b> you'll see compression, deduplication and erasure coding. Compression is on by default.{% if rf > 1 %} Erasure coding needs at least 4 nodes, so it isn't available here.{% endif %}</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>2. Create a VM network</h3>
+<p>AHV connects VMs to a bridge (<code>br0</code>) through a subnet with a VLAN ID. The lab network is untagged, so use VLAN 0.</p>
+<ul>
+  <li><b>Settings (gear) &gt; Network Configuration &gt; Create Subnet</b>: name <code>lab-net</code>, VLAN ID <code>0</code>.</li>
+  <li>Optional: tick <b>Enable IP address management</b> to let AHV hand out IPs. If you do, use a range outside the gateway's DHCP pool (.150 to .200), for example .100 to .140.</li>
+  <li>Or from a CVM: <code>acli net.create lab-net vlan=0</code></li>
+</ul>
+</div>
+
+<div class="step">
+<h3>3. Upload an image</h3>
+<p><b>Settings &gt; Image Configuration &gt; Upload Image</b>. Choose ISO or disk, and pick a file or paste a URL. For example, a Linux cloud image (<code>.qcow2</code>) or a Windows ISO. Images are stored once and can be used by every VM.</p>
+</div>
+
+<div class="step">
+<h3>4. Create and power on a VM</h3>
+<ul>
+  <li><b>VM &gt; + Create VM</b>: give it 2 vCPU and 4 GB, add a disk cloned from your image (or a CD-ROM with the ISO), add a NIC on <code>lab-net</code>, then <b>Save</b>.</li>
+  <li>Select the VM, then choose <b>Power On</b> and <b>Launch Console</b>.</li>
+  <li>The lab nodes are nested VMs, so give guest VMs modest sizes. Keep the total RAM of your VMs within what's left on {{ 'the node' if n == 1 else 'the nodes' }} (about {{ ((vm_memory_mb | int) // 1024) - 22 }} GB {{ 'free' if n == 1 else 'free per node' }}: the CVM takes about 16 GB and AHV about 6 GB).</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>5. Install Nutanix Guest Tools (NGT)</h3>
+<p>Select the VM, then <b>Manage Guest Tools &gt; Enable NGT &gt; Mount Nutanix Guest Tools</b>, and run the installer inside the guest. NGT adds the VirtIO drivers, application-consistent snapshots and file-level restore.</p>
+</div>
+
+<h2>Day-2 tasks</h2>
+
+<div class="step">
+<h3>Health checks (NCC)</h3>
+<pre>ncc health_checks run_all</pre>
+<p>Run it from any CVM, or in Prism under <b>Health &gt; Actions &gt; Run NCC Checks</b>. In a nested lab, expect a few warnings about hardware and firmware.</p>
+</div>
+
+<div class="step">
+<h3>Change the default passwords</h3>
+<ul>
+  <li><b>CVM:</b> sign in as <code>nutanix</code> and run <code>passwd</code>. The new password applies to every CVM in the cluster.</li>
+  <li><b>AHV hosts:</b> SSH to each host as <code>root</code> and run <code>passwd</code>.{% if n > 1 %} Do it on all {{ n }} hosts.{% endif %}</li>
+  <li><b>Prism admin:</b> use the user menu (top right) and choose <b>Change Password</b>.</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>Sign in to Prism with Active Directory</h3>
+<ol>
+  <li><b>Settings &gt; Authentication &gt; + New Directory</b>: type Active Directory, name <code>lab</code>, domain <code>{{ lab_domain_name }}</code>, URL <code>ldap://{{ lab_lan1_dns_ip }}:389</code>. For the service account, use <code>administrator@{{ lab_domain_name }}</code> and the lab password.</li>
+  <li><b>Settings &gt; Role Mapping</b>: map the AD group <code>Domain Admins</code> to <b>Cluster Admin</b>.</li>
+  <li>Sign out, then sign in as <code>administrator@{{ lab_domain_name }}</code>.</li>
+</ol>
+</div>
+
+<div class="step">
+<h3>Snapshots and protection domains</h3>
+<ul>
+  <li>For a quick snapshot, select a VM and choose <b>Take Snapshot</b>. Restore it from the VM's <b>VM Snapshots</b> tab.</li>
+  <li>For scheduled protection, go to <b>Data Protection &gt; + Protection Domain &gt; Async DR</b>. Add VMs, then add a schedule (for example, every hour, keeping 24 copies).</li>
+</ul>
+</div>
+
+{% if n > 1 %}
+<div class="step">
+<h3>Live migration and host maintenance</h3>
+<ul>
+  <li>To move a running VM to another host, select it and choose <b>Migrate</b>.</li>
+  <li>To take a host out of service, go to <b>Hardware &gt; Table &gt; Hosts</b>, select the host and choose <b>Enter Maintenance Mode</b>. Its VMs live-migrate to the other hosts. Undo it with <b>Exit Maintenance Mode</b>.</li>
+  <li>From a CVM: <code>acli host.enter_maintenance_mode {{ nutanix_nodes[1].ip_address }}</code>, then <code>acli host.exit_maintenance_mode {{ nutanix_nodes[1].ip_address }}</code>.</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>Test a node failure (RF{{ rf }})</h3>
+<ol>
+  <li>Start a VM, and note the <b>Data Resiliency Status</b> on the Home dashboard.</li>
+  <li>Simulate a failure: power off one node VM, for example <code>{{ lab_prefix | default('') }}{{ nutanix_nodes[-1].inventory_hostname }}</code>, in vCenter, or ask whoever runs the lab environment.</li>
+  <li>Watch the alerts, check that VMs on that host restart on the others (AHV HA), and watch data resiliency go to critical and then recover as the cluster rebuilds the second copy.</li>
+  <li>Power the node back on. Its CVM rejoins the cluster on its own.</li>
+</ol>
+</div>
+{% endif %}
+
+<div class="step">
+<h3>Upgrades with Life Cycle Manager (LCM)</h3>
+<p><b>Settings &gt; Life Cycle Management &gt; Inventory &gt; Perform Inventory</b> lists the available updates for AOS, AHV, NCC and Foundation. LCM needs internet access. {% if n > 1 %}On {{ n }} nodes it upgrades one node at a time while VMs keep running.{% else %}On a single node, an AHV or AOS upgrade means downtime for the guest VMs.{% endif %}</p>
+</div>
+
+<div class="step">
+<h3>Collect logs for support</h3>
+<pre>logbay collect --duration=-4h      # the last 4 hours, from every CVM</pre>
+</div>
+
+<div class="step">
+<h3>Shut down and start up cleanly</h3>
+<p>Before the lab is powered off, stop the cluster cleanly:</p>
+<ol>
+  <li>Shut down the guest VMs (Prism: select them, then <b>Guest Shutdown</b>).</li>
+  <li>On a CVM, run <code>cluster stop</code> and answer <code>I agree</code>.</li>
+  <li>On each CVM, run <code>cvm_shutdown -P now</code>.</li>
+  <li>Power off each AHV host, either from SSH as root with <code>shutdown -h now</code> or from vCenter.</li>
+</ol>
+<p>To start up, power on the AHV {{ 'host' if n == 1 else 'hosts' }}. The CVMs start on their own. Wait about 5 minutes, then run <code>cluster start</code> on a CVM and check with <code>cluster status</code>.</p>
+</div>
+
+<h2>Useful commands</h2>
+<table>
+  <tr><th>Command (on a CVM)</th><th>Shows or does</th></tr>
+  <tr><td><code>cluster status</code></td><td>The state of every service on every CVM</td></tr>
+  <tr><td><code>ncli cluster info</code></td><td>Cluster name, version, virtual IP, node count</td></tr>
+  <tr><td><code>ncli host list</code></td><td>The nodes and their addresses</td></tr>
+  <tr><td><code>acli vm.list</code> / <code>acli net.list</code> / <code>acli image.list</code></td><td>VMs, networks and images</td></tr>
+  <tr><td><code>acli vm.on &lt;vm&gt;</code> / <code>acli vm.shutdown &lt;vm&gt;</code></td><td>Power a VM on, or shut it down from the guest</td></tr>
+  <tr><td><code>hostssh "virsh list --all"</code></td><td>Runs a command on every AHV host</td></tr>
+  <tr><td><code>manage_ovs show_interfaces</code></td><td>The host NICs and bridges</td></tr>
+</table>
+
+<p class="small">Generated by LabBuilder (build_from_iso_nutanix) for {{ lab_name }}. Nutanix Community Edition is for testing and learning, and isn't supported for production use.</p>
+</body>
+</html>

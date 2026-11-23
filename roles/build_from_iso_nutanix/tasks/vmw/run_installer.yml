@@ -1,0 +1,82 @@
+---
+# Drives the CE 2.1 installer (phoenix gui.CEGui) through the VM console.
+#   Page 1: Hypervisor, Disk selection (defaults), Host IP, CVM IP, Subnet Mask, Gateway, Next Page
+#   Page 2: EULA (must be scrolled to the end), Accept checkbox, Previous Page, Start
+# Tab moves to the next field. When imaging finishes the installer asks
+# "Please enter 'Y' to reboot now (Y/N)".
+
+- name: Power-On the virtual machine
+  community.vmware.vmware_guest_powerstate:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    state: powered-on
+  delegate_to: localhost
+
+- name: Wait for the CE installer screen
+  ansible.builtin.wait_for:
+    timeout: "{{ installer_boot_wait }}"
+  delegate_to: localhost
+
+- name: Page 1 - type the network settings and go to the next page
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    keys_send: "{{ item.press }}"
+    string_send: "{{ item.text | default(omit) }}"
+  delegate_to: localhost
+  loop:
+    - { press: [TAB, TAB], text: "{{ host_address }}" }   # past Hypervisor and Disk selection
+    - { press: [TAB],      text: "{{ cvm_address }}" }
+    - { press: [TAB],      text: "{{ vm_netmask }}" }
+    - { press: [TAB],      text: "{{ vm_gateway }}" }
+    - { press: [TAB, ENTER] }                             # Next Page
+  loop_control:
+    label: "{{ item.text | default(item.press | join(' ')) }}"
+
+- name: Page 2 - scroll the EULA to the end (517 lines, 22 visible)
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    keys_send: "{{ ['DOWNARROW'] * 130 }}"
+  delegate_to: localhost
+  loop: [1, 2, 3, 4]
+
+- name: Page 2 - accept the EULA and press Start
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    keys_send: [TAB, SPACE, TAB, TAB, ENTER]   # Accept, Previous Page, Start
+  delegate_to: localhost
+
+- name: Wait for imaging to finish
+  ansible.builtin.wait_for:
+    timeout: "{{ installer_image_wait }}"
+  delegate_to: localhost
+
+- name: Answer the reboot prompt
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: '{{ vm_name }}'
+    string_send: "{{ item.text | default(omit) }}"
+    keys_send: "{{ item.press | default([]) }}"
+  delegate_to: localhost
+  loop:
+    - { text: "Y" }
+    - { press: [ENTER] }
+  loop_control:
+    label: "{{ item.text | default('ENTER') }}"
