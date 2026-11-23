@@ -1,0 +1,189 @@
+all:
+  hosts:
+  vars:
+    lab_name: "{{ (ansible_inventory_sources[0] | basename | splitext)[0] }}"
+    lab_prefix: "{{ lab_name }}_"
+    lab_password: "{{ default_lab_password }}"
+    lab_vm_datastore: "{{ lab_name }}"
+    lab_vswitch: "{{ lab_name }}"
+    lab_wan_portgroup: "{{ vm_network }}"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
+    lab_lan1_vlan: 4095
+    lab_lan2_portgroup: "{{ lab_name }}_net2"
+    lab_lan2_vlan: 10
+    lab_lan3_portgroup: "{{ lab_name }}_net3"
+    lab_lan3_vlan: 20
+    lab_lan4_portgroup: "{{ lab_name }}_net4"
+    lab_lan4_vlan: 30
+    lab_lan5_portgroup: "{{ lab_name }}_net5"
+    lab_lan5_vlan: 40
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip:  "192.168.0.21"
+    lab_domain_name:   "lab.test"
+    lab_domain_controller: "{{ (groups['dc'] | default([])) | first | default('') }}"
+  children:
+    pfsense:
+      hosts:
+        gateway:
+          ip_address:   192.168.0.1
+          rdp_jumphost: 192.168.0.20
+          interfaces:
+            wan:  "{{lab_wan_portgroup}}"
+            lan:  "{{lab_lan1_portgroup}}"
+            opt1: "{{lab_lan2_portgroup}}"
+            opt2: "{{lab_lan3_portgroup}}"
+            opt3: "{{lab_lan4_portgroup}}"
+            opt4: "{{lab_lan5_portgroup}}"
+          lan:
+            address:      192.168.0.1
+            netmask_cidr: 24
+            domain:       "{{lab_domain_name}}"
+            dns_server:   192.168.0.21
+            dhcp_start:   192.168.0.150
+            dhcp_end:     192.168.0.200
+          opt1:
+            address:      192.168.10.1
+            netmask_cidr: 24
+            dhcp_start:   192.168.10.100
+            dhcp_end:     192.168.10.200
+          opt2:
+            address:      192.168.20.1
+            netmask_cidr: 24
+            dhcp_start:   192.168.20.100
+            dhcp_end:     192.168.20.200
+          opt3:
+            address:      192.168.30.1
+            netmask_cidr: 24
+            dhcp_start:   192.168.30.100
+            dhcp_end:     192.168.30.200
+          opt4:
+            address:      192.168.40.1
+            netmask_cidr: 24
+            dhcp_start:   192.168.40.100
+            dhcp_end:     192.168.40.200
+    dc:
+      hosts:
+        dc01:
+          version: "Server2022eval"
+          ip_address: 192.168.0.21
+          extra_commands:
+            - |
+              # Create Reverse Lookup Zone (192.168.0.0/24)
+              Add-DnsServerPrimaryZone -NetworkID "192.168.0.0/24" -ReplicationScope "Domain" -ErrorAction SilentlyContinue
+
+              # Pre-populate Forward (A) and Reverse (PTR) records (all lowercase for VCF Installer)
+              $records = @{
+                "esx01"      = "192.168.0.51"
+                "esx02"      = "192.168.0.52"
+                "vc01"       = "192.168.0.50"
+                "vcfops"     = "192.168.0.60"
+                "vcfproxy"   = "192.168.0.61"
+                "vcflic"     = "192.168.0.62"
+                "vcfms01"    = "192.168.0.63"
+                "vcfms02"    = "192.168.0.64"
+                "vcfms03"    = "192.168.0.65"
+                "vcfinst"    = "192.168.0.66"
+                "ontap9"     = "192.168.0.90"
+                "ontap9-01"  = "192.168.0.91"
+                "svm-nfs"    = "192.168.0.95"
+              }
+              foreach ($hostName in $records.Keys) {
+                Add-DnsServerResourceRecordA -Name $hostName -ZoneName "lab.test" -IPv4Address $records[$hostName] -CreatePtr -AllowUpdateAny -ErrorAction SilentlyContinue
+              }
+
+              # Enable NTP Server on dc01 (192.168.0.21)
+              Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\NtpServer" -Name "Enabled" -Value 1
+              Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Config" -Name "AnnounceFlags" -Value 5
+              Restart-Service w32time
+
+    winservers:
+      hosts:
+        desktop:
+          version: "Server2022eval"
+          ip_address: 192.168.0.20
+          join_domain: true
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
+          extra_files:
+            - files/VCF-SDDC-Manager-Appliance-9.1.1.0200.25801071.ova
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+            - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
+          extra_commands:
+            # PuTTY: wait for the install to finish, and find the MSI by pattern
+            # (the config ISO renames putty-64bit-0.83-installer.msi to PUTTY_64BIT_0_83_INSTALLER.MSI)
+            - |
+              Start-Sleep 60    # let Windows settle after the domain-join reboot
+              $msi = (Get-Item E:\files\putty*.msi).FullName
+              Start-Process msiexec.exe -Wait -ArgumentList "/i $msi /qn /l*v C:\putty-install.log"
+            - Start-Process msiexec.exe -Wait -ArgumentList '/i E:\files\googlechromestandaloneenterprise64.msi /qn /l*v C:\chrome-install.log'
+
+            # PuTTY sessions for every user: saved once to a .reg file, which Windows
+            # imports now and again each time any user signs in
+            - |
+              $sessions = [ordered]@{
+                'esx01'     = '192.168.0.51'
+                'esx02'     = '192.168.0.52'
+                'vc01'      = '192.168.0.50'
+                'ontap9'    = '192.168.0.90'
+                'ontap9-01' = '192.168.0.91'
+              }
+              $reg = "Windows Registry Editor Version 5.00`r`n"
+              foreach ($name in $sessions.Keys) {
+                $reg += "`r`n[HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions\$name]`r`n"
+                $reg += "`"HostName`"=`"$($sessions[$name])`"`r`n"
+                $reg += "`"PortNumber`"=dword:00000016`r`n"    # 0x16 = port 22
+                $reg += "`"Protocol`"=`"ssh`"`r`n"
+              }
+              Set-Content -Path C:\ProgramData\putty-sessions.reg -Value $reg -Encoding Unicode
+              New-ItemProperty -Path HKLM:\Software\Microsoft\Windows\CurrentVersion\Run -Name PuTTYSessions `
+                -Value 'reg.exe import C:\ProgramData\putty-sessions.reg' -Force | Out-Null
+              reg.exe import C:\ProgramData\putty-sessions.reg 
+
+    esx:
+      hosts:
+        esx01:
+          ip_address: 192.168.0.51
+        esx02:
+          ip_address: 192.168.0.52
+      vars:
+          install_iso: "VMware-VMvisor-Installer-9.1.1.0100.25782009.x86_64.iso"
+          vm_memory_mb: 65536
+          vm_num_cpus: 16
+          vm_disk1_size_gb: 128
+          vm_disk2_size_gb: 200
+          create_local_vmfs: 'True'
+          enable_ssh: 'True'
+          ethernet_ports:
+            eth0: '{{lab_lan1_portgroup}}'
+            eth1: '{{lab_lan1_portgroup}}'
+
+    vsims:
+      hosts:
+        ontap9-01:
+          cluster_name: "ontap9"
+          cluster_mgmt_ip: 192.168.0.90
+          ip_address:      192.168.0.91
+      vars:
+          ovf_version:  "9.19.1"
+          disk_model: "vscsi"
+          shelf0_disk_size: 102400
+          shelf0_disk_count: 12
+          fake_ssd_disk_size: 102400
+          adp_enabled: "true"
+          extra_commands:
+            - storage disk assign -node ontap9-01 -auto
+            - storage aggregate auto-provision -nodes ontap9-01 -skip-confirmation
+            - sleep 60
+            - vserver create -vserver svm_nfs -aggregate ontap9_01_SSD_1 -rootvolume svm_nfs_root -rootvolume-security-style unix
+            - vserver nfs create -vserver svm_nfs -v3 enabled -access true
+            - vserver export-policy rule create -vserver svm_nfs -policyname default -ruleindex 1 -protocol nfs3 -clientmatch 192.168.0.0/24 -rorule sys -rwrule sys -superuser sys
+            - network interface create -vserver svm_nfs -lif lif_nfs_01 -service-policy default-data-files -home-node ontap9-01 -home-port e0c -address 192.168.0.95 -netmask 255.255.255.0
+            - volume create -vserver svm_nfs -volume vvf_mgmt -aggregate ontap9_01_SSD_1 -size 5500GB -space-guarantee none -is-space-reporting-logical true -is-space-enforcement-logical true -percent-snapshot-space 0 -junction-path /vvf_mgmt
+
+
+
+
+
