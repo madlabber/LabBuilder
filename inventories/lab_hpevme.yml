@@ -139,6 +139,7 @@ all:
       hosts:
         ansible:
       vars:
+        stage2_wait: 14400            # 4 h: win01's build and the Manager deploy take most of it
         stage2_vcenter: vc01
         stage2_esx_hosts: [esx01]
         stage2_files:
