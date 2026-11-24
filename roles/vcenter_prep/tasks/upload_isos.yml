@@ -1,0 +1,47 @@
+---
+# Puts installer ISOs (files in files/) on the lab datastore, for users to build their own VMs
+# from in the lab vCenter (New Virtual Machine > CD/DVD > Datastore ISO File).
+# Uploaded through vCenter with a long timeout; ISOs already there are left alone.
+- name: Create the ISO folder on the lab datastore
+  community.vmware.vsphere_file:
+    hostname: "{{ vcenter_prep_address }}"
+    username: "{{ vcenter_prep_username }}"
+    password: "{{ vcenter_prep_password }}"
+    validate_certs: no
+    datacenter: "{{ vcenter_prep_datacenter }}"
+    datastore: "{{ vcenter_prep_datastore }}"
+    path: ISO
+    state: directory
+  delegate_to: localhost
+
+- name: Check for the ISOs on the lab datastore
+  community.vmware.vsphere_file:
+    hostname: "{{ vcenter_prep_address }}"
+    username: "{{ vcenter_prep_username }}"
+    password: "{{ vcenter_prep_password }}"
+    validate_certs: no
+    datacenter: "{{ vcenter_prep_datacenter }}"
+    datastore: "{{ vcenter_prep_datastore }}"
+    path: "ISO/{{ item }}"
+    state: file
+  delegate_to: localhost
+  register: vcenter_prep_iso_present
+  ignore_errors: true          # "not found" is the normal first-build answer
+  loop: "{{ vcenter_prep_isos }}"
+
+- name: Upload the ISOs to [{{ vcenter_prep_datastore }}] ISO/ (several GB; can take a while)
+  community.vmware.vsphere_copy:
+    hostname: "{{ vcenter_prep_address }}"
+    username: "{{ vcenter_prep_username }}"
+    password: "{{ vcenter_prep_password }}"
+    validate_certs: no
+    src: "{{ playbook_dir }}/files/{{ item.item }}"
+    datacenter: "{{ vcenter_prep_datacenter }}"
+    datastore: "{{ vcenter_prep_datastore }}"
+    path: "ISO/{{ item.item }}"
+    timeout: 7200
+  delegate_to: localhost
+  when: item is failed
+  loop: "{{ vcenter_prep_iso_present.results }}"
+  loop_control:
+    label: "{{ item.item }}"

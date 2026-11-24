@@ -53,6 +53,24 @@ nutanix_cvm_password: "nutanix/4u"     # CE default
 nutanix_admin_password: ""             # new Prism admin password; blank keeps the default
 nutanix_cluster_wait: 5400             # how long to wait for the CVMs, in seconds
 
+# Nutanix Move (deploy_move.yml): a VM on the AHV cluster, deployed once the cluster exists.
+# Download the Move qcow2 from the Nutanix Support Portal into files/ and name it here;
+# blank skips Move.
+nutanix_move_image: ""
+nutanix_move_vm: "move"
+nutanix_move_ip: ""                    # fixed address on nutanix_lab_network, e.g. 192.168.0.70
+nutanix_move_vcpus: 2                  # Move guide: 2 vCPU with 2 cores each, 8 GB
+nutanix_move_cores_per_vcpu: 2
+nutanix_move_memory: "8G"
+nutanix_lan_prefix_len: 24
+
+# Managed AHV network on the lab LAN (lab_network.yml), for new and migrated VMs. Blank skips it.
+# Required by the AHV Move deployment above. Keep its pool outside the gateway's DHCP range.
+nutanix_lab_network: ""                # e.g. lab-lan
+nutanix_lab_network_pool_start: ""
+nutanix_lab_network_pool_end: ""
+nutanix_lab_domain: ""                 # DNS search domain handed out on it
+
 # Lab guide: create_cluster.yml writes it as HTML; a Windows VM can list it in
 # extra_files and print it to PDF (see inventories/lab_nutanix.yml).
 nutanix_guide_file: "{{ playbook_dir }}/files/{{ lab_name | default('nutanix') }}_nxguide.htm"

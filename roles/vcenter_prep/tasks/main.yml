@@ -1,0 +1,56 @@
+---
+- name: Wait for the vCenter API ({{ vcenter_prep_address }})
+  community.vmware.vmware_about_info:
+    hostname: "{{ vcenter_prep_address }}"
+    username: "{{ vcenter_prep_username }}"
+    password: "{{ vcenter_prep_password }}"
+    validate_certs: no
+  delegate_to: localhost
+  register: vcenter_prep_about
+  until: vcenter_prep_about is succeeded
+  retries: "{{ (vcenter_prep_wait | int / 60) | int }}"
+  delay: 60
+
+- name: Create the datacenter
+  community.vmware.vmware_datacenter:
+    hostname: "{{ vcenter_prep_address }}"
+    username: "{{ vcenter_prep_username }}"
+    password: "{{ vcenter_prep_password }}"
+    validate_certs: no
+    datacenter_name: "{{ vcenter_prep_datacenter }}"
+    state: present
+  delegate_to: localhost
+
+- name: Create the cluster
+  vmware.vmware.cluster:            # community.vmware.vmware_cluster was removed in community.vmware 6.0
+    hostname: "{{ vcenter_prep_address }}"
+    username: "{{ vcenter_prep_username }}"
+    password: "{{ vcenter_prep_password }}"
+    validate_certs: no
+    datacenter: "{{ vcenter_prep_datacenter }}"
+    cluster: "{{ vcenter_prep_cluster }}"
+  delegate_to: localhost
+
+# files/add_esx_host.py: adds the host (taking the thumbprint from vCenter's SSL fault, so it
+# also works where only vCenter is reachable) and creates the first host's datastore
+- name: Add the ESXi hosts
+  ansible.builtin.command:
+    argv: ["{{ ansible_playbook_python }}", "{{ role_path }}/files/add_esx_host.py", "{{ vcenter_prep_address }}",
+           "{{ vcenter_prep_datacenter }}", "{{ vcenter_prep_cluster }}", "{{ item }}",
+           "{{ vcenter_prep_datastore if item == vcenter_prep_esx_hosts[0] else '' }}"]
+  environment:
+    VC_USER: "{{ vcenter_prep_username }}"
+    VC_PASSWORD: "{{ vcenter_prep_password }}"
+    ESX_USER: "{{ vcenter_prep_esx_username }}"
+    ESX_PASSWORD: "{{ vcenter_prep_esx_password }}"
+  loop: "{{ vcenter_prep_esx_hosts }}"
+  delegate_to: localhost
+  register: vcenter_prep_add_host
+  changed_when: "'added' in vcenter_prep_add_host.stdout or 'datastore created' in vcenter_prep_add_host.stdout"
+  until: vcenter_prep_add_host is succeeded
+  retries: 20          # a host may still be finishing its install
+  delay: 30
+
+- name: Upload installer ISOs
+  ansible.builtin.include_tasks: upload_isos.yml
+  when: vcenter_prep_isos | length > 0

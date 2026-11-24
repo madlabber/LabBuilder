@@ -129,6 +129,8 @@
         nutanix_dns_servers:    "{{lab_lan1_dns_ip}}"
         nutanix_ntp_servers:    "{{lab_lan1_gateway}}"
         nutanix_admin_password: "{{lab_password}}"
+        nutanix_lab_domain:     "{{lab_domain_name}}"
+        nutanix_lan_prefix_len: "{{lab_lan1_netmask_cidr}}"
 
 # Build Windows Server VMs
 - name: Build Windows Servers
@@ -232,6 +234,31 @@
         ovf_password: "{{lab_password}}"
         ovf_ssh:      "{{enable_ssh|string}}"
         ovf_createvmfs: "{{create_local_vmfs|string}}"
+
+# Prepare a freshly deployed vCenter: datacenter, cluster, ESXi hosts, datastore, installer ISOs
+# (roles/vcenter_prep). Used by stage 2 blueprints, which run inside a lab against its own vCenter.
+- name: Prepare vCenter
+  hosts: vcenter_prep
+  gather_facts: false
+  vars_files:
+    - defaults/main.yml
+    - "{{ mainvars }}"
+    - "{{ credentials }}"
+  tasks:
+    - include_role:
+        name: vcenter_prep
+      when: state | default('present') != 'absent'
+      vars:
+        vcenter_prep_address:      "{{ vcenter_address }}"
+        vcenter_prep_username:     "{{ vcenter_username }}"
+        vcenter_prep_password:     "{{ vcenter_password }}"
+        vcenter_prep_datacenter:   "{{ vcenter_datacenter }}"
+        vcenter_prep_cluster:      "{{ vcenter_cluster }}"
+        vcenter_prep_esx_hosts:    "{{ esx_hosts | default([]) }}"
+        vcenter_prep_esx_username: "{{ esxi_username }}"
+        vcenter_prep_esx_password: "{{ esxi_password }}"
+        vcenter_prep_datastore:    "{{ lab_vm_datastore }}"
+        vcenter_prep_isos:         "{{ isos | default([]) }}"
 
 - name: Build Centos VMs
   hosts: centos
@@ -565,5 +592,20 @@
     when: #only run on VMware
       - pve_address|default('') == ''
 
-
-
+# Stage 2: LabBuilder runs again on the lab's Ansible VM, inside the pod, with a blueprint and vars
+# file generated for the lab's own vCenter (roles/stage2). The gateway forwards stage2_ssh_port to it.
+- name: Stage 2 inside the pod
+  hosts: stage2
+  gather_facts: false
+  vars_files:
+    - defaults/main.yml
+    - "{{ mainvars }}"
+    - "{{ credentials }}"
+  tasks:
+    - include_role:
+        name: stage2
+      when: state | default('present') != 'absent'
+      vars:
+        stage2_gateway_vm: "{{lab_prefix | default('')}}gateway"
+        stage2_lan_gateway: "{{lab_lan1_gateway}}"
+        stage2_vm_name: "{{lab_prefix | default('')}}{{inventory_hostname}}"

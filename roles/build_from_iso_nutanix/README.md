@@ -41,6 +41,30 @@ Only a VM that this run creates gets the keystrokes. Re-running the playbook lea
 
 The first Prism sign-in still asks for a Nutanix .NEXT account (my.nutanix.com), so the lab needs internet access through the gateway.
 
+## Lab VM network (`tasks/lab_network.yml`)
+Once the cluster exists, the role can create a managed AHV network on the lab LAN (VLAN 0, IP management on, the lab's DNS and domain), e.g. as the target network for VMs that Nutanix Move migrates:
+```yaml
+nutanix_lab_network: lab-lan
+nutanix_lab_network_pool_start: 192.168.0.100   # outside the gateway's DHCP range
+nutanix_lab_network_pool_end:   192.168.0.120
+```
+
+## Nutanix Move on AHV (`tasks/deploy_move.yml`)
+Optional, and not what `lab_nutanix_move` uses (see below). This is the layout the Move guide documents for migrations to AHV: the qcow2 from the Move package for AHV (`move-<version>.zip`), on the target cluster. Put the qcow2 in `files/`, set `nutanix_lab_network` as above, then:
+```yaml
+nutanix_move_image: "move-<version>.qcow2"   # blank skips Move
+nutanix_move_ip: 192.168.0.70                # fixed address on nutanix_lab_network
+```
+It runs on the first CVM, through the same SSH forward:
+1. Copies the image to the CVM (`files/cvm_put.py`, SFTP).
+2. Imports it with `acli image.create` from a web server on the CVM's own loopback, then deletes the copy. LabBuilder's firewall isn't involved.
+3. Creates the `move` VM as the Move guide specifies (2 vCPU x 2 cores, 8 GB, legacy BIOS, disk cloned from the image) on `nutanix_lab_network` with the fixed address, powers it on, and waits for its web UI.
+
+It's skipped when a VM named `move` already exists. In a lab that leaves cluster creation to the user, run the lab build again after the cluster is created: the nodes are left alone and Move is deployed.
+
+## The Move demo lab
+`inventories/lab_nutanix_move.yml` (1 node) adds a VMware source next to the cluster: vCenter 8.0 U3 (`vc01`) and one ESXi host (`esx01`, with a data disk for `datastore1`), plus an **Ansible VM** (`ansible`, AlmaLinux 9). The last play runs **stage 2** on that VM, inside the lab (roles/stage2): it prepares `vc01` (roles/vcenter_prep), puts Windows Server 2019 and Debian 12 ISOs on `datastore1`, and deploys Move from its OVA on `esx01` with "Deploy OVF files". Users then build a small Windows VM and a small Linux VM and migrate both; `lab-lan` is the target network on the cluster. The Move guide documents the OVA for ESXi-to-ESXi, and Move 6.3.3 is qualified with AOS 6.10 while CE 2.1 runs AOS 6.8.1; the lab guide notes both and walks through the migration.
+
 ## Timing
 | Variable | Default | Meaning |
 |---|---|---|
