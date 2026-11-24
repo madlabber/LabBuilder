@@ -142,10 +142,11 @@ class DrawioBuilder:
         )
         return self.add_box(x, y, w, h, fallback_label or icon_key.upper(), style)
 
-    def add_line(self, x1, y1, x2, y2, color=COLOR_BLACK, width=3, dashed=False):
+    def add_line(self, x1, y1, x2, y2, color=COLOR_BLACK, width=3, dashed=False, arrow="none"):
         cid = self.next_id()
         dash_str = "dashed=1;" if dashed else ""
-        style = f"endArrow=none;html=1;rounded=0;strokeColor={color};strokeWidth={width};{dash_str}"
+        arrow_extra = "endFill=1;endSize=4;" if arrow != "none" else ""
+        style = f"endArrow={arrow};html=1;rounded=0;strokeColor={color};strokeWidth={width};{dash_str}{arrow_extra}"
         cell = ET.SubElement(self.root, "mxCell", id=cid, value="", style=style, edge="1", parent="1")
         geom = ET.SubElement(cell, "mxGeometry", relative="1", **{"as": "geometry"})
         ET.SubElement(geom, "mxPoint", x=str(x1), y=str(y1), **{"as": "sourcePoint"})
@@ -538,9 +539,10 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
         if node["role"] == "gateway":
             cx = box_x + 35
             b.add_icon("laptop", 22, top_y + 42, 84, 55, "LAPTOP")
+            b.add_line(box_x + 20, top_y + 68, cx, top_y + 68, COLOR_BLACK, width=4)
             badge_bg = "ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=light-dark(#FFFFFF,#FFFFFF);strokeColor=none;"
-            b.add_box(box_x - 20, top_y + 47, 40, 40, "", badge_bg)
-            b.add_icon("arrow_badge", box_x - 20, top_y + 47, 40, 40, "<->")
+            b.add_box(box_x - 20, top_y + 48, 40, 40, "", badge_bg)
+            b.add_icon("arrow_badge", box_x - 20, top_y + 48, 40, 40, "<->")
             r_size = 84
             r_style = (
                 f"ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor={COLOR_CARD_BG};"
@@ -581,11 +583,13 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
     if gateway_right_x and rdp_target_left_x and rdp_target_left_x > gateway_right_x:
         badge_size = 40
         target_badge_x = rdp_target_left_x - (badge_size // 2)
-        b.add_line(gateway_right_x, top_y + 68, target_badge_x, top_y + 68, COLOR_BLACK, 5)
+        arrow_y = top_y + 68
+        b.add_line(gateway_right_x, arrow_y, target_badge_x, arrow_y, COLOR_BLACK, width=4, arrow="block")
         badge_bg = "ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=light-dark(#FFFFFF,#FFFFFF);strokeColor=none;"
         b.add_box(target_badge_x, top_y + 48, badge_size, badge_size, "", badge_bg)
         b.add_icon("arrow_badge", target_badge_x, top_y + 48, badge_size, badge_size, "RDP")
-        b.add_text("RDP", target_badge_x - 14, top_y + 48 + badge_size, badge_size, 20, bold=True, size=12)
+        line_mid_x = (gateway_right_x + target_badge_x) // 2
+        b.add_text("RDP", line_mid_x - 25, arrow_y + 6, 50, 20, bold=True, size=12)
 
     # --- RENDER BOTTOM ROW NODES (Hypervisors & Storage) ---
     hv_nodes = [n for n in bottom_nodes if n["role"] == "hypervisor"]
