@@ -1,17 +1,20 @@
 ---
-- name: Remove VMs if state is absent or forced
-  include_tasks: absent.yml
-  when: state == "absent" or state == "force"
-
-- name: build vm on VMware
-  include_tasks: vmw_main.yml
+- name: set host_type=vmw
+  set_fact:
+    host_type: "vmw"
   when: 
-    - state != "absent"
     - vcenter_address ~ esxi_address != ''
     - pve_address == ''
 
-- name: build vm on PVE
-  include_tasks: pve_main.yml
+- name: set host_type=pve
+  set_fact:
+    host_type: "pve"
   when:
-    - state != "absent"
     - pve_address != ''
+
+- name: Remove VMs if state is absent or forced
+  include_tasks: "{{ host_type }}/absent.yml"
+
+- name: build vm 
+  include_tasks: "{{ host_type }}_main.yml"
+

@@ -1,0 +1,23 @@
+# If the install did not automatically reinstall
+# Open-VM-Tools fall back to sendkey
+- name: Blind Install Open-VM-Tools
+  community.vmware.vmware_guest_sendkey:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    name: "{{ vm_name }}"
+    keys_send: ENTER
+    string_send: "{{item}}"
+  delegate_to: localhost
+  loop_control:
+    pause: 5
+  loop: 
+    - "8" 
+    - "8" 
+    - "8" 
+    - ""
+    - "pkg-static install -y pfSense-pkg-Open-VM-Tools" # enter
+    - "service vmware-guestd.sh start"
+    - ""
+  when: vmtools_after_install is failed

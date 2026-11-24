@@ -15,7 +15,7 @@
   include_tasks: pve/parse_networks.yml
 
 - name: create config file
-  include_tasks: pve/create_config_file.yml
+  include_tasks: create_config_file.yml
 
 - name: create config disk
   include_tasks: pve/create_config_disk.yml
