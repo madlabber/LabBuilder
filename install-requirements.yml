@@ -35,6 +35,8 @@
     # become_user: root
     ignore_errors: true
     with_items:
+      - curl
+      - xorg-x11-server-Xvfb
       - mtools
       - qemu-img
       - xorriso
@@ -47,22 +49,43 @@
     # become_user: root
     ignore_errors: true
     with_items:
+      - curl
+      - xorg-x11-server-Xvfb
       - mtools
       - qemu-utils
       - xorriso
     when: ansible_facts['pkg_mgr'] == "apt"
 
-  # This is a little underhanded, but the default 10 second timeout is very risky for the vcenter ova
-  # OVA deployment is prone to timeouts, and this was the least bad option for fixing it
-  # If this breaks the library in a future version, delete the patched version from the library folder
+#Install headless draw.io:
+# RPM_URL=$(curl -s "https://api.github.com/repos/jgraph/drawio-desktop/releases/latest" | grep -oP '"browser_download_url":\s*"\K[^"]+x86_64[^"]+\.rpm')
+# sudo dnf install -y "$RPM_URL"
+  - name: Fetch latest draw.io Desktop release metadata
+    ansible.builtin.uri:
+      url: "https://{{ 'api.github' ~ '.com' }}/repos/jgraph/drawio-desktop/releases/latest"
+      return_content: true
+      headers:
+        Accept: application/vnd.github+json
+    register: drawio_release
+
+  - name: Install draw.io Desktop x86_64 RPM
+    ansible.builtin.command:
+      argv:
+        - dnf
+        - install
+        - -y
+        - >-
+          {{
+            drawio_release.json.assets
+            | selectattr('name', 'match', '^drawio-x86_64-.*\.rpm$')
+            | map(attribute='browser_download_url')
+            | first
+          }}
+    register: drawio_install
+    changed_when: "'Nothing to do.' not in drawio_install.stdout"
+    become: true
+
 # This is a little underhanded, but the default 10 second timeout is very risky for the vcenter ova
 # The OVA is prone to timeouts, and this was the least bad option for fixing it
-# - name: Locate system community.vmware vmware_deploy_ovf.py path
-#   ansible.builtin.command: >
-#     python3 -c "import ansible_collections.community.vmware.plugins.modules.vmware_deploy_ovf as m; print(m.__file__)"
-#   register: deploy_ovf_module_path
-#   changed_when: false
-#   delegate_to: localhost
   - name: Locate community.vmware vmware_deploy_ovf module
     ansible.builtin.shell: |
       set -o pipefail

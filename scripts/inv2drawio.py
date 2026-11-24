@@ -597,13 +597,14 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
 
 
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         print("Usage: python inv2drawio.py <inventory_file_or_dir> <output_dir> [icons_dir]")
         sys.exit(1)
 
     src = Path(sys.argv[1])
-    out_dir = Path(sys.argv[2])
-    default_icons = Path(__file__).resolve().parent.parent / "icons"
+    default_out_dir = Path(__file__).resolve().parent.parent / "diagrams/"
+    out_dir = Path(sys.argv[2]) if len(sys.argv) > 2 else default_out_dir
+    default_icons = Path(__file__).resolve().parent.parent / "diagrams/icons"
     icons_dir = Path(sys.argv[3]) if len(sys.argv) > 3 else default_icons
     out_dir.mkdir(parents=True, exist_ok=True)
 
