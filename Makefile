@@ -4,7 +4,7 @@ SHELL := /bin/bash
 %::
 	@:
 
-.PHONY: configure install lab prep graph build post
+.PHONY: configure install lab prep graph build post diagram
 
 configure:
 	@mkdir -p vars; \
@@ -93,3 +93,11 @@ graph:
 		EXTRA_ARGS="$$EXTRA_ARGS -l $(limit)"; \
 	fi; \
 	ansible-inventory --graph -i inventories/$$INV.yml $$EXTRA_ARGS
+
+diagram:
+	@INV="$(word 2, $(MAKECMDGOALS))"; \
+	[ -z "$$INV" ] && INV="$(firstword $(MAKECMDGOALS))"; \
+	[ "$$INV" = "graph" ] && INV="$(word 2, $(MAKECMDGOALS))"; \
+	./scripts/inv2drawio.py inventories/$$INV.yml; \
+	./scripts/drawio2png.sh diagrams/$$INV.drawio
+

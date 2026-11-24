@@ -31,6 +31,8 @@ ICON_FILES = {
     "arrow_badge": "arrow_badge.svg",
     "monitor": "monitor.svg",
     "windows": "windows.svg",
+    "gui": "gui.svg",
+    "cli": "cli.svg",
     "ad_dc": "ad_dc.svg",
     "ansible": "ansible.svg",
     "linux": "linux.svg",
@@ -60,6 +62,12 @@ def load_svg_data_uri(icons_dir: Path, key: str):
         # Omit ';base64' so draw.io's style parser doesn't split on the semicolon
         return f"data:image/svg+xml,{b64}"
     return None
+
+
+def is_truthy(val) -> bool:
+    if isinstance(val, bool):
+        return val
+    return str(val).strip().lower() in ("true", "yes", "1", "on")
 
 
 class DrawioBuilder:
@@ -134,10 +142,11 @@ class DrawioBuilder:
         )
         return self.add_box(x, y, w, h, fallback_label or icon_key.upper(), style)
 
-    def add_line(self, x1, y1, x2, y2, color=COLOR_BLACK, width=3, dashed=False):
+    def add_line(self, x1, y1, x2, y2, color=COLOR_BLACK, width=3, dashed=False, arrow="none"):
         cid = self.next_id()
         dash_str = "dashed=1;" if dashed else ""
-        style = f"endArrow=none;html=1;rounded=0;strokeColor={color};strokeWidth={width};{dash_str}"
+        arrow_extra = "endFill=1;endSize=4;" if arrow != "none" else ""
+        style = f"endArrow={arrow};html=1;rounded=0;strokeColor={color};strokeWidth={width};{dash_str}{arrow_extra}"
         cell = ET.SubElement(self.root, "mxCell", id=cid, value="", style=style, edge="1", parent="1")
         geom = ET.SubElement(cell, "mxGeometry", relative="1", **{"as": "geometry"})
         ET.SubElement(geom, "mxPoint", x=str(x1), y=str(y1), **{"as": "sourcePoint"})
@@ -256,38 +265,20 @@ def extract_subnets(all_vars: dict) -> list:
             "color": COLOR_BLUE,
         })
     return lans
-def detect_connected_lans(host_vars: dict, group_vars: dict, total_lans: int) -> list:
+def detect_connected_lans(host_vars: dict, group_vars: dict, total_lans: int, allow_extra_lans: bool = True) -> list:
     """Determine which LAN buses (1-based indices) a host connects to."""
     merged = {**group_vars, **host_vars}
-    connected = set()
+    connected = {1}
 
-    # Check ethernet_ports dict (common on esx, proxmox, xcpng)
-    eth_ports = merged.get("ethernet_ports", {})
-    if isinstance(eth_ports, dict):
-        for target in eth_ports.values():
-            t_str = str(target).lower()
-            for idx in range(1, total_lans + 1):
-                if f"lan{idx}" in t_str or f"net{idx}" in t_str:
-                    connected.add(idx)
+    if allow_extra_lans:
+        eth_ports = merged.get("ethernet_ports", {})
+        if isinstance(eth_ports, dict):
+            for target in eth_ports.values():
+                t_str = str(target).lower()
+                for idx in range(2, total_lans + 1):
+                    if f"lan{idx}" in t_str or f"net{idx}" in t_str:
+                        connected.add(idx)
 
-    # Check interfaces dict (common on pfsense)
-    ifaces = merged.get("interfaces", {})
-    if isinstance(ifaces, dict):
-        for iface_name, target in ifaces.items():
-            if str(iface_name).lower() == "wan":
-                continue
-            t_str = str(target).lower()
-            for idx in range(1, total_lans + 1):
-                if f"lan{idx}" in t_str or f"net{idx}" in t_str:
-                    connected.add(idx)
-
-    # Check explicit lanX_ip / secondary IPs
-    for idx in range(1, total_lans + 1):
-        if f"lan{idx}_ip" in merged or f"ip_address_lan{idx}" in merged:
-            connected.add(idx)
-
-    if not connected:
-        connected.add(1)
     return sorted(connected)
 
 
@@ -314,16 +305,27 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
     # 1. Routers / Firewalls (pfsense)
     pf_grp = children.get("pfsense", {}) or {}
     pf_gvars = pf_grp.get("vars", {}) or {}
+    has_nat_rules = bool(pf_gvars.get("nat") or pf_gvars.get("nat_rules"))
+    default_rdp_candidate = None
+
     for hname, hvars in (pf_grp.get("hosts", {}) or {}).items():
         hvars = hvars or {}
+        merged_pf = {**pf_gvars, **hvars}
+        if merged_pf.get("nat") or merged_pf.get("nat_rules"):
+            has_nat_rules = True
+
         if not rdp_target_ip:
-            rdp_target_ip = str(hvars.get("rdp_jumphost", pf_gvars.get("rdp_jumphost", "")))
-        gw_ip = str(hvars.get("ip_address", all_vars.get("lab_lan1_gateway", "192.168.0.1")))
+            rdp_target_ip = str(merged_pf.get("rdp_jumphost", "")).strip()
+
+        gw_ip = str(hvars.get("ip_address", all_vars.get("lab_lan1_gateway", "192.168.0.1"))).strip()
+        if not default_rdp_candidate and "." in gw_ip:
+            default_rdp_candidate = f"{gw_ip.rsplit('.', 1)[0]}.11"
+
         top_nodes.append({
             "role": "gateway",
             "name": hname,
             "ip": gw_ip,
-            "lans": detect_connected_lans(hvars, pf_gvars, total_lans),
+            "lans": detect_connected_lans(hvars, pf_gvars, total_lans, allow_extra_lans=False),
         })
 
     # 2. Windows Desktops / Servers / Domain Controllers (winservers, dc, windows)
@@ -332,15 +334,26 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
         gvars = grp.get("vars", {}) or {}
         for hname, hvars in (grp.get("hosts", {}) or {}).items():
             hvars = hvars or {}
+            merged = {**gvars, **hvars}
+            host_lans = detect_connected_lans(hvars, gvars, total_lans)
+            if is_truthy(merged.get("nested_virtualization")):
+                bottom_nodes.append({
+                    "role": "hypervisor",
+                    "name": hname,
+                    "ip": str(hvars.get("ip_address", "")),
+                    "bot_icon": "windows",
+                    "lans": host_lans,
+                })
+                continue
             is_dc = (grp_name == "dc") or ("dc" in hname.lower())
             top_nodes.append({
                 "role": "dc" if is_dc else "desktop",
                 "name": hname,
                 "ip": str(hvars.get("ip_address", "")),
-                "top_icon": "ad_dc" if is_dc else "monitor",
+                "top_icon": "ad_dc" if is_dc else "gui",
                 "bot_icon": "windows",
                 "is_ova": False,
-                "lans": detect_connected_lans(hvars, gvars, total_lans),
+                "lans": host_lans,
             })
 
     # 3. Linux / Ansible / Ubuntu / RHEL (centos, ubuntu, linux, ansible)
@@ -350,9 +363,19 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
         for hname, hvars in (grp.get("hosts", {}) or {}).items():
             hvars = hvars or {}
             merged = {**gvars, **hvars}
-            is_ans = merged.get("install_ansible") or ("ansible" in hname.lower()) or (grp_name == "ansible")
-            top_icon = "ansible" if is_ans else ("ubuntu" if grp_name == "ubuntu" else "server_top")
+            host_lans = detect_connected_lans(hvars, gvars, total_lans)
             bot_icon = "ubuntu" if grp_name == "ubuntu" else "linux"
+            if is_truthy(merged.get("nested_virtualization")):
+                bottom_nodes.append({
+                    "role": "hypervisor",
+                    "name": hname,
+                    "ip": str(hvars.get("ip_address", "")),
+                    "bot_icon": bot_icon,
+                    "lans": host_lans,
+                })
+                continue
+            is_ans = is_truthy(merged.get("install_ansible")) or ("ansible" in hname.lower()) or (grp_name == "ansible")
+            top_icon = "ansible" if is_ans else "cli"
             top_nodes.append({
                 "role": "linux",
                 "name": hname,
@@ -360,8 +383,9 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
                 "top_icon": top_icon,
                 "bot_icon": bot_icon,
                 "is_ova": False,
-                "lans": detect_connected_lans(hvars, gvars, total_lans),
+                "lans": host_lans,
             })
+
 
     # 4. Appliances: vCenter, AIQUM, Generic OVA/OVF (vcenter, aiqum, ova, ovf)
     for grp_name in ("vcenter", "aiqum", "ova", "ovf"):
@@ -390,10 +414,11 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
                 "is_ova": is_ova,
                 "lans": detect_connected_lans(hvars, gvars, total_lans),
             })
-    # 5. Hypervisors (esx, nested_esx, proxmox, pve, xcpng)
+    # 5. Hypervisors (esx, nested_esx, nestedesx, proxmox, pve, xcpng)
     hypervisor_map = {
         "esx": "esxi",
         "nested_esx": "esxi",
+        "nestedesx": "esxi",
         "proxmox": "proxmox",
         "pve": "proxmox",
         "xcpng": "xcpng",
@@ -404,9 +429,7 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
         gvars = grp.get("vars", {}) or {}
         for hname, hvars in (grp.get("hosts", {}) or {}).items():
             hvars = hvars or {}
-            hv_lans = detect_connected_lans(hvars, gvars, total_lans)
-            if total_lans > 1 and hv_lans == [1] and not gvars.get("ethernet_ports"):
-                hv_lans = [1, 2]
+            hv_lans = detect_connected_lans(hvars, gvars, total_lans, allow_extra_lans=True)
             bottom_nodes.append({
                 "role": "hypervisor",
                 "name": hname,
@@ -415,17 +438,17 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
                 "lans": hv_lans,
             })
 
-    # 6. Storage Systems (vsims, ots, ontap, sgws, storagegrid)
-    for grp_name in ("vsims", "ots", "ontap", "sgws", "storagegrid"):
+    # 6. Storage Systems (vsims, ots, ontap, ontapselecteval, sgws, storagegrid)
+    for grp_name in ("vsims", "ots", "ontap", "ontapselecteval", "sgws", "storagegrid"):
         grp = children.get(grp_name, {}) or {}
         gvars = grp.get("vars", {}) or {}
         for hname, hvars in (grp.get("hosts", {}) or {}).items():
             hvars = hvars or {}
             merged = {**gvars, **hvars}
-            cname = merged.get("cluster_name", hname)
-            cip = str(merged.get("cluster_mgmt_ip", hvars.get("ip_address", "")))
+            cname = merged.get("ontap_cluster_name", merged.get("cluster_name", hname))
+            cip = str(merged.get("ontap_cluster_mgmt_ip", merged.get("cluster_mgmt_ip", hvars.get("ip_address", ""))))
             st_icon = "storagegrid" if grp_name in ("sgws", "storagegrid") else "netapp"
-            st_lans = list(range(1, total_lans + 1)) if total_lans > 1 else [1]
+            st_lans = [1]
             bottom_nodes.append({
                 "role": "storage",
                 "name": cname,
@@ -456,9 +479,12 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
 
     # --- COMPUTE CANVAS & BUS GEOMETRY ---
     col_step = 135
-    max_cols = max(len(top_nodes), len(bottom_nodes) + 1, 5)
+    hv_count = len([n for n in bottom_nodes if n["role"] == "hypervisor"])
+    st_count = len([n for n in bottom_nodes if n["role"] == "storage"])
+    bot_span = 220 + (max(hv_count, 1) * 120) + (st_count * 200)
+    max_cols = max(len(top_nodes), 5)
     box_x = 140
-    box_w = max(840, max_cols * col_step + 140)
+    box_w = max(840, max_cols * col_step + 140, bot_span + 60)
     box_y = 30
 
     bus_x1 = box_x + 25
@@ -490,6 +516,20 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
         label_str = f"{lan['desc']} ({lan['subnet']})" if (idx > 0 and lan["subnet"]) else lan["desc"]
         b.add_text(label_str, bus_x1 + 65, by + 4, 220, 22, bold=True, size=13, align="left")
 
+    # Default RDP jumphost to .11 if rdp_jumphost and NAT rules are both undefined
+    if not rdp_target_ip and not has_nat_rules and default_rdp_candidate:
+        if any(n.get("ip") == default_rdp_candidate for n in top_nodes if n["role"] != "gateway"):
+            rdp_target_ip = default_rdp_candidate
+
+    # Place RDP jumphost VM first among VMs (right after the gateway) and give it the monitor icon
+    if rdp_target_ip:
+        gateways = [n for n in top_nodes if n["role"] == "gateway"]
+        rdp_vms = [n for n in top_nodes if n["role"] != "gateway" and n.get("ip") == rdp_target_ip]
+        for n in rdp_vms:
+            n["top_icon"] = "monitor"
+        other_vms = [n for n in top_nodes if n["role"] != "gateway" and n.get("ip") != rdp_target_ip]
+        top_nodes = gateways + rdp_vms + other_vms
+
     # --- RENDER TOP ROW NODES ---
     top_y = 95
     gateway_right_x = None
@@ -499,9 +539,10 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
         if node["role"] == "gateway":
             cx = box_x + 35
             b.add_icon("laptop", 22, top_y + 42, 84, 55, "LAPTOP")
+            b.add_line(box_x + 20, top_y + 68, cx, top_y + 68, COLOR_BLACK, width=4)
             badge_bg = "ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=light-dark(#FFFFFF,#FFFFFF);strokeColor=none;"
-            b.add_box(box_x - 20, top_y + 47, 40, 40, "", badge_bg)
-            b.add_icon("arrow_badge", box_x - 20, top_y + 47, 40, 40, "<->")
+            b.add_box(box_x - 20, top_y + 48, 40, 40, "", badge_bg)
+            b.add_icon("arrow_badge", box_x - 20, top_y + 48, 40, 40, "<->")
             r_size = 84
             r_style = (
                 f"ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor={COLOR_CARD_BG};"
@@ -542,12 +583,13 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
     if gateway_right_x and rdp_target_left_x and rdp_target_left_x > gateway_right_x:
         badge_size = 40
         target_badge_x = rdp_target_left_x - (badge_size // 2)
-        b.add_line(gateway_right_x, top_y + 68, target_badge_x, top_y + 68, COLOR_BLACK, 5)
+        arrow_y = top_y + 68
+        b.add_line(gateway_right_x, arrow_y, target_badge_x, arrow_y, COLOR_BLACK, width=4, arrow="block")
         badge_bg = "ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=light-dark(#FFFFFF,#FFFFFF);strokeColor=none;"
         b.add_box(target_badge_x, top_y + 48, badge_size, badge_size, "", badge_bg)
         b.add_icon("arrow_badge", target_badge_x, top_y + 48, badge_size, badge_size, "RDP")
-        mid_rdp = (gateway_right_x + target_badge_x) // 2
-        b.add_text("RDP", mid_rdp - 20, top_y + 72, 40, 20, bold=True, size=12)
+        line_mid_x = (gateway_right_x + target_badge_x) // 2
+        b.add_text("RDP", line_mid_x - 25, arrow_y + 6, 50, 20, bold=True, size=12)
 
     # --- RENDER BOTTOM ROW NODES (Hypervisors & Storage) ---
     hv_nodes = [n for n in bottom_nodes if n["role"] == "hypervisor"]
@@ -579,10 +621,10 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
             f"rounded=0;whiteSpace=wrap;html=1;fillColor={COLOR_CARD_BG};"
             f"strokeColor={COLOR_BLACK};strokeWidth=2.5;"
         )
-        b.add_icon(node["icon"], cx, bot_y + 45, sw, sh, node["name"].upper(), st_style)
-        b.add_text(node["name"].upper(), cx, bot_y + 45 + sh + 6, sw, 22, bold=True, size=13)
+        b.add_icon(node["icon"], cx, bot_y, sw, sh, node["name"].upper(), st_style)
+        b.add_text(node["name"].upper(), cx, bot_y + sh + 6, sw, 22, bold=True, size=13)
 
-        top_edge = bot_y + 45
+        top_edge = bot_y
         n_lans = node["lans"]
         for pos, lan_num in enumerate(n_lans):
             lan_obj = next((l for l in lans if l["index"] == lan_num), lans[0])
@@ -604,7 +646,7 @@ def main():
     src = Path(sys.argv[1])
     default_out_dir = Path(__file__).resolve().parent.parent / "diagrams/"
     out_dir = Path(sys.argv[2]) if len(sys.argv) > 2 else default_out_dir
-    default_icons = Path(__file__).resolve().parent.parent / "diagrams/icons"
+    default_icons = Path(__file__).resolve().parent.parent / "icons"
     icons_dir = Path(sys.argv[3]) if len(sys.argv) > 3 else default_icons
     out_dir.mkdir(parents=True, exist_ok=True)
 
