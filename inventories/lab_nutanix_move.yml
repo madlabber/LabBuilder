@@ -146,6 +146,8 @@ all:
           # the Nutanix lab guide, written by the "Create Nutanix CE cluster" play
           extra_files:
             - "{{ playbook_dir }}/files/{{ lab_name }}_nxguide.htm"
+            # the Move OVA (optional, gitignored), for the user to deploy Move again; ends up in C:\Software
+            - "{{ playbook_dir }}/files/Nutanix-Move.ova"
           extra_commands:
             # PuTTY: wait for the install to finish, and find the MSI by pattern
             # (the config ISO renames putty-64bit-0.83-installer.msi to PUTTY_64BIT_0_83_INSTALLER.MSI)
@@ -154,6 +156,14 @@ all:
               $msi = (Get-Item E:\files\putty*.msi).FullName
               Start-Process msiexec.exe -Wait -ArgumentList "/i $msi /qn /l*v C:\putty-install.log"
             - Start-Process msiexec.exe -Wait -ArgumentList '/i E:\files\googlechromestandaloneenterprise64.msi /qn /l*v C:\chrome-install.log'
+
+            # The Move OVA, if it was in files/ (the config ISO may have renamed it, hence the pattern)
+            - |
+              $ova = Get-Item E:\files\*move*.ova -ErrorAction SilentlyContinue | Select-Object -First 1
+              if ($ova) {
+                New-Item -ItemType Directory -Path C:\Software -Force | Out-Null
+                Copy-Item $ova.FullName C:\Software\Nutanix-Move.ova -Force
+              }
 
             # PuTTY sessions for every user: saved once to a .reg file, which Windows
             # imports now and again each time any user signs in
