@@ -1,0 +1,60 @@
+---
+# HPE VM Essentials setup, run by stage 2 inside the lab (the hosts are reachable there).
+# Each part can be turned off; lab_hpevme_manual turns off everything after the ONTAP storage.
+
+hpevme_wait: 3600                      # seconds to wait for the hosts' unattended install
+
+# --- Local storage: each host's empty data disk, the cluster's default datastore ---------
+hpevme_local_datastore: true
+hpevme_local_path: /var/lib/hvm-local  # mount point on every host
+hpevme_local_name: data                # datastore name in the Manager (it makes its own "local" on the OS disk)
+
+# --- ONTAP storage (ontap.yml), optional: an extra NFS datastore and a LUN for GFS2 --------
+# The cluster doesn't depend on it; if the NFS datastore can't be added, the build goes on.
+hpevme_ontap: true
+hpevme_ontap_address: ""               # cluster management address
+hpevme_ontap_username: admin
+hpevme_ontap_password: ""
+hpevme_ontap_nodes: []                 # node names, for the LIFs' home nodes
+hpevme_ontap_port: e0d                 # data port on each node
+hpevme_svm: svm_vme
+hpevme_netmask: ""
+hpevme_client_match: ""                # export rule clients, e.g. 192.168.0.0/24
+hpevme_nfs_lif: ""                     # NFS LIF address
+hpevme_iscsi_lifs: []                  # one iSCSI LIF address per node
+hpevme_nfs_volume: vme_nfs             # NFS datastore, exported at /vme_nfs
+hpevme_nfs_size_gb: 400
+hpevme_iscsi_volume: vme_iscsi
+hpevme_lun: vme_gfs2                   # iSCSI LUN for a GFS2 datastore shared by the hosts
+hpevme_lun_size_gb: 300
+hpevme_igroup: vme_hosts
+
+# --- Manager VM on the first host (manager.yml) -------------------------------------------
+hpevme_manager: true
+hpevme_manager_image: "HPE_Morpheus_Manager-9.1.0-3.qcow2.gz"   # on the Manager ISO (a CD on the first host)
+hpevme_manager_ip: ""
+hpevme_manager_hostname: vme
+hpevme_manager_size: S                 # S: 2 vCPU / 12 GB
+hpevme_manager_netmask: ""
+hpevme_manager_gateway: ""
+hpevme_manager_dns: ""
+hpevme_manager_domain: ""
+hpevme_manager_ntp: ""
+hpevme_admin_user: admin
+hpevme_admin_password: ""
+hpevme_manager_wait: 2700              # seconds for the Manager to come up
+
+# --- Manager setup through its API (manager_api.yml) --------------------------------------
+hpevme_setup_manager: true             # first-time setup: appliance name, admin account
+hpevme_admin_email: "admin@lab.test"
+hpevme_license: ""                     # license key; blank leaves it for the user
+hpevme_group: Lab
+hpevme_vcenter_cloud: true             # add the lab's vCenter as a cloud (migration source)
+hpevme_vcenter_address: ""
+hpevme_vcenter_username: administrator@vsphere.local
+hpevme_vcenter_password: ""
+hpevme_vcenter_datacenter: Datacenter
+hpevme_vcenter_cluster: Cluster
+hpevme_create_cluster: true            # create the HVM cluster from the hosts, with the NFS datastore
+hpevme_cluster_name: hvm-cluster
+hpevme_layout_match: "26.04"            # picks the cluster layout for the hosts' OS ("HVM 2.0 Cluster on HVM/Ubuntu 26.04")

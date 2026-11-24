@@ -1,0 +1,105 @@
+---
+# HPE's GRUB entry boots "autoinstall ds=nocloud;s=/cdrom/server/", so the ISO's own
+# /server/user-data drives the install and asks for locale, identity, network and storage.
+# The unattended copy changes only GRUB: "ds=nocloud" makes cloud-init read its seed from a
+# disk labelled CIDATA instead, which each host gets as a small second CD (seed_iso.yml).
+# Its user-data is HPE's own with those four sections answered.
+- name: Set the unattended ISO's name
+  ansible.builtin.set_fact:
+    hvm_auto_iso: "{{ install_iso | regex_replace('\\.iso$', '') }}-auto.iso"
+    hvm_iso_work: "{{ playbook_dir }}/files/{{ lab_name | default('hvm') }}_hvm_iso"
+  run_once: true
+
+- name: Make a work folder
+  ansible.builtin.file:
+    path: "{{ hvm_iso_work }}"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+  run_once: true
+
+- name: Read HPE's GRUB menu and autoinstall user-data from the ISO
+  ansible.builtin.command: >
+    xorriso -osirrox on -indev {{ playbook_dir }}/files/{{ install_iso }}
+    -extract /boot/grub/grub.cfg {{ hvm_iso_work }}/grub.cfg
+    -extract /server/user-data {{ hvm_iso_work }}/user-data
+  args:
+    creates: "{{ hvm_iso_work }}/user-data"
+  delegate_to: localhost
+  run_once: true
+
+- name: Keep HPE's user-data for the seed ISOs
+  ansible.builtin.set_fact:
+    hvm_hpe_user_data: "{{ lookup('file', hvm_iso_work ~ '/user-data') | from_yaml }}"
+  run_once: true
+
+- name: Check for the unattended ISO in files/
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/files/{{ hvm_auto_iso }}"
+  register: hvm_auto_iso_stat
+  delegate_to: localhost
+  run_once: true
+
+- name: Make the unattended ISO
+  when: not hvm_auto_iso_stat.stat.exists
+  run_once: true
+  delegate_to: localhost
+  block:
+    - name: Make the GRUB menu writable
+      ansible.builtin.file:
+        path: "{{ hvm_iso_work }}/grub.cfg"
+        mode: "u+w"
+
+    - name: Read the seed from the CIDATA disk instead of /cdrom/server/
+      ansible.builtin.replace:
+        path: "{{ hvm_iso_work }}/grub.cfg"
+        regexp: 'ds=nocloud\\;s=/cdrom/server/'
+        replace: 'ds=nocloud'
+
+    - name: Boot the install entry after 3 seconds
+      ansible.builtin.lineinfile:
+        path: "{{ hvm_iso_work }}/grub.cfg"
+        regexp: '^set timeout='
+        line: 'set timeout=3'
+
+    # replay keeps HPE's BIOS and EFI boot records
+    - name: Write the unattended ISO
+      ansible.builtin.command: >
+        xorriso -indev {{ playbook_dir }}/files/{{ install_iso }}
+        -outdev {{ playbook_dir }}/files/{{ hvm_auto_iso }}
+        -map {{ hvm_iso_work }}/grub.cfg /boot/grub/grub.cfg
+        -boot_image any replay
+
+- name: Check for the unattended ISO on the datastore
+  community.vmware.vsphere_file:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ iso_datastore }}"
+    path: "{{ item }}"
+    state: file
+  loop: "{{ [hvm_auto_iso] + (groups[hvm_group | default('hvm')] | map('extract', hostvars, 'hvm_extra_isos') | select('defined') | flatten | unique) }}"
+  register: hvm_iso_exists
+  delegate_to: localhost
+  run_once: true
+  ignore_errors: true
+
+# About 4 GB each; every host shares one copy
+- name: Copy the ISOs to the datastore
+  community.vmware.vsphere_copy:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    src: "{{ playbook_dir }}/files/{{ item.item }}"
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ iso_datastore }}"
+    path: "{{ item.item }}"
+    timeout: 3600
+  loop: "{{ hvm_iso_exists.results | selectattr('failed') | list }}"
+  loop_control:
+    label: "{{ item.item }}"
+  delegate_to: localhost
+  run_once: true

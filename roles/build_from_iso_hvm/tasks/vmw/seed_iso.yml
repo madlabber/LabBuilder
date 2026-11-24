@@ -1,0 +1,95 @@
+---
+# Each host's seed: HPE's user-data with the questions answered, on a small CIDATA ISO.
+# The first NIC gets a fixed MAC (from the lab name and the host's last octet), so the
+# install can find it by address whatever name Ubuntu gives it.
+- name: Set this host's seed details
+  ansible.builtin.set_fact:
+    hvm_seed_dir: "{{ playbook_dir }}/files/{{ vm_name }}-seed"
+    hvm_seed_iso: "{{ vm_name }}-seed.iso"
+    hvm_mac: "{{ '00:50:56:%02x:%s:%02x' | format(((lab_name | default('hvm')) | hash('md5'))[0:2] | int(base=16) % 64,
+                                              ((lab_name | default('hvm')) | hash('md5'))[2:4],
+                                              host_address.split('.')[3] | int) }}"
+
+- name: Set this host's autoinstall answers
+  ansible.builtin.set_fact:
+    hvm_autoinstall: >-
+      {{ hvm_hpe_user_data.autoinstall | dict2items | rejectattr('key', 'equalto', 'interactive-sections') | items2dict
+         | combine(hvm_answers) }}
+  vars:
+    hvm_answers:
+      identity:
+        hostname: "{{ vm_hostname }}"
+        realname: "HVM admin"
+        username: "{{ hvm_username }}"
+        password: "{{ hvm_password | password_hash('sha512', (vm_name | hash('sha1'))[0:16]) }}"
+      ssh:
+        install-server: true
+        allow-pw: true
+      timezone: "{{ hvm_timezone }}"
+      # OS on the smallest disk; the data disk stays empty for VM storage
+      storage:
+        layout:
+          name: direct
+          match:
+            size: smallest
+      network:
+        version: 2
+        ethernets:
+          mgmt:
+            match:
+              macaddress: "{{ hvm_mac }}"
+            dhcp4: false
+            addresses: ["{{ host_address }}/{{ vm_netmask_cidr }}"]
+            routes: [{ to: default, via: "{{ vm_gateway }}" }]
+            nameservers:
+              addresses: ["{{ vm_dns_server }}"]
+              search: ["{{ vm_domain }}"]
+      # HPE's network screen writes /opt/HPE/installer-config, which its first-boot script reads
+      # to create the vs0 virtSwitch; with the screen answered here, this writes it instead
+      late-commands:
+        - "echo {{ lookup('template', 'late-commands.sh.j2') | b64encode }} | base64 -d > /target/root/hvm-late.sh"
+        - "bash /target/root/hvm-late.sh && rm -f /target/root/hvm-late.sh"
+
+- name: Make the seed folder
+  ansible.builtin.file:
+    path: "{{ hvm_seed_dir }}"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+
+- name: Write the seed's user-data and meta-data
+  ansible.builtin.copy:
+    dest: "{{ hvm_seed_dir }}/{{ item.name }}"
+    content: "{{ item.content }}"
+    mode: "0600"
+  loop:
+    - { name: user-data, content: "{{ '#cloud-config\n' ~ ({'autoinstall': hvm_autoinstall} | to_nice_yaml(width=4096, indent=2)) }}" }
+    - { name: meta-data, content: "instance-id: {{ vm_name }}\nlocal-hostname: {{ vm_hostname }}\n" }
+  loop_control:
+    label: "{{ item.name }}"
+  delegate_to: localhost
+  no_log: true
+
+- name: Make the seed ISO (volume label CIDATA)
+  ansible.builtin.command: >
+    xorriso -as mkisofs -V CIDATA -J -R
+    -o {{ playbook_dir }}/files/{{ hvm_seed_iso }} {{ hvm_seed_dir }}
+  delegate_to: localhost
+
+- name: Remove the seed folder
+  ansible.builtin.file:
+    path: "{{ hvm_seed_dir }}"
+    state: absent
+  delegate_to: localhost
+
+- name: Copy the seed ISO to the datastore
+  community.vmware.vsphere_copy:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    src: "{{ playbook_dir }}/files/{{ hvm_seed_iso }}"
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ iso_datastore }}"
+    path: "{{ hvm_seed_iso }}"
+  delegate_to: localhost

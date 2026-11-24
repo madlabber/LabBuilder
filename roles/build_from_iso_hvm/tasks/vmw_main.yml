@@ -1,0 +1,34 @@
+---
+- name: remove if absent or forced
+  include_tasks: vmw/absent.yml
+  when: state == "absent" or state == "force"
+
+# One unattended copy of HPE's ISO for all hosts (GRUB reads the seed from a CIDATA disk)
+- name: Prepare the unattended install ISO
+  include_tasks: vmw/prepare_iso.yml
+  when: state == "present" or state == "force"
+
+- name: Check whether the host VM already exists
+  community.vmware.vmware_guest_info:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: "{{ vcenter_datacenter }}"
+    name: '{{ vm_name }}'
+  delegate_to: localhost
+  register: existing_vm
+  failed_when: false
+  when: state == "present" or state == "force"
+
+# An installed host is left alone; use state=force to rebuild it.
+- name: Build and install a new host
+  when:
+    - state == "present" or state == "force"
+    - existing_vm.instance is not defined
+  block:
+    - name: Make and upload this host's seed ISO
+      include_tasks: vmw/seed_iso.yml
+
+    - name: Build VM
+      include_tasks: vmw/build_vm.yml

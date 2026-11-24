@@ -1,0 +1,77 @@
+---
+# Runs on each HVM host (SSH as the install user, see the stage 2 blueprint)
+
+- name: Wait for the host's unattended install and first boot
+  ansible.builtin.wait_for_connection:
+    timeout: "{{ hpevme_wait }}"
+    sleep: 30
+
+# HPE's first-boot commands install hvmcli and create vs0, then reboot once more
+# (vs0 is the virtSwitch name; its Linux bridge is hvmbr0)
+- name: Wait for hvmcli and the vs0 virtSwitch
+  ansible.builtin.shell: hvmcli virtswitch list | grep -qw vs0
+  become: true
+  register: hpevme_ready
+  until: hpevme_ready.rc == 0
+  retries: 60
+  delay: 30
+  changed_when: false
+
+# The Manager runs sudo over SSH as this user and parses the output as JSON. Ubuntu 26.04's
+# sudo-rs echoes '********' at the password prompt, which breaks that, so the host is dropped.
+- name: Passwordless sudo for {{ ansible_user }} (the Manager's SSH user)
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/90-hpevme
+    content: "{{ ansible_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    mode: "0440"
+    validate: visudo -cf %s
+  become: true
+
+# The host's empty data disk (build_from_iso_hvm's data_disk_gb) becomes the cluster's local
+# datastore, so the cluster doesn't need ONTAP
+- name: Format and mount the data disk at {{ hpevme_local_path }}
+  ansible.builtin.shell: |
+    set -e
+    if ! findmnt -rn {{ hpevme_local_path }} >/dev/null; then
+      # the one whole disk with no partitions and no filesystem
+      dev=$(lsblk -dnpo NAME,TYPE | awk '$2=="disk"{print $1}' | while read d; do
+              [ "$(lsblk -no NAME "$d" | wc -l)" = 1 ] && [ -z "$(lsblk -dno FSTYPE "$d")" ] && echo "$d"; done | head -1)
+      [ -n "$dev" ] || { echo "no empty data disk"; exit 1; }
+      mkfs.ext4 -q -L hvmlocal "$dev"
+      mkdir -p {{ hpevme_local_path }}
+      grep -q 'LABEL=hvmlocal' /etc/fstab || echo 'LABEL=hvmlocal {{ hpevme_local_path }} ext4 defaults,nofail 0 2' >> /etc/fstab
+      mount {{ hpevme_local_path }}
+      echo formatted "$dev"
+    fi
+  become: true
+  register: hpevme_disk
+  changed_when: "'formatted' in hpevme_disk.stdout"
+  when: hpevme_local_datastore
+
+- name: Read the host's iSCSI initiator name
+  ansible.builtin.shell: sed -n 's/^InitiatorName=//p' /etc/iscsi/initiatorname.iscsi
+  become: true
+  register: hpevme_iqn
+  changed_when: false
+
+- name: ONTAP storage (NFS and iSCSI)
+  include_tasks: ontap.yml
+  when: hpevme_ontap
+  args:
+    apply:
+      run_once: true
+      delegate_to: localhost
+
+- name: Manager VM on the first host
+  include_tasks: manager.yml
+  when:
+    - hpevme_manager
+    - inventory_hostname == ansible_play_hosts_all[0]
+
+- name: Manager setup (API)
+  include_tasks: manager_api.yml
+  when: hpevme_manager and hpevme_setup_manager
+  args:
+    apply:
+      run_once: true
+      delegate_to: localhost

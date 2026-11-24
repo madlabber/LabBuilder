@@ -1,0 +1,192 @@
+---
+# The HVM cluster from the hosts, then its datastores: the hosts' local data disks (default) and,
+# optionally, the ONTAP NFS volume. Type, layout and cloud type codes are looked up rather than
+# assumed. If a step fails, the API's own message is shown, and the cluster can be finished in the UI.
+- name: Find the HVM cluster type, cloud type and layouts
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}{{ item }}"
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+  loop:
+    - /api/cluster-types?max=100
+    - /api/zone-types?max=100
+    - /api/library/cluster-layouts?max=200
+  register: hpevme_lookups
+
+- name: Pick the HVM types
+  ansible.builtin.set_fact:
+    hpevme_cluster_type: >-
+      {{ hpevme_lookups.results[0].json.clusterTypes
+         | selectattr('code', 'search', '(?i)mvm|hvm') | map(attribute='code') | first | default('') }}
+    # VME 9.1 puts HVM clusters in a Private Cloud ('standard'); there's no HVM cloud type
+    hpevme_zone_type: >-
+      {{ (hpevme_lookups.results[1].json.zoneTypes | selectattr('code', 'search', '(?i)mvm|hvm') | map(attribute='code') | list
+          + hpevme_lookups.results[1].json.zoneTypes | selectattr('code', 'eq', 'standard') | map(attribute='code') | list)
+         | first | default('') }}
+    # The layout for the hosts' OS, e.g. "HVM 2.0 Cluster on HVM/Ubuntu 26.04"
+    hpevme_layout_id: >-
+      {{ hpevme_lookups.results[2].json.layouts | selectattr('groupType')
+         | selectattr('groupType.code', 'search', '(?i)mvm|hvm')
+         | selectattr('name', 'search', hpevme_layout_match) | map(attribute='id') | max | default('') }}
+
+- name: Stop if the Manager offers no HVM types
+  ansible.builtin.fail:
+    msg: >-
+      No HVM cluster type, cloud type or layout found. Types: {{ hpevme_lookups.results[0].json.clusterTypes | map(attribute='code') | list }};
+      cloud types: {{ hpevme_lookups.results[1].json.zoneTypes | map(attribute='code') | list }}
+  when: hpevme_cluster_type == '' or hpevme_zone_type == '' or hpevme_layout_id | string == ''
+
+# The hosts' service plan comes from the layout's provision type ("Default Manual" on 9.1.0-3)
+- name: Find the service plan for the layout
+  ansible.builtin.uri:
+    url: >-
+      {{ hpevme_url }}/api/service-plans?max=100&provisionTypeId={{
+      (hpevme_lookups.results[2].json.layouts | selectattr('id', 'eq', hpevme_layout_id | int) | first).provisionType.id }}
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+  register: hpevme_plans
+
+- name: Pick the service plan
+  ansible.builtin.set_fact:
+    hpevme_plan_id: "{{ hpevme_plans.json.servicePlans | map(attribute='id') | first }}"
+
+- name: Find the HVM cloud
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/zones?name=hvm"
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+  register: hpevme_hvm_cloud
+
+- name: Create the HVM cloud
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/zones"
+    method: POST
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+    body_format: json
+    body: { zone: { name: hvm, zoneType: { code: "{{ hpevme_zone_type }}" }, groupId: "{{ hpevme_group_id | int }}" } }
+    status_code: [200, 201]
+  register: hpevme_hvm_cloud_new
+  when: hpevme_hvm_cloud.json.zones | length == 0
+
+- name: Keep the HVM cloud id
+  ansible.builtin.set_fact:
+    hpevme_cloud_id: "{{ (hpevme_hvm_cloud.json.zones | length > 0) | ternary(hpevme_hvm_cloud.json.zones[0].id | default(0), hpevme_hvm_cloud_new.json.zone.id | default(0)) }}"
+
+- name: Find the cluster
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/clusters?name={{ hpevme_cluster_name | urlencode }}"
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+  register: hpevme_clusters
+
+- name: Create the HVM cluster from the hosts
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/clusters"
+    method: POST
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+    body_format: json
+    body:
+      cluster:
+        type: "{{ hpevme_cluster_type }}"
+        name: "{{ hpevme_cluster_name }}"
+        group: { id: "{{ hpevme_group_id | int }}" }
+        cloud: { id: "{{ hpevme_cloud_id | int }}" }
+        layout: { id: "{{ hpevme_layout_id | int }}" }
+        # The fields and defaults HPE's morpheus-cli sends ("clusters add --dry-run") for this layout.
+        # Without sshPort the Manager accepts the cluster but silently adds no hosts.
+        server:
+          plan: { id: "{{ hpevme_plan_id | int }}" }
+          visibility: private
+          hostname: "{{ hpevme_cluster_name }}"
+          sshHosts: "{{ hpevme_ssh_hosts | from_json }}"   # a list of {ip, name}, not a string
+          sshPort: 22
+          sshUsername: "{{ ansible_user }}"
+          sshPassword: "{{ ansible_password }}"
+          cpuPlacementMode: unmanaged
+          serverGroup: { applianceUrlProxyBypass: "on" }
+          config:
+            cpuArch: x86_64
+            cpuModel: host-passthrough
+            dynamicPlacementMode: "off"
+            drsAggressiveness: conservative
+            powerPolicy: balanced
+            migrationConcurrencyLimit: "1"
+            migrationConcurrencyAutoMode: "true"
+    status_code: [200, 201]
+  vars:
+    hpevme_ssh_hosts: >-
+      [{% for h in ansible_play_hosts_all %}{"ip": "{{ hostvars[h].ansible_host }}", "name": "{{ h }}"}{{ ', ' if not loop.last }}{% endfor %}]
+  when: hpevme_clusters.json.clusters | length == 0
+  register: hpevme_cluster_new
+  no_log: true
+  ignore_errors: true
+
+- name: Cluster create failed
+  ansible.builtin.fail:
+    msg: "The Manager refused the cluster: {{ hpevme_cluster_new.json | default(hpevme_cluster_new.msg | default('')) }}"
+  when: hpevme_cluster_new is failed
+
+# The hosts join as 'provisioning' while the Manager sets them up; datastores need them done
+- name: Wait for all hosts to join the cluster and be provisioned
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/clusters?name={{ hpevme_cluster_name | urlencode }}"
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+  register: hpevme_clusters
+  until: >-
+    (hpevme_clusters.json.clusters[0].status | default('')) in ['failed', 'error'] or
+    ((hpevme_clusters.json.clusters[0].status | default('')) == 'ok' and
+     (hpevme_clusters.json.clusters[0].servers | default([]) | length) >= (ansible_play_hosts_all | length))
+  retries: 120
+  delay: 30
+
+- name: Cluster result
+  ansible.builtin.fail:
+    msg: "The cluster is '{{ hpevme_clusters.json.clusters[0].status }}': {{ hpevme_clusters.json.clusters[0].statusMessage | default('') }}"
+  when: (hpevme_clusters.json.clusters[0].status | default('')) in ['failed', 'error']
+
+- name: Find the cluster's datastores
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/clusters/{{ hpevme_clusters.json.clusters[0].id }}/datastores"
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+  register: hpevme_datastores
+
+- name: Add the hosts' data disks as the local datastore (default)
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/clusters/{{ hpevme_clusters.json.clusters[0].id }}/datastores"
+    method: POST
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+    body_format: json
+    body:
+      datastore:
+        name: "{{ hpevme_local_name }}"
+        datastoreType: { code: libvirt-dir }         # "Directory Datastore (Local)"
+        defaultStore: true
+        config: { targetPath: "{{ hpevme_local_path }}" }
+    status_code: [200, 201]
+  when:
+    - hpevme_local_datastore
+    - hpevme_local_name not in (hpevme_datastores.json.datastores | map(attribute='name') | list)
+
+# Optional: the cluster works without it, so a failure here is reported and the build goes on
+- name: Add the ONTAP NFS volume as an NFS datastore (optional)
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/clusters/{{ hpevme_clusters.json.clusters[0].id }}/datastores"
+    method: POST
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+    body_format: json
+    body:
+      datastore:
+        name: "{{ hpevme_nfs_volume }}"
+        datastoreType: { code: libvirt-netfs-nfs }   # "NFS Datastore" (/api/data-store-types)
+        config: { sourceHostname: "{{ hpevme_nfs_lif }}", sourceDirPath: "/{{ hpevme_nfs_volume }}" }
+    status_code: [200, 201]
+  when:
+    - hpevme_ontap
+    - hpevme_nfs_volume not in (hpevme_datastores.json.datastores | map(attribute='name') | list)
+  ignore_errors: true

@@ -1,0 +1,180 @@
+---
+# An SVM with NFS and iSCSI for the VME cluster: an NFS volume for an NFS Pool datastore,
+# and a LUN mapped to all hosts for a GFS2 datastore.
+- name: Set the ONTAP connection
+  ansible.builtin.set_fact:
+    hpevme_na: &na
+      hostname: "{{ hpevme_ontap_address }}"
+      username: "{{ hpevme_ontap_username }}"
+      password: "{{ hpevme_ontap_password }}"
+      https: true
+      validate_certs: false
+      use_rest: always
+
+- name: Wait for the ONTAP REST API
+  netapp.ontap.na_ontap_rest_info:
+    <<: *na
+    gather_subset: [cluster/nodes]
+  register: hpevme_nodes
+  until: hpevme_nodes is succeeded
+  retries: 30
+  delay: 20
+
+- name: Find the data aggregates
+  netapp.ontap.na_ontap_rest_info:
+    <<: *na
+    gather_subset: [storage/aggregates]
+    fields: [name]
+  register: hpevme_aggrs
+
+# A fresh sim has only root aggregates. POST with an empty body creates ONTAP's recommended
+# data aggregates (one per node), as System Manager does.
+- name: Create the recommended data aggregates
+  ansible.builtin.uri:
+    url: "https://{{ hpevme_ontap_address }}/api/storage/aggregates?return_timeout=120"
+    method: POST
+    body_format: json
+    body: {}
+    user: "{{ hpevme_ontap_username }}"
+    password: "{{ hpevme_ontap_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    status_code: [200, 201, 202]
+    timeout: 180
+  when: hpevme_aggrs.ontap_info['storage/aggregates'].records | default([]) | length == 0
+
+- name: Find the data aggregates again
+  netapp.ontap.na_ontap_rest_info:
+    <<: *na
+    gather_subset: [storage/aggregates]
+    fields: [name, state]
+  register: hpevme_aggrs
+  until: hpevme_aggrs.ontap_info['storage/aggregates'].records | default([]) | selectattr('state', 'eq', 'online') | list | length > 0
+  retries: 20
+  delay: 15
+
+- name: Pick the first aggregate
+  ansible.builtin.set_fact:
+    hpevme_aggr: "{{ hpevme_aggrs.ontap_info['storage/aggregates'].records | map(attribute='name') | sort | first }}"
+
+- name: SVM {{ hpevme_svm }}
+  netapp.ontap.na_ontap_svm:
+    <<: *na
+    name: "{{ hpevme_svm }}"
+    aggr_list: "{{ hpevme_aggrs.ontap_info['storage/aggregates'].records | map(attribute='name') | list }}"
+    services:
+      nfs: { allowed: true, enabled: true }
+      iscsi: { allowed: true, enabled: true }
+
+# The sim's second node can come up with its data ports outside any broadcast domain
+- name: Put each node's {{ hpevme_ontap_port }} in the Default broadcast domain
+  netapp.ontap.na_ontap_ports:
+    <<: *na
+    resource_type: broadcast_domain
+    resource_name: Default
+    ipspace: Default
+    names: "{{ hpevme_ontap_nodes | map('regex_replace', '$', ':' ~ hpevme_ontap_port) | list }}"
+
+- name: NFS LIF
+  netapp.ontap.na_ontap_interface:
+    <<: *na
+    vserver: "{{ hpevme_svm }}"
+    interface_name: lif_nfs
+    address: "{{ hpevme_nfs_lif }}"
+    netmask: "{{ hpevme_netmask }}"
+    home_node: "{{ hpevme_ontap_nodes[0] }}"
+    home_port: "{{ hpevme_ontap_port }}"
+    service_policy: default-data-files
+    interface_type: ip
+
+- name: iSCSI LIFs, one per node
+  netapp.ontap.na_ontap_interface:
+    <<: *na
+    vserver: "{{ hpevme_svm }}"
+    interface_name: "lif_iscsi{{ idx + 1 }}"
+    address: "{{ item }}"
+    netmask: "{{ hpevme_netmask }}"
+    home_node: "{{ hpevme_ontap_nodes[idx] }}"
+    home_port: "{{ hpevme_ontap_port }}"
+    service_policy: default-data-blocks
+    interface_type: ip
+  loop: "{{ hpevme_iscsi_lifs }}"
+  loop_control:
+    index_var: idx
+
+- name: NFS v3 and v4.1
+  netapp.ontap.na_ontap_nfs:
+    <<: *na
+    vserver: "{{ hpevme_svm }}"
+    service_state: started
+    nfsv3: enabled
+    nfsv4: enabled
+    nfsv41: enabled
+
+- name: Export rule for the lab LAN
+  netapp.ontap.na_ontap_export_policy_rule:
+    <<: *na
+    vserver: "{{ hpevme_svm }}"
+    name: default
+    client_match: ["{{ hpevme_client_match }}"]
+    protocol: [nfs]
+    ro_rule: [sys]
+    rw_rule: [sys]
+    super_user_security: [sys]
+    rule_index: 1
+
+- name: NFS datastore volume (/{{ hpevme_nfs_volume }})
+  netapp.ontap.na_ontap_volume:
+    <<: *na
+    vserver: "{{ hpevme_svm }}"
+    name: "{{ hpevme_nfs_volume }}"
+    aggregate_name: "{{ hpevme_aggr }}"
+    size: "{{ hpevme_nfs_size_gb }}"
+    size_unit: gb
+    space_guarantee: none
+    junction_path: "/{{ hpevme_nfs_volume }}"
+    export_policy: default
+    unix_permissions: "777"
+
+- name: iSCSI service
+  netapp.ontap.na_ontap_iscsi:
+    <<: *na
+    vserver: "{{ hpevme_svm }}"
+    service_state: started
+
+- name: Volume for the GFS2 LUN
+  netapp.ontap.na_ontap_volume:
+    <<: *na
+    vserver: "{{ hpevme_svm }}"
+    name: "{{ hpevme_iscsi_volume }}"
+    aggregate_name: "{{ hpevme_aggr }}"
+    size: "{{ (hpevme_lun_size_gb * 1.1) | round(0, 'ceil') | int }}"
+    size_unit: gb
+    space_guarantee: none
+
+- name: igroup with every host's initiator
+  netapp.ontap.na_ontap_igroup:
+    <<: *na
+    vserver: "{{ hpevme_svm }}"
+    name: "{{ hpevme_igroup }}"
+    os_type: linux
+    initiator_group_type: iscsi
+    initiator_names: "{{ ansible_play_hosts_all | map('extract', hostvars, ['hpevme_iqn', 'stdout']) | select | list }}"
+
+- name: LUN for the GFS2 datastore
+  netapp.ontap.na_ontap_lun:
+    <<: *na
+    vserver: "{{ hpevme_svm }}"
+    name: "{{ hpevme_lun }}"
+    flexvol_name: "{{ hpevme_iscsi_volume }}"
+    size: "{{ hpevme_lun_size_gb }}"
+    size_unit: gb
+    os_type: linux
+    space_reserve: false
+
+- name: Map the LUN to the hosts
+  netapp.ontap.na_ontap_lun_map:
+    <<: *na
+    vserver: "{{ hpevme_svm }}"
+    path: "/vol/{{ hpevme_iscsi_volume }}/{{ hpevme_lun }}"
+    initiator_group_name: "{{ hpevme_igroup }}"

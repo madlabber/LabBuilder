@@ -1,0 +1,40 @@
+---
+# HPE VM Essentials host: HVM OS 26.04 (HPE's custom Ubuntu Server ISO), nested on VMware.
+# See README.md for how the unattended install works.
+
+state: present
+install_iso: "HPE_HVM_Install_26.04_S6E64-11270.iso"
+
+# blank host addresses (set by mainvars)
+pve_address: ""
+esxi_address: ""
+vcenter_address: ""
+vcenter_cluster:
+
+# vm defaults
+vm_name:     hvm
+vm_hostname: hvm
+vm_network:  "VM Network"
+
+# One socket per host: the VME eval license counts sockets (6), and a 3-node cluster uses 3
+vm_num_cpus:  8
+vm_memory_mb: 49152          # 32 GB minimum; hvm01 also runs the Manager VM (size S, 12 GB)
+network_device_type: vmxnet3
+os_disk_gb:   100            # HVM OS (the installer takes the smallest disk); the Manager needs 50 GB free in /var
+data_disk_gb: 200            # left empty: local storage for VMs
+
+# Host addresses
+host_address:
+vm_netmask_cidr:
+vm_gateway:
+vm_dns_server:
+vm_domain:
+
+# Install user (sudo). The Manager deploy and the VME cluster connect as this user over SSH.
+hvm_username: hvmadmin
+hvm_password: ""
+hvm_timezone: "UTC"
+
+# Extra ISOs to attach as CD drives, from iso_datastore (e.g. the Manager image ISO on the host
+# that deploys the Manager). Uploaded from files/ if they aren't on the datastore yet.
+hvm_extra_isos: []

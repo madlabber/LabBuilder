@@ -1,0 +1,127 @@
+---
+# First-time setup and lab objects through the Manager's REST API (Morpheus API).
+# The cluster step (cluster.yml) is the least proven part: see the README.
+- name: Set the Manager URL
+  ansible.builtin.set_fact:
+    hpevme_url: "https://{{ hpevme_manager_ip }}"
+
+- name: Wait for the Manager API
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/ping"
+    validate_certs: false
+    return_content: true
+  register: hpevme_ping
+  until: hpevme_ping.status == 200
+  retries: 90
+  delay: 20
+
+- name: First-time setup (appliance name, master tenant, admin account)
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/setup/init"
+    method: POST
+    validate_certs: false
+    body_format: json
+    body:
+      applianceName: "{{ hpevme_manager_hostname }}"
+      applianceUrl: "https://{{ hpevme_manager_hostname }}.{{ hpevme_manager_domain }}"
+      accountName: "{{ lab_name | default('lab') }}"
+      username: "{{ hpevme_admin_user }}"
+      password: "{{ hpevme_admin_password }}"
+      email: "{{ hpevme_admin_email }}"
+      firstName: Lab
+      lastName: Admin
+    status_code: [200, 201]
+  when: hpevme_ping.json.setupNeeded | default(false)
+  no_log: true
+
+- name: Sign in to the API
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/oauth/token?grant_type=password&scope=write&client_id=morph-api"
+    method: POST
+    validate_certs: false
+    body_format: form-urlencoded
+    body:
+      username: "{{ hpevme_admin_user }}"
+      password: "{{ hpevme_admin_password }}"
+  register: hpevme_token
+  until: hpevme_token.status == 200
+  retries: 20
+  delay: 15
+  no_log: true
+
+- name: Set the API headers
+  ansible.builtin.set_fact:
+    hpevme_headers:
+      Authorization: "Bearer {{ hpevme_token.json.access_token }}"
+  no_log: true
+
+- name: Apply the license
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/license"
+    method: POST
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+    body_format: json
+    body: { license: "{{ hpevme_license }}" }
+  when: hpevme_license | length > 0
+  no_log: true
+
+- name: Find the group
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/groups?name={{ hpevme_group | urlencode }}"
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+  register: hpevme_groups
+
+- name: Create the group {{ hpevme_group }}
+  ansible.builtin.uri:
+    url: "{{ hpevme_url }}/api/groups"
+    method: POST
+    validate_certs: false
+    headers: "{{ hpevme_headers }}"
+    body_format: json
+    body: { group: { name: "{{ hpevme_group }}" } }
+  register: hpevme_group_new
+  when: hpevme_groups.json.groups | length == 0
+
+- name: Keep the group id
+  ansible.builtin.set_fact:
+    hpevme_group_id: "{{ (hpevme_groups.json.groups | length > 0) | ternary(hpevme_groups.json.groups[0].id | default(0), hpevme_group_new.json.group.id | default(0)) }}"
+
+# The migration source: the lab's vCenter as a VMware cloud
+- name: Add the lab's vCenter as a cloud
+  when: hpevme_vcenter_cloud
+  block:
+    - name: Find the vCenter cloud
+      ansible.builtin.uri:
+        url: "{{ hpevme_url }}/api/zones?name=vc01"
+        validate_certs: false
+        headers: "{{ hpevme_headers }}"
+      register: hpevme_vc_cloud
+
+    - name: Create the vCenter cloud
+      ansible.builtin.uri:
+        url: "{{ hpevme_url }}/api/zones"
+        method: POST
+        validate_certs: false
+        headers: "{{ hpevme_headers }}"
+        body_format: json
+        body:
+          zone:
+            name: vc01
+            zoneType: { code: vmware }
+            groupId: "{{ hpevme_group_id | int }}"
+            config:
+              apiUrl: "https://{{ hpevme_vcenter_address }}/sdk"
+              username: "{{ hpevme_vcenter_username }}"
+              password: "{{ hpevme_vcenter_password }}"
+              datacenter: "{{ hpevme_vcenter_datacenter }}"
+              cluster: "{{ hpevme_vcenter_cluster }}"
+              importExisting: "on"
+        status_code: [200, 201]
+      when: hpevme_vc_cloud.json.zones | length == 0
+      no_log: true
+
+- name: HVM cluster
+  include_tasks: cluster.yml
+  when: hpevme_create_cluster

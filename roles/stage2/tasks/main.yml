@@ -77,8 +77,9 @@
            "dnf -y -q install rsync python3.12 python3.12-pip &&
             ([ -x {{ stage2_venv }}/bin/python ] || python3.12 -m venv {{ stage2_venv }}) &&
             {{ stage2_venv }}/bin/pip -q install --upgrade pip &&
-            {{ stage2_venv }}/bin/pip -q install 'ansible-core{{ stage2_ansible_core }}' pyvmomi requests &&
-            {{ stage2_venv }}/bin/ansible-galaxy collection install -U community.vmware vmware.vmware"]
+            {{ stage2_venv }}/bin/pip -q install 'ansible-core{{ stage2_ansible_core }}' pyvmomi requests {{ stage2_pip_extra | join(' ') }} &&
+            {{ stage2_venv }}/bin/ansible-galaxy collection install -U vmware.vmware {{ stage2_collections_extra | join(' ') }} &&
+            {{ stage2_venv }}/bin/ansible-galaxy collection install --force 'community.vmware:{{ stage2_community_vmware }}'"]
   delegate_to: localhost
   changed_when: false
 
@@ -94,10 +95,10 @@
   ansible.builtin.command:
     argv: "{{ ['rsync', '-a', '--partial', '-e', stage2_ssh] + stage2_binaries + ['root@' ~ stage2_wan ~ ':' ~ stage2_dir ~ '/files/'] }}"
   vars:
-    stage2_binaries: "{{ (stage2_isos + (stage2_ovas | map(attribute='ova') | list)) | map('regex_replace', '^', playbook_dir ~ '/files/') | list }}"
+    stage2_binaries: "{{ (stage2_isos + stage2_files + (stage2_ovas | map(attribute='ova') | list)) | unique | map('regex_replace', '^', playbook_dir ~ '/files/') | list }}"
   delegate_to: localhost
   changed_when: false
-  when: stage2_isos | length + stage2_ovas | length > 0
+  when: stage2_isos | length + stage2_files | length + stage2_ovas | length > 0
 
 # Some appliance OVFs (Nutanix Move 6.3) put a VirtualSystem's Info/Name after its sections,
 # which vCenter's import API refuses; files/fix_ovf.py unpacks those OVAs and reorders them

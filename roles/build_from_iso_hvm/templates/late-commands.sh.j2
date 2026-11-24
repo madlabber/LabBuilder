@@ -1,0 +1,30 @@
+#!/bin/bash
+# Runs at the end of the install (Subiquity late-commands), with the new system in /target.
+# Writes what HPE's network screen would: /opt/HPE/installer-config/00-installer-config.yaml,
+# which configure_mgmt_ip.sh reads on first boot to create the vs0 virtSwitch.
+set -e
+IF=""
+for d in /sys/class/net/*; do
+  if [ "$(cat "$d/address" 2>/dev/null)" = "{{ hvm_mac }}" ]; then IF=$(basename "$d"); fi
+done
+[ -n "$IF" ] || { echo "no NIC with MAC {{ hvm_mac }}"; exit 1; }
+
+mkdir -p /target/opt/HPE/installer-config
+cat > /target/opt/HPE/installer-config/00-installer-config.yaml <<EOF
+network:
+  version: 2
+  ethernets:
+    $IF:
+      dhcp4: false
+      addresses:
+        - {{ host_address }}/{{ vm_netmask_cidr }}
+      routes:
+        - to: default
+          via: {{ vm_gateway }}
+      nameservers:
+        addresses: [{{ vm_dns_server }}]
+        search: [{{ vm_domain }}]
+EOF
+chmod 600 /target/opt/HPE/installer-config/00-installer-config.yaml
+# configure_node.sh: hvmcli node configure hostname
+echo "{{ vm_hostname }}" > /target/opt/HPE/installer-config/hostname

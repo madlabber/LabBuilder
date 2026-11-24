@@ -7,6 +7,12 @@ all:
     lab_prefix: ""
     lab_password: "{{ '{{ default_lab_password }}' }}"
     lab_vm_datastore: {{ stage2_datastore }}
+    lab_lan1_portgroup: "{{ stage2_network }}"
+    lab_lan1_netmask: {{ lab_lan1_netmask }}
+    lab_lan1_netmask_cidr: "{{ lab_lan1_netmask_cidr }}"
+    lab_lan1_gateway: {{ lab_lan1_gateway }}
+    lab_lan1_dns_ip: {{ lab_lan1_dns_ip }}
+    lab_domain_name: {{ lab_domain_name }}
   children:
     vcenter_prep:
       hosts:
@@ -25,4 +31,7 @@ all:
           ovf_networks: {{ o.networks | default({'VM Network': stage2_network}) | to_json }}
           ovf_properties: {{ o.properties | default({}) | to_json }}
 {% endfor %}
+{% endif %}
+{% if stage2_groups %}
+    {{ stage2_groups | to_nice_yaml(indent=2, width=4096) | indent(4) }}
 {% endif %}
