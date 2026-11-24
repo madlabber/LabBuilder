@@ -37,13 +37,16 @@ ICON_FILES = {
     "ubuntu": "ubuntu.svg",
     "vcenter": "vcenter.svg",
     "server_top": "server_top.svg",
+    "server_card": "server_card.svg",
+    "vm_card": "vm_card.svg",
     "esxi": "esxi.svg",
     "proxmox": "proxmox.svg",
-    "xcpng": "xcpng.svg",
+    "xcpng": "rocket_gray.svg",
     "netapp": "netapp.svg",
     "storagegrid": "storagegrid.svg",
     "aiqum": "aiqum.svg",
     "ova": "ova.svg",
+    "nutanix": "nutanix.svg",
 }
 
 
@@ -151,12 +154,20 @@ class DrawioBuilder:
 
     def draw_vm_card(self, label: str, x: int, y: int, top_icon: str, bottom_icon: str, is_ova=False, label_below=False):
         w, h = 84, 136
-        card_style = (
-            f"rounded=1;arcSize=18;whiteSpace=wrap;html=1;fillColor={COLOR_CARD_BG};"
-            f"strokeColor={COLOR_BLACK};strokeWidth=2.5;"
-        )
-        self.add_box(x, y, w, h, "", card_style)
-        self.add_line(x, y + 68, x + w, y + 68, COLOR_BLACK, 2)
+        uri = load_svg_data_uri(self.icons_dir, "vm_card")
+        if uri:
+            style = (
+                "shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;"
+                f"verticalAlign=top;aspect=fixed;imageAspect=1;image={uri};"
+            )
+            self.add_box(x, y, w, h, "", style)
+        else:
+            card_style = (
+                f"rounded=1;arcSize=18;whiteSpace=wrap;html=1;fillColor={COLOR_CARD_BG};"
+                f"strokeColor={COLOR_BLACK};strokeWidth=2.5;"
+            )
+            self.add_box(x, y, w, h, "", card_style)
+            self.add_line(x, y + 68, x + w, y + 68, COLOR_BLACK, 2)
 
         if label_below:
             self.add_text(label.upper(), x - 12, y + h + 4, w + 24, 22, bold=True, size=13)
@@ -173,6 +184,29 @@ class DrawioBuilder:
             self.add_box(x + 12, y + 82, 60, 38, "OVA", ova_style)
         else:
             self.add_icon(bottom_icon, x + 16, y + 78, 52, 48, bottom_icon.upper())
+
+        return x + (w // 2), y, y + h
+
+    def draw_hypervisor_card(self, label: str, x: int, y: int, hv_icon: str):
+        w, h = 84, 156
+        uri = load_svg_data_uri(self.icons_dir, "server_card")
+        if uri:
+            style = (
+                "shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;"
+                f"verticalAlign=top;aspect=fixed;imageAspect=1;image={uri};"
+            )
+            self.add_box(x, y, w, h, "", style)
+        else:
+            card_style = (
+                f"rounded=0;whiteSpace=wrap;html=1;fillColor={COLOR_CARD_BG};"
+                f"strokeColor={COLOR_BLACK};strokeWidth=2.5;"
+            )
+            self.add_box(x, y, w, h, "", card_style)
+            self.add_line(x, y + 78, x + w, y + 78, COLOR_BLACK, 2)
+            self.add_icon("server_top", x + 16, y + 12, 52, 48, "SRV")
+
+        self.add_icon(hv_icon, x + 16, y + 92, 52, 48, hv_icon.upper())
+        self.add_text(label.upper(), x - 12, y + h + 4, w + 24, 22, bold=True, size=13)
 
         return x + (w // 2), y, y + h
 
@@ -266,7 +300,7 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
     all_vars = data.get("all", {}).get("vars", {}) or {}
     children = data.get("all", {}).get("children", {}) or {}
 
-    lab_name = all_vars.get("lab_name", yaml_path.stem)
+    lab_name = yaml_path.stem
     lans = extract_subnets(all_vars)
     total_lans = len(lans)
 
@@ -363,6 +397,7 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
         "proxmox": "proxmox",
         "pve": "proxmox",
         "xcpng": "xcpng",
+        "nutanix": "nutanix",
     }
     for grp_name, hv_icon in hypervisor_map.items():
         grp = children.get(grp_name, {}) or {}
@@ -376,7 +411,6 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
                 "role": "hypervisor",
                 "name": hname,
                 "ip": str(hvars.get("ip_address", "")),
-                "top_icon": "server_top",
                 "bot_icon": hv_icon,
                 "lans": hv_lans,
             })
@@ -399,6 +433,26 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
                 "icon": st_icon,
                 "lans": st_lans,
             })
+
+    # Filter network bars to only LANs connected by at least one VM or hypervisor (exclude gateway & storage)
+    active_lan_indices = set()
+    for n in top_nodes:
+        if n["role"] != "gateway":
+            active_lan_indices.update(n.get("lans", []))
+    for n in bottom_nodes:
+        if n["role"] == "hypervisor":
+            active_lan_indices.update(n.get("lans", []))
+
+    if active_lan_indices:
+        lans = [l for l in lans if l["index"] in active_lan_indices]
+    else:
+        lans = lans[:1]
+
+    valid_indices = {l["index"] for l in lans}
+    for n in bottom_nodes:
+        if n["role"] == "storage":
+            filtered = [i for i in n.get("lans", []) if i in valid_indices]
+            n["lans"] = filtered if filtered else [lans[0]["index"]]
 
     # --- COMPUTE CANVAS & BUS GEOMETRY ---
     col_step = 135
@@ -453,8 +507,8 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
                 f"ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor={COLOR_CARD_BG};"
                 f"strokeColor={COLOR_BLACK};strokeWidth=2.5;"
             )
-            b.add_box(cx, top_y + 26, r_size, r_size, "", r_style)
-            b.add_icon("router", cx + 12, top_y + 38, 60, 60, "GW")
+            #b.add_box(cx, top_y + 26, r_size, r_size, "", r_style)
+            b.add_icon("router", cx, top_y + 26, r_size, r_size, "GW")
             b.add_text(node["name"], cx, top_y, r_size, 22, bold=True, size=13)
 
             drop_x = cx + (r_size // 2)
@@ -502,13 +556,11 @@ def generate_diagram(yaml_path: Path, out_dir: Path, icons_dir: Path):
     hv_start_x = box_x + 220
     for idx, node in enumerate(hv_nodes):
         cx = hv_start_x + (idx * 120)
-        mid_x, top_edge, _ = b.draw_vm_card(
+        mid_x, top_edge, _ = b.draw_hypervisor_card(
             node["name"],
             cx,
             bot_y,
-            node["top_icon"],
             node["bot_icon"],
-            label_below=True,
         )
         n_lans = node["lans"]
         for pos, lan_num in enumerate(n_lans):
