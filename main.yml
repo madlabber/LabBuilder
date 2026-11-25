@@ -95,6 +95,32 @@
       - lab_domain_controller|default("") != ""
       - inventory_hostname == ansible_play_hosts_all[0]
 
+  # Once: send outside lookups to the lab gateway's resolver. Recursing from root hints, the
+  # DC's DNS returns SERVFAIL for some names (galaxy.ansible.com, github.com) that the gateway
+  # resolves, which broke stage 2's collection install.
+  - name: Forward the DC's outside lookups to the lab gateway via vm shell
+    community.vmware.vmware_vm_shell:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'
+      validate_certs: no
+      vm_username: ".\\Administrator"
+      vm_password: "{{lab_password}}"
+      vm_id: "{{lab_prefix | default('')}}{{lab_domain_controller}}"
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: >-
+        -command "Set-DnsServerForwarder -IPAddress {{ lab_lan1_gateway }} -UseRootHint $true -ErrorAction Stop; Clear-DnsServerCache -Force"
+      wait_for_process: true
+    delegate_to: localhost
+    retries: 5
+    delay: 30
+    register: forwarder_result
+    until: forwarder_result is succeeded
+    ignore_errors: yes
+    when:
+      - lab_domain_controller|default("") != ""
+      - inventory_hostname == ansible_play_hosts_all[0]
+
   # A and PTR records. The A record is replaced, so a rerun also adds a missing PTR.
   # WIN32 9715: the A record was added but the PTR exists, which is fine.
   - name: Add DNS record via vm shell
