@@ -6,7 +6,7 @@
 # mainvars file (vars/main.yml), and lab_vm_datastore from the lab inventory.
 vsphere_prep_wait: 5400        # seconds to wait for a vCenter that is still in its first boot
 
-# FQDNs of the ESXi hosts to add. The first gets lab_vm_datastore on its largest empty disk if it
+# FQDNs of the ESXi hosts to add. The first gets lab_vm_datastore on its largest disk if it
 # has none; ESXi 8 keeps its boot disk for itself, so give the host a separate data disk.
 esx_hosts: []
 
