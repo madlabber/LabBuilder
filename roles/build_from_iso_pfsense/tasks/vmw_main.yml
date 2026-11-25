@@ -12,7 +12,7 @@
   when: vcenter_address == ''
 
 - name: create config file
-  include_tasks: vmw/create_config_file.yml
+  include_tasks: create_config_file.yml
 
 - name: create config disk
   include_tasks: vmw/create_config_disk.yml

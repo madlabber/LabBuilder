@@ -17,7 +17,9 @@
         internal_port: "3389"
         protocol: "tcp"
         target_ip: "{{rdp_jumphost}}"
-  when: rdp_jumphost|default('') != ''
+  when: 
+    - rdp_jumphost|default('') != ''
+    - nat_rules|default('') == ''
 
 - name: set dns_overrides for lan.domain
   set_fact:
