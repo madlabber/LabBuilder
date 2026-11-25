@@ -8,7 +8,7 @@ all:
     lab_password: "{{ '{{ default_lab_password }}' }}"
     lab_vm_datastore: {{ stage2_datastore }}
   children:
-    vcenter_prep:
+    vsphere_prep:
       hosts:
         {{ stage2_vcenter }}:
           esx_hosts:

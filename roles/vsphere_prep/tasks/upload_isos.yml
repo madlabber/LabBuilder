@@ -4,44 +4,44 @@
 # Uploaded through vCenter with a long timeout; ISOs already there are left alone.
 - name: Create the ISO folder on the lab datastore
   community.vmware.vsphere_file:
-    hostname: "{{ vcenter_prep_address }}"
-    username: "{{ vcenter_prep_username }}"
-    password: "{{ vcenter_prep_password }}"
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
     validate_certs: no
-    datacenter: "{{ vcenter_prep_datacenter }}"
-    datastore: "{{ vcenter_prep_datastore }}"
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ lab_vm_datastore }}"
     path: ISO
     state: directory
   delegate_to: localhost
 
 - name: Check for the ISOs on the lab datastore
   community.vmware.vsphere_file:
-    hostname: "{{ vcenter_prep_address }}"
-    username: "{{ vcenter_prep_username }}"
-    password: "{{ vcenter_prep_password }}"
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
     validate_certs: no
-    datacenter: "{{ vcenter_prep_datacenter }}"
-    datastore: "{{ vcenter_prep_datastore }}"
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ lab_vm_datastore }}"
     path: "ISO/{{ item }}"
     state: file
   delegate_to: localhost
-  register: vcenter_prep_iso_present
+  register: vsphere_prep_iso_present
   ignore_errors: true          # "not found" is the normal first-build answer
-  loop: "{{ vcenter_prep_isos }}"
+  loop: "{{ isos }}"
 
-- name: Upload the ISOs to [{{ vcenter_prep_datastore }}] ISO/ (several GB; can take a while)
+- name: Upload the ISOs to [{{ lab_vm_datastore }}] ISO/ (several GB; can take a while)
   community.vmware.vsphere_copy:
-    hostname: "{{ vcenter_prep_address }}"
-    username: "{{ vcenter_prep_username }}"
-    password: "{{ vcenter_prep_password }}"
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
     validate_certs: no
     src: "{{ playbook_dir }}/files/{{ item.item }}"
-    datacenter: "{{ vcenter_prep_datacenter }}"
-    datastore: "{{ vcenter_prep_datastore }}"
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ lab_vm_datastore }}"
     path: "ISO/{{ item.item }}"
     timeout: 7200
   delegate_to: localhost
   when: item is failed
-  loop: "{{ vcenter_prep_iso_present.results }}"
+  loop: "{{ vsphere_prep_iso_present.results }}"
   loop_control:
     label: "{{ item.item }}"
