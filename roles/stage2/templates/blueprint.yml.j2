@@ -14,7 +14,7 @@ all:
     lab_lan1_dns_ip: {{ lab_lan1_dns_ip }}
     lab_domain_name: {{ lab_domain_name }}
   children:
-    vcenter_prep:
+    vsphere_prep:
       hosts:
         {{ stage2_vcenter }}:
           esx_hosts:

@@ -1,0 +1,56 @@
+---
+- name: Wait for the vCenter API ({{ vcenter_address }})
+  community.vmware.vmware_about_info:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+  delegate_to: localhost
+  register: vsphere_prep_about
+  until: vsphere_prep_about is succeeded
+  retries: "{{ (vsphere_prep_wait | int / 60) | int }}"
+  delay: 60
+
+- name: Create the datacenter
+  community.vmware.vmware_datacenter:
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+    datacenter_name: "{{ vcenter_datacenter }}"
+    state: present
+  delegate_to: localhost
+
+- name: Create the cluster
+  vmware.vmware.cluster:            # community.vmware.vmware_cluster was removed in community.vmware 6.0
+    hostname: "{{ vcenter_address }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+    datacenter: "{{ vcenter_datacenter }}"
+    cluster: "{{ vcenter_cluster }}"
+  delegate_to: localhost
+
+# files/add_esx_host.py: adds the host (taking the thumbprint from vCenter's SSL fault, so it
+# also works where only vCenter is reachable) and creates the first host's datastore
+- name: Add the ESXi hosts
+  ansible.builtin.command:
+    argv: ["{{ ansible_playbook_python }}", "{{ role_path }}/files/add_esx_host.py", "{{ vcenter_address }}",
+           "{{ vcenter_datacenter }}", "{{ vcenter_cluster }}", "{{ item }}",
+           "{{ lab_vm_datastore if item == esx_hosts[0] else '' }}"]
+  environment:
+    VC_USER: "{{ vcenter_username }}"
+    VC_PASSWORD: "{{ vcenter_password }}"
+    ESX_USER: "{{ esxi_username }}"
+    ESX_PASSWORD: "{{ esxi_password }}"
+  loop: "{{ esx_hosts }}"
+  delegate_to: localhost
+  register: vsphere_prep_add_host
+  changed_when: "'added' in vsphere_prep_add_host.stdout or 'datastore created' in vsphere_prep_add_host.stdout"
+  until: vsphere_prep_add_host is succeeded
+  retries: 20          # a host may still be finishing its install
+  delay: 30
+
+- name: Upload installer ISOs
+  ansible.builtin.include_tasks: upload_isos.yml
+  when: isos | length > 0

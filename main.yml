@@ -194,10 +194,11 @@
         nutanix_lan_prefix_len: "{{lab_lan1_netmask_cidr}}"
 
 # Prepare a freshly deployed vCenter: datacenter, cluster, ESXi hosts, datastore, installer ISOs
-# (roles/vcenter_prep). Used by stage 2 blueprints, which run inside a lab against its own vCenter.
+# (roles/vsphere_prep). Used by stage 2 blueprints, which run inside a lab against its own vCenter.
+# Reads vcenter_* and esxi_* from mainvars; the ISOs to upload are `isos` (host var or -e).
 # Before the Windows servers, so a stage 2 blueprint can build Windows VMs in that vCenter.
-- name: Prepare vCenter
-  hosts: vcenter_prep
+- name: Prepare vSphere
+  hosts: vsphere_prep
   gather_facts: false
   vars_files:
     - defaults/main.yml
@@ -205,19 +206,8 @@
     - "{{ credentials }}"
   tasks:
     - include_role:
-        name: vcenter_prep
+        name: vsphere_prep
       when: state | default('present') != 'absent'
-      vars:
-        vcenter_prep_address:      "{{ vcenter_address }}"
-        vcenter_prep_username:     "{{ vcenter_username }}"
-        vcenter_prep_password:     "{{ vcenter_password }}"
-        vcenter_prep_datacenter:   "{{ vcenter_datacenter }}"
-        vcenter_prep_cluster:      "{{ vcenter_cluster }}"
-        vcenter_prep_esx_hosts:    "{{ esx_hosts | default([]) }}"
-        vcenter_prep_esx_username: "{{ esxi_username }}"
-        vcenter_prep_esx_password: "{{ esxi_password }}"
-        vcenter_prep_datastore:    "{{ lab_vm_datastore }}"
-        vcenter_prep_isos:         "{{ isos | default([]) }}"
 
 # Build Windows Server VMs
 - name: Build Windows Servers
