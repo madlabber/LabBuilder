@@ -1,10 +1,10 @@
 # HPE VM Essentials demo, built end to end: three HVM OS 26.04 hosts (hvm01-03) installed
 # unattended, a 2-node ONTAP sim for NFS and iSCSI, and a VMware source to migrate from
-# (vCenter 8.0 U3 with one ESXi 8.0 U3 host running a small Windows Server 2019 VM, win01).
-# Stage 2 runs on an Ansible VM inside the lab: it sets up vc01 and builds win01, deploys the
+# (vCenter 8.0 U3 with one ESXi 8.0 U3 host running a small Ubuntu 24.04 VM, lnx01).
+# Stage 2 runs on an Ansible VM inside the lab: it sets up vc01 and builds lnx01, deploys the
 # VME Manager on hvm01, and creates the HVM cluster on the hosts' local data disks. The ONTAP sim
 # is left unconfigured (hpevme_ontap: true would add an SVM and an NFS datastore).
-# The user migrates win01 from vCenter to the HVM cluster in the Manager.
+# The user migrates lnx01 from vCenter to the HVM cluster in the Manager.
 # Files in files/: HPE_HVM_Install_26.04_S6E64-11270.iso, HPE_Morpheus_Manager_SW_image_v9.1.0-3_S6E64-11330.iso.
 # About 210 GB of RAM: the HVM hosts 3 x 48 GB, vCenter 14, ESXi 16, the ONTAP sim and the rest.
 all:
@@ -99,7 +99,7 @@ all:
           adp_enabled: "true"
 
     # Migration source: vCenter 8.0 U3 with one ESXi 8.0 U3 host. Stage 2 sets them up and
-    # builds win01 on esx01.
+    # builds lnx01 on esx01.
     vcenter:
       hosts:
         vc01:
@@ -111,7 +111,7 @@ all:
       hosts:
         esx01:
           ip_address: 192.168.0.41
-          extra_dns_records: [ { name: win01, ip: 192.168.0.42 } ]   # built on esx01 by stage 2
+          extra_dns_records: [ { name: lnx01, ip: 192.168.0.42 } ]   # built on esx01 by stage 2
       vars:
           install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
           vm_num_cpus: 4
@@ -139,22 +139,23 @@ all:
       hosts:
         ansible:
       vars:
-        stage2_wait: 14400            # 4 h: win01's build and the Manager deploy take most of it
+        stage2_wait: 14400            # 4 h: the Manager deploy and cluster take most of it
         stage2_vcenter: vc01
         stage2_esx_hosts: [esx01]
-        stage2_files:
-          - 17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso   # for win01
         stage2_pip_extra: [paramiko, pycdlib, netaddr]
         stage2_collections_extra: [community.general, ansible.utils, netapp.ontap]
         stage2_groups:
-          # the VM to migrate, on esx01
-          winservers:
+          # the VM to migrate, on esx01. Ubuntu rather than Windows: open-vm-tools and
+          # qemu-guest-agent come with the install, and a nested Server 2019 VM's VMTools service
+          # wasn't registered (see the PR). The role downloads its ISO inside the lab.
+          ubuntu:
             hosts:
-              win01:
-                version: "Server2019eval"
+              lnx01:
+                version: "24.04"
                 ip_address: 192.168.0.42
-                vm_memory_mb: 4096
+                vm_memory_mb: 2048
                 vm_num_cpus: 2
+                vm_disk_gb: 20
           # the HVM hosts, for roles/hpevme_setup
           hpevme:
             hosts:
