@@ -117,12 +117,6 @@
     - nutanix_lab_network | default('') != ''
     - (cluster_create is changed) or ('unconfigured' not in cluster_status.stdout)
 
-- name: Deploy Nutanix Move
-  ansible.builtin.include_tasks: deploy_move.yml
-  when:
-    - nutanix_move_image | default('') != ''
-    - (cluster_create is changed) or ('unconfigured' not in cluster_status.stdout)
-
 - name: Write the lab guide ({{ nutanix_guide_file }})
   ansible.builtin.template:
     src: nutanix_guide.html.j2
