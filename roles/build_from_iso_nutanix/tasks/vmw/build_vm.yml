@@ -18,7 +18,13 @@
         unit_number: 0
         state: present
         type: iso
-        iso_path: '[{{ iso_datastore }}] {{ install_iso }}'
+        iso_path: '[{{ iso_datastore }}] {{ nutanix_unattended_iso }}'
+      - controller_number: 0          # the node's answer file (make_seed_iso.yml)
+        controller_type: sata
+        unit_number: 1
+        state: present
+        type: iso
+        iso_path: '[{{ iso_datastore }}] {{ vm_name }}-arizona.iso'
     disk:
       - size_gb: '{{ hyp_disk_gb }}'      # AHV boot
         type: thin

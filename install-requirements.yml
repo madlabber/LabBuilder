@@ -9,6 +9,7 @@
       name: "{{item}}"
     with_items:
       - pycdlib
+      - paramiko
       - pywinrm
       - pyvmomi
       - netapp-lib

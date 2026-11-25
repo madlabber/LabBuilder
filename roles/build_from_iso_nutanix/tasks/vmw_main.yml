@@ -16,15 +16,21 @@
   failed_when: false
   when: state == "present" or state == "force"
 
-# An installed node is left alone: re-running the playbook doesn't reconfigure
-# it or type into its console. Use state=force to rebuild it.
+# An installed node is left alone: re-running the playbook doesn't reinstall it.
+# Use state=force to rebuild it.
 - name: Build and install a new node
   when:
     - state == "present" or state == "force"
     - existing_vm.instance is not defined
   block:
+    - name: Make the unattended CE ISO
+      include_tasks: vmw/make_install_iso.yml
+
     - name: upload install iso
       include_tasks: vmw/upload_install_iso.yml
+
+    - name: Make the node's answer file and seed ISO
+      include_tasks: vmw/make_seed_iso.yml
 
     - name: Build VM
       include_tasks: vmw/build_vm.yml

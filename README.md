@@ -29,6 +29,7 @@ ansible-galaxy collections:
 
 python libraries
 - pycdlib
+- paramiko
 - pywinrm
 - pyvmomi
 - netapp-lib

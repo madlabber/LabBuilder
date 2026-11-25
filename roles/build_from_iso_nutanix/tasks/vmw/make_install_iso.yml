@@ -1,0 +1,66 @@
+---
+# The unattended copy of the CE ISO, built once in files/ and shared by every node. Two changes:
+#  - the CE Installer boot line gets AZ_HINT=<seed ISO UUID>: phoenix mounts that volume, reads
+#    arizona.cfg from it and installs with no GUI (phoenix/phoenix, the AZ_HINT branch);
+#  - the AOS installer, split on the ISO into .tar.p00 and .tar.p01, is joined into one .tar,
+#    because the unattended installer checks it as a tar file. ISO level 3 allows files over 4 GiB.
+- name: Check for the unattended CE ISO
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/files/{{ nutanix_unattended_iso }}"
+  register: nutanix_unattended_iso_stat
+  delegate_to: localhost
+  run_once: true
+
+- name: Build the unattended CE ISO ({{ nutanix_unattended_iso }}, about 15 minutes)
+  when: not nutanix_unattended_iso_stat.stat.exists
+  delegate_to: localhost
+  run_once: true
+  vars:
+    src_iso: "{{ playbook_dir }}/files/{{ install_iso }}"
+    work: "{{ playbook_dir }}/files/{{ nutanix_unattended_iso }}.work"
+    aos: /images/svm/nutanix_installer_package.tar
+  block:
+    - name: Extract the boot menu and the AOS installer
+      ansible.builtin.shell: |
+        set -e
+        rm -rf "{{ work }}"; mkdir -p "{{ work }}"
+        xorriso -osirrox on -indev "{{ src_iso }}" \
+          -extract /boot/isolinux/isolinux.cfg "{{ work }}/isolinux.cfg" \
+          -extract {{ aos }}.p00 "{{ work }}/aos.tar" \
+          -extract {{ aos }}.p01 "{{ work }}/aos.p01"
+        chmod u+w "{{ work }}"/*
+        cat "{{ work }}/aos.p01" >> "{{ work }}/aos.tar"
+        rm -f "{{ work }}/aos.p01"
+
+    - name: Add AZ_HINT to the CE Installer boot line
+      ansible.builtin.replace:
+        path: "{{ work }}/isolinux.cfg"
+        regexp: '^(\s*append .*init=/ce_installer.*?)(?: AZ_HINT=\S+)?$'
+        replace: '\1 AZ_HINT={{ nutanix_az_uuid }}'
+
+    - name: Write the unattended ISO
+      ansible.builtin.shell: |
+        set -e
+        rm -f "{{ work }}.iso"
+        xorriso -indev "{{ src_iso }}" -outdev "{{ work }}.iso" \
+          -boot_image any replay -compliance iso_9660_level=3 \
+          -rm {{ aos }}.p00 {{ aos }}.p01 -- \
+          -map "{{ work }}/aos.tar" {{ aos }} \
+          -map "{{ work }}/isolinux.cfg" /boot/isolinux/isolinux.cfg
+        mv "{{ work }}.iso" "{{ playbook_dir }}/files/{{ nutanix_unattended_iso }}"
+        rm -rf "{{ work }}"
+
+# The answer file points at the AHV ISO on the installer CD (mounted at /mnt/iso)
+- name: Find the AHV ISO on the unattended CE ISO
+  ansible.builtin.shell: >-
+    xorriso -indev "{{ playbook_dir }}/files/{{ nutanix_unattended_iso }}"
+    -find /images/hypervisor/kvm -type f -name '*.iso' 2>/dev/null
+  register: nutanix_ahv_find
+  changed_when: false
+  delegate_to: localhost
+  run_once: true
+
+- name: Keep the AHV ISO path
+  ansible.builtin.set_fact:
+    nutanix_ahv_iso_path: "{{ nutanix_ahv_find.stdout_lines | first | trim(\"'\") }}"
+  run_once: true
