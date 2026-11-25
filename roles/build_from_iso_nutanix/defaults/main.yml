@@ -22,22 +22,29 @@ vm_num_cpus:  8
 vm_memory_mb: 49152
 network_device_type: vmxnet3
 
-# The installer picks its disks by size (VMware paravirtual disks report as SSD):
-#   smallest disk (>= 14 GB)        -> AHV boot
-#   largest SSD (>= 200 GB)         -> CVM boot   (so keep it the largest)
-#   every other disk (>= 200 GB)    -> data
+# Disks: scsi0:0-2 in build_vm.yml, which the installer sees as sda, sdb and sdc.
+# The answer file (templates/arizona.cfg.j2) assigns them; the CVM boot disk needs >= 200 GB.
 hyp_disk_gb:  64
 cvm_disk_gb:  500
 data_disk_gb: 250
+nutanix_hyp_boot_disk:  sda             # AHV boot
+nutanix_cvm_boot_disks: [sdb]           # CVM boot
+nutanix_cvm_data_disks: [sdc]           # data
 
 # Node addresses
 host_address:
 vm_netmask:
 vm_gateway:
 
-# Installer timing, in seconds
-installer_boot_wait:  300   # power-on until the installer screen is up (about 3 minutes)
-installer_image_wait: 1500  # Start until imaging has finished
+# Unattended install (see README.md). The CE ISO is rebuilt once, in files/, into a copy whose
+# boot line reads each node's answer file from a small seed ISO; nothing is typed into the console.
+nutanix_unattended_iso: "{{ (install_iso | splitext)[0] }}-unattended.iso"
+# Every seed ISO gets this volume date, which Linux shows as the volume UUID; the unattended ISO's
+# boot line (AZ_HINT) finds the seed by it. Both forms are the same date.
+nutanix_az_volume_date: "2026010100000000"
+nutanix_az_uuid: "2026-01-01-00-00-00-00"
+# The AOS version in install_iso, for the answer file (the installer doesn't detect it)
+nutanix_aos_version: '{{ (install_iso | regex_findall("aos_([0-9][0-9.]*[0-9])") + [""]) | first }}'
 
 # Cluster creation (create_cluster.yml)
 nutanix_create_cluster: true           # false: stop once every CVM is up, for the user to create the cluster
@@ -52,6 +59,24 @@ nutanix_cvm_username: nutanix
 nutanix_cvm_password: "nutanix/4u"     # CE default
 nutanix_admin_password: ""             # new Prism admin password; blank keeps the default
 nutanix_cluster_wait: 5400             # how long to wait for the CVMs, in seconds
+
+# Nutanix Move (deploy_move.yml): a VM on the AHV cluster, deployed once the cluster exists.
+# Download the Move qcow2 from the Nutanix Support Portal into files/ and name it here;
+# blank skips Move.
+nutanix_move_image: ""
+nutanix_move_vm: "move"
+nutanix_move_ip: ""                    # fixed address on nutanix_lab_network, e.g. 192.168.0.70
+nutanix_move_vcpus: 2                  # Move guide: 2 vCPU with 2 cores each, 8 GB
+nutanix_move_cores_per_vcpu: 2
+nutanix_move_memory: "8G"
+nutanix_lan_prefix_len: 24
+
+# Managed AHV network on the lab LAN (lab_network.yml), for new and migrated VMs. Blank skips it.
+# Required by the AHV Move deployment above. Keep its pool outside the gateway's DHCP range.
+nutanix_lab_network: ""                # e.g. lab-lan
+nutanix_lab_network_pool_start: ""
+nutanix_lab_network_pool_end: ""
+nutanix_lab_domain: ""                 # DNS search domain handed out on it
 
 # Lab guide: create_cluster.yml writes it as HTML; a Windows VM can list it in
 # extra_files and print it to PDF (see inventories/lab_nutanix.yml).

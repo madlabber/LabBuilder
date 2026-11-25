@@ -7,23 +7,23 @@
     validate_certs: no
     datacenter: "{{ vcenter_datacenter }}"
     datastore: "{{ iso_datastore }}"
-    path: "{{ install_iso }}"
+    path: "{{ nutanix_unattended_iso }}"
     state: file
   register: install_iso_exists
   delegate_to: localhost
   ignore_errors: true
 
-# The CE ISO is about 7 GB; all nodes share one copy, so only the first host uploads it.
+# The unattended CE ISO is about 7 GB; all nodes share one copy, so only the first host uploads it.
 - name: Copy install iso to datastore
   community.vmware.vsphere_copy:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'
     validate_certs: no
-    src: "{{ playbook_dir }}/files/{{ install_iso }}"
+    src: "{{ playbook_dir }}/files/{{ nutanix_unattended_iso }}"
     datacenter: "{{ vcenter_datacenter }}"
     datastore: "{{ iso_datastore }}"
-    path: "{{ install_iso }}"
+    path: "{{ nutanix_unattended_iso }}"
     timeout: 3600
   delegate_to: localhost
   run_once: true

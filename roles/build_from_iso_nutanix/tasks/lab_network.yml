@@ -1,0 +1,20 @@
+---
+# A managed AHV network (VLAN 0, IP management on) on the lab LAN, for VMs created on the cluster
+# or migrated to it, e.g. with Nutanix Move. Included from create_cluster.yml when
+# nutanix_lab_network is set and the cluster exists.
+- name: Create the AHV network {{ nutanix_lab_network }}
+  ansible.builtin.command:
+    argv: "{{ cvm_ssh + ['0', 'bash -lc ' ~ (net_script | quote)] }}"
+  environment:
+    CVM_PASSWORD: "{{ nutanix_cvm_password }}"
+  delegate_to: localhost
+  register: lab_net
+  changed_when: "'created' in lab_net.stdout"
+  vars:
+    net_script: |
+      set -e
+      if acli net.list | awk '{print $1}' | grep -qx {{ nutanix_lab_network }}; then echo present; exit 0; fi
+      acli net.create {{ nutanix_lab_network }} vlan=0 ip_config={{ vm_gateway }}/{{ nutanix_lan_prefix_len }}
+      acli net.update_dhcp_dns {{ nutanix_lab_network }} servers={{ nutanix_dns_servers }} domains={{ nutanix_lab_domain }}
+      acli net.add_dhcp_pool {{ nutanix_lab_network }} start={{ nutanix_lab_network_pool_start }} end={{ nutanix_lab_network_pool_end }}
+      echo created

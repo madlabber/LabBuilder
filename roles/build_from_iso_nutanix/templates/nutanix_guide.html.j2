@@ -5,6 +5,21 @@
 {%- set prism = nutanix_cluster_vip or nutanix_cvm_ips[0] -%}
 {%- set cvm1 = nutanix_cvm_ips[0] -%}
 {%- set desktop_ip = hostvars['desktop'].ip_address if 'desktop' in hostvars else '' -%}
+{#- optional vSphere source for the Move demo: the lab's own vCenter, ESXi host(s) and the Windows VMs on them -#}
+{%- set vcs = groups.get('vcenter', []) -%}
+{%- set esxs = groups.get('esx', []) + groups.get('nestedesx', []) -%}
+{%- set vc_fqdn = (vcs[0] ~ '.' ~ lab_domain_name) if vcs else '' -%}
+{%- set move_ip = nutanix_move_ip if (nutanix_move_image | default('')) != '' else '' -%}
+{#- stage 2 (roles/stage2): LabBuilder runs again on an Ansible VM inside the lab -#}
+{%- set runners = groups.get('stage2', []) -%}
+{%- set s2 = hostvars[runners[0]] if runners else {} -%}
+{%- set move_ova = (s2.stage2_ovas | default([]) | selectattr('name', 'equalto', 'move') | list) -%}
+{%- set move_esx = ((s2.stage2_esx_hosts | default(['the ESXi host']))[0] if move_ova else '') if not move_ip else '' -%}
+{%- set isos = s2.stage2_isos | default([]) -%}
+{%- set win_iso = (isos | select('search', '(?i)server|win') | list + [''])[0] -%}
+{%- set lnx_iso = (isos | select('search', '(?i)debian|ubuntu|rocky|alma|centos') | list + [''])[0] -%}
+{%- set move_url = 'https://' ~ move_ip if move_ip else ('https://&lt;address of the move VM&gt;' if move_esx else '') -%}
+{%- set lab_net = nutanix_lab_network | default('') -%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,10 +79,25 @@
 <h3>Other lab machines</h3>
 <table>
   <tr><th>Machine</th><th>IP</th><th>Use</th></tr>
-  <tr><td>gateway</td><td>{{ lab_lan1_gateway }}</td><td>pfSense: routing, NAT, NTP. Forwards RDP to the desktop, plus Prism (9440) and SSH (2222) to the first CVM.</td></tr>
+  <tr><td>gateway</td><td>{{ lab_lan1_gateway }}</td><td>pfSense: routing, NAT, NTP. Forwards RDP to the desktop, plus Prism (9440) and SSH (2222) to the first CVM{% if runners %}, and SSH (2223) to the Ansible VM{% endif %}.</td></tr>
   <tr><td>{{ lab_domain_controller }}</td><td>{{ lab_lan1_dns_ip }}</td><td>Active Directory and DNS for {{ lab_domain_name }}</td></tr>
 {% if desktop_ip %}
-  <tr><td>desktop</td><td>{{ desktop_ip }}</td><td>This jump desktop: Chrome, PuTTY (saved sessions for the nodes and CVMs)</td></tr>
+  <tr><td>desktop</td><td>{{ desktop_ip }}</td><td>This jump desktop: Chrome, PuTTY (saved sessions for the nodes, CVMs{% if vcs %}, vCenter, ESXi{% endif %})</td></tr>
+{% endif %}
+{% for h in vcs %}
+  <tr><td>{{ h }}</td><td>{{ hostvars[h].ip_address }}</td><td>vCenter Server 8.0 U3 (<code>{{ h }}.{{ lab_domain_name }}</code>): datacenter <b>Datacenter</b>, cluster <b>Cluster</b>. The VMware side of the migration.</td></tr>
+{% endfor %}
+{% for h in esxs %}
+  <tr><td>{{ h }}</td><td>{{ hostvars[h].ip_address }}</td><td>ESXi 8.0 U3 host in that cluster, with datastore <b>datastore1</b>{% if isos %} (installer ISOs in its <code>ISO</code> folder){% endif %}</td></tr>
+{% endfor %}
+{% for h in runners %}
+  <tr><td>{{ h }}</td><td>{{ hostvars[h].ip_address }}</td><td>Ansible VM (AlmaLinux 9): LabBuilder ran its second stage here, inside the lab, to set up {{ vcs[0] if vcs else 'the vCenter' }}. Its copy of LabBuilder and the run's log are in <code>/root/LabBuilder</code>.</td></tr>
+{% endfor %}
+{% if move_esx %}
+  <tr><td>move</td><td>DHCP (.150 to .200)</td><td>Nutanix Move appliance (OVA) running <b>on {{ move_esx }}</b>, on the VMware side. Its address is in vCenter: VM <b>move</b> &gt; Summary.</td></tr>
+{% endif %}
+{% if move_ip %}
+  <tr><td>{{ nutanix_move_vm }}</td><td>{{ move_ip }}</td><td>Nutanix Move appliance, a VM on the AHV cluster{% if not (nutanix_create_cluster | bool) %} (deployed once you've created the cluster; see <a href="#move">Migrate a VM with Move</a>){% endif %}</td></tr>
 {% endif %}
 </table>
 
@@ -78,6 +108,15 @@
   <tr><td>CVM (SSH)</td><td>{{ nutanix_cvm_ips | join(', ') }}</td><td>nutanix</td><td><code>nutanix/4u</code></td></tr>
   <tr><td>AHV host (SSH)</td><td>{{ nutanix_nodes | map(attribute='ip_address') | join(', ') }}</td><td>root</td><td><code>nutanix/4u</code></td></tr>
   <tr><td>Windows machines</td><td>{{ lab_domain_name }}</td><td>Administrator</td><td>the lab password</td></tr>
+{% if vcs %}
+  <tr><td>vCenter</td><td><code>https://{{ vc_fqdn }}</code></td><td>administrator@vsphere.local</td><td>the lab password</td></tr>
+{% endif %}
+{% if esxs %}
+  <tr><td>ESXi host</td><td>{% for h in esxs %}<code>https://{{ h }}.{{ lab_domain_name }}</code> {% endfor %}</td><td>root</td><td>the lab password</td></tr>
+{% endif %}
+{% if move_url %}
+  <tr><td>Nutanix Move</td><td><code>{{ move_url }}</code></td><td>nutanix</td><td>you set it at the first sign-in</td></tr>
+{% endif %}
 </table>
 <p class="small">The <code>nutanix/4u</code> passwords are the Community Edition defaults. Changing them is one of the day-2 tasks below.</p>
 
@@ -132,7 +171,7 @@ ncli cluster add-to-ntp-servers servers={{ nutanix_ntp_servers or lab_lan1_gatew
 <div class="note"><b>If the create fails:</b> read the last lines of the output, then <code>~/data/logs/genesis.out</code> on the CVM. Usual causes: a CVM that isn't up yet (wait, then run the command again) or a typo in an IP. Run <code>cluster status</code> before you retry. If the cluster was partly created, ask before you destroy anything.</div>
 {% endif %}
 
-<h2>First sign-in to Prism</h2>
+<h2 id="first-prism">First sign-in to Prism</h2>
 <ol>
   <li>Open Chrome on this desktop and go to <code>https://{{ prism }}:9440</code>. Accept the certificate warning: the cluster uses a self-signed certificate.</li>
   <li>Sign in as <code>admin</code>.{% if not (nutanix_admin_password_changed | bool) %} The password is <code>nutanix/4u</code>, and Prism asks you to set a new one. Prism requires at least 8 characters with upper case, lower case, a digit and a symbol, no dictionary words, and no more than 2 identical characters in a row.{% endif %}</li>
@@ -140,6 +179,78 @@ ncli cluster add-to-ntp-servers servers={{ nutanix_ntp_servers or lab_lan1_gatew
   <li>Accept or decline Pulse (telemetry). For a lab, declining is fine.</li>
   <li>On the Home dashboard, check <b>Cluster Health</b>, <b>Data Resiliency Status</b> ({% if rf == 1 %}a single-node cluster always shows it can't tolerate a failure; that's expected{% else %}it should be <b>OK</b> and able to tolerate 1 node failure{% endif %}) and <b>Alerts</b>.</li>
 </ol>
+
+{% if vcs and esxs %}
+<h2 id="move">Migrate VMs with Nutanix Move</h2>
+<p>This lab has a small VMware environment next to the Nutanix cluster: vCenter <b>{{ vcs[0] }}</b> manages ESXi host <b>{{ esxs | join(', ') }}</b>. You build two small VMs on it, a Windows one and a Linux one, then <b>Nutanix Move</b> copies them to AHV while they keep running and switches them over with a short outage (the cutover).</p>
+{% if move_esx %}
+<div class="note"><b>Where Move runs:</b> this lab deploys the Move OVA on <b>{{ move_esx }}</b>, next to the VMs it migrates. The Move guide documents the OVA for ESXi-to-ESXi migrations and the qcow2 on the AHV cluster for migrations to AHV, so this layout isn't one Nutanix describes. Move 6.3.3 is also qualified with AOS 6.10, and this cluster runs AOS 6.8.1. If adding the cluster as a target fails, that's the first thing to look at. The OVA is also on this desktop as <code>C:\Software\Nutanix-Move.ova</code>, if you want to deploy Move yourself (vCenter: <b>Deploy OVF Template &gt; Local file</b>).</div>
+{% elif not move_ip %}
+<div class="note"><b>Move isn't deployed in this lab.</b> Put the Move qcow2 from the Nutanix Support Portal in LabBuilder's <code>files/</code> folder, set <code>nutanix_move_image</code> in the lab inventory, and run the lab build again. Installed machines are left as they are and only Move is added.</div>
+{% elif not (nutanix_create_cluster | bool) %}
+<div class="note"><b>First create the cluster</b> (above), then ask for the lab build to be run again. It leaves the installed machines alone and deploys Move on the new cluster at <code>{{ move_ip }}</code>.</div>
+{% endif %}
+
+<div class="step">
+<h3>1. Build a Windows VM and a Linux VM in vCenter</h3>
+<p>Open <code>https://{{ vc_fqdn }}</code> in Chrome and sign in as <code>administrator@vsphere.local</code>. Right-click <b>Cluster</b> and choose <b>New Virtual Machine &gt; Create a new virtual machine</b>. Use host <b>{{ esxs[0] }}.{{ lab_domain_name }}</b>, datastore <b>datastore1</b> and network <b>VM Network</b> for both. Keep them small: the host has room for Move and two small VMs.</p>
+<table>
+  <tr><th></th><th>Windows</th><th>Linux</th></tr>
+  <tr><td>Name</td><td><code>win01</code></td><td><code>lnx01</code></td></tr>
+  <tr><td>Guest OS</td><td>Windows, Microsoft Windows Server 2019 (64-bit)</td><td>Linux, Debian GNU/Linux 12 (64-bit)</td></tr>
+  <tr><td>Size</td><td>2 vCPU, 4 GB, 40 GB thin disk</td><td>1 vCPU, 2 GB, 16 GB thin disk</td></tr>
+  <tr><td>CD/DVD</td><td>Datastore ISO File: <code>[datastore1] ISO/{{ win_iso or '&lt;Windows ISO&gt;' }}</code>, connected at power on</td><td>Datastore ISO File: <code>[datastore1] ISO/{{ lnx_iso or '&lt;Linux ISO&gt;' }}</code>, connected at power on</td></tr>
+  <tr><td>Address</td><td>static <code>{{ (lab_lan1_gateway.split('.'))[:3] | join('.') }}.42</code>, gateway {{ lab_lan1_gateway }}, DNS {{ lab_lan1_dns_ip }}</td><td>static <code>{{ (lab_lan1_gateway.split('.'))[:3] | join('.') }}.43</code>, same gateway and DNS</td></tr>
+</table>
+<ul>
+  <li><b>Windows:</b> install <i>Windows Server 2019 Standard Evaluation (Desktop Experience)</i> and set the Administrator password. Then <b>VM &gt; Guest OS &gt; Install VMware Tools</b> and run the installer inside the guest. Set the static address, and enable Remote Desktop.</li>
+  <li><b>Linux:</b> a minimal install with <i>SSH server</i> and <i>standard system utilities</i> is enough; note the root password. The netinst ISO fetches packages from the internet, through the lab gateway. Then install the VMware tools: <code>apt install open-vm-tools</code>.</li>
+  <li>Move needs <b>VMware Tools running</b> in each VM, and the guest credentials, to prepare them automatically. Create a file on each (a text file on the Windows desktop, <code>/root/before-move.txt</code> on Linux) so you can find it again after the migration.</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>2. Sign in to Prism first</h3>
+<p>Move signs in to Prism as <code>admin</code>, so do the <a href="#first-prism">first Prism sign-in</a> before this if you haven't: Community Edition only accepts the new admin password after that.</p>
+</div>
+
+<div class="step">
+<h3>3. Open Move</h3>
+{% if move_esx %}<p>Find Move's address in vCenter (VM <b>move</b> &gt; Summary &gt; IP addresses); it comes from the gateway's DHCP.</p>
+{% endif %}<p>Go to <code>{{ move_url or 'https://&lt;Move IP&gt;' }}</code> and accept the certificate warning. The first time, accept the license agreement, answer the Customer Experience Program screen, and set a password for the <code>nutanix</code> user.</p>
+</div>
+
+<div class="step">
+<h3>4. Add the source and the target</h3>
+<ul>
+  <li><b>+ Add Environment &gt; VMware ESXi</b>: name <code>{{ vcs[0] }}</code>, vCenter <code>{{ vc_fqdn }}</code>, user <code>administrator@vsphere.local</code>, the lab password. Move reads the inventory and lists the VMs.</li>
+  <li><b>+ Add Environment &gt; Nutanix AOS</b>: name <code>{{ nutanix_cluster_name }}</code>, Prism <code>{{ prism }}</code>, user <code>admin</code> and your Prism password.</li>
+</ul>
+</div>
+
+<div class="step">
+<h3>5. Create the migration plan</h3>
+<ol>
+  <li><b>+ Create a Migration Plan</b>, name it <code>vsphere-to-ahv</code>.</li>
+  <li>Source <b>{{ vcs[0] }}</b>; target <b>{{ nutanix_cluster_name }}</b> and a storage container (the default one, or <code>lab-vms</code> if you created it).</li>
+  <li>Select <b>win01</b> and <b>lnx01</b>. (<b>move</b> itself is listed too; leave it out.)</li>
+  <li>Network mapping: source <b>VM Network</b> to target <b>{{ lab_net or 'the subnet you created' }}</b>.</li>
+  <li>VM preparation: <b>Automatic</b>. Give each VM's guest credentials: <code>Administrator</code> for win01, <code>root</code> for lnx01. Move installs the VirtIO drivers in each guest and keeps their static addresses.</li>
+  <li><b>Save and Start</b>. Move takes a snapshot of each VM and copies its disks to AHV (<i>seeding</i>) while the VMs keep running in vSphere.</li>
+</ol>
+</div>
+
+<div class="step">
+<h3>6. Cut over</h3>
+<p>When the plan shows <b>Ready to Cutover</b>, select the VMs and choose <b>Cutover</b>. Move shuts each VM down in vSphere, copies the last changes, creates it on AHV and powers it on there.</p>
+<ul>
+  <li>In vCenter, win01 and lnx01 are now powered off and renamed with a Move suffix; in Prism (<b>VM &gt; Table</b>) they're running on AHV.</li>
+  <li>RDP to <code>{{ (lab_lan1_gateway.split('.'))[:3] | join('.') }}.42</code> and SSH to <code>{{ (lab_lan1_gateway.split('.'))[:3] | join('.') }}.43</code> again: same machines, same files, now on Nutanix.</li>
+  <li>Install Nutanix Guest Tools on them (next section, step 5) to finish the job.</li>
+</ul>
+</div>
+<p class="small">Things to try next: change a file between seeding and cutover to see the final sync pick it up; schedule a cutover; or move a VM back to ESXi with a plan in the other direction.</p>
+{% endif %}
 
 <h2>Next steps: get the cluster ready for workloads</h2>
 
@@ -159,6 +270,9 @@ ncli cluster add-to-ntp-servers servers={{ nutanix_ntp_servers or lab_lan1_gatew
   <li><b>Settings (gear) &gt; Network Configuration &gt; Create Subnet</b>: name <code>lab-net</code>, VLAN ID <code>0</code>.</li>
   <li>Optional: tick <b>Enable IP address management</b> to let AHV hand out IPs. If you do, use a range outside the gateway's DHCP pool (.150 to .200), for example .100 to .140.</li>
   <li>Or from a CVM: <code>acli net.create lab-net vlan=0</code></li>
+{% if lab_net %}
+  <li>LabBuilder already created <code>{{ lab_net }}</code> (VLAN 0, IP management on, pool {{ nutanix_lab_network_pool_start }} to {{ nutanix_lab_network_pool_end }}) for the VMs that Move migrates. You can use it for new VMs too.</li>
+{% endif %}
 </ul>
 </div>
 
