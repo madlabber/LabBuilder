@@ -3,7 +3,8 @@
 # ONTAP sim with SVM svm_vme for NFS and iSCSI, and the VMware source (vCenter, esx01 and lnx01).
 # The user then follows the lab guide: deploy the VME Manager on hvm01 (the Manager ISO is
 # attached there as a CD), create the HVM cluster and its datastores, add vc01 as a cloud, migrate lnx01.
-# Files in files/: HPE_HVM_Install_26.04_S6E64-11270.iso, HPE_Morpheus_Manager_SW_image_v9.1.0-3_S6E64-11330.iso.
+# Files in files/: HPE_HVM_Install_26.04_S6E64-11270.iso, HPE_Morpheus_Manager_SW_image_v9.1.0-3_S6E64-11330.iso,
+# ubuntu-24.04.3-live-server-amd64.iso (for lnx01).
 # About 210 GB of RAM, as lab_hpevme (the Manager VM, once deployed, runs inside hvm01).
 all:
   hosts:
@@ -140,12 +141,14 @@ all:
         stage2_wait: 14400            # 4 h: the Manager deploy and cluster take most of it
         stage2_vcenter: vc01
         stage2_esx_hosts: [esx01]
-        stage2_pip_extra: [paramiko, pycdlib, netaddr]
+        stage2_files:
+          - ubuntu-24.04.3-live-server-amd64.iso   # for lnx01
+        stage2_pip_extra: [paramiko, pycdlib, netaddr, passlib]   # passlib: the Ubuntu role's password_hash
         stage2_collections_extra: [community.general, ansible.utils, netapp.ontap]
         stage2_groups:
           # the VM to migrate, on esx01. Ubuntu rather than Windows: open-vm-tools and
           # qemu-guest-agent come with the install, and a nested Server 2019 VM's VMTools service
-          # wasn't registered (see the PR). The role downloads its ISO inside the lab.
+          # wasn't registered (see the PR).
           ubuntu:
             hosts:
               lnx01:
