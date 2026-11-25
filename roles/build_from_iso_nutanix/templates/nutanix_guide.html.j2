@@ -9,16 +9,15 @@
 {%- set vcs = groups.get('vcenter', []) -%}
 {%- set esxs = groups.get('esx', []) + groups.get('nestedesx', []) -%}
 {%- set vc_fqdn = (vcs[0] ~ '.' ~ lab_domain_name) if vcs else '' -%}
-{%- set move_ip = nutanix_move_ip if (nutanix_move_image | default('')) != '' else '' -%}
 {#- stage 2 (roles/stage2): LabBuilder runs again on an Ansible VM inside the lab -#}
 {%- set runners = groups.get('stage2', []) -%}
 {%- set s2 = hostvars[runners[0]] if runners else {} -%}
 {%- set move_ova = (s2.stage2_ovas | default([]) | selectattr('name', 'equalto', 'move') | list) -%}
-{%- set move_esx = ((s2.stage2_esx_hosts | default(['the ESXi host']))[0] if move_ova else '') if not move_ip else '' -%}
+{%- set move_esx = (s2.stage2_esx_hosts | default(['the ESXi host']))[0] if move_ova else '' -%}
 {%- set isos = s2.stage2_isos | default([]) -%}
 {%- set win_iso = (isos | select('search', '(?i)server|win') | list + [''])[0] -%}
 {%- set lnx_iso = (isos | select('search', '(?i)debian|ubuntu|rocky|alma|centos') | list + [''])[0] -%}
-{%- set move_url = 'https://' ~ move_ip if move_ip else ('https://&lt;address of the move VM&gt;' if move_esx else '') -%}
+{%- set move_url = 'https://&lt;address of the move VM&gt;' if move_esx else '' -%}
 {%- set lab_net = nutanix_lab_network | default('') -%}
 <!DOCTYPE html>
 <html lang="en">
@@ -95,9 +94,6 @@
 {% endfor %}
 {% if move_esx %}
   <tr><td>move</td><td>DHCP (.150 to .200)</td><td>Nutanix Move appliance (OVA) running <b>on {{ move_esx }}</b>, on the VMware side. Its address is in vCenter: VM <b>move</b> &gt; Summary.</td></tr>
-{% endif %}
-{% if move_ip %}
-  <tr><td>{{ nutanix_move_vm }}</td><td>{{ move_ip }}</td><td>Nutanix Move appliance, a VM on the AHV cluster{% if not (nutanix_create_cluster | bool) %} (deployed once you've created the cluster; see <a href="#move">Migrate a VM with Move</a>){% endif %}</td></tr>
 {% endif %}
 </table>
 
@@ -185,10 +181,8 @@ ncli cluster add-to-ntp-servers servers={{ nutanix_ntp_servers or lab_lan1_gatew
 <p>This lab has a small VMware environment next to the Nutanix cluster: vCenter <b>{{ vcs[0] }}</b> manages ESXi host <b>{{ esxs | join(', ') }}</b>. You build two small VMs on it, a Windows one and a Linux one, then <b>Nutanix Move</b> copies them to AHV while they keep running and switches them over with a short outage (the cutover).</p>
 {% if move_esx %}
 <div class="note"><b>Where Move runs:</b> this lab deploys the Move OVA on <b>{{ move_esx }}</b>, next to the VMs it migrates. The Move guide documents the OVA for ESXi-to-ESXi migrations and the qcow2 on the AHV cluster for migrations to AHV, so this layout isn't one Nutanix describes. Move 6.3.3 is also qualified with AOS 6.10, and this cluster runs AOS 6.8.1. If adding the cluster as a target fails, that's the first thing to look at. The OVA is also on this desktop as <code>C:\Software\Nutanix-Move.ova</code>, if you want to deploy Move yourself (vCenter: <b>Deploy OVF Template &gt; Local file</b>).</div>
-{% elif not move_ip %}
-<div class="note"><b>Move isn't deployed in this lab.</b> Put the Move qcow2 from the Nutanix Support Portal in LabBuilder's <code>files/</code> folder, set <code>nutanix_move_image</code> in the lab inventory, and run the lab build again. Installed machines are left as they are and only Move is added.</div>
-{% elif not (nutanix_create_cluster | bool) %}
-<div class="note"><b>First create the cluster</b> (above), then ask for the lab build to be run again. It leaves the installed machines alone and deploys Move on the new cluster at <code>{{ move_ip }}</code>.</div>
+{% else %}
+<div class="note"><b>Move isn't deployed in this lab.</b> Download the Move OVA from the Nutanix Support Portal and deploy it on <b>{{ esxs[0] }}</b> (vCenter: <b>Deploy OVF Template &gt; Local file</b>), or add it to <code>stage2_ovas</code> in the lab inventory and run the lab build again.</div>
 {% endif %}
 
 <div class="step">
