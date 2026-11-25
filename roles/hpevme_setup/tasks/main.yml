@@ -61,6 +61,30 @@
   delay: 30
   when: hpevme_create_cluster
 
+# HVM OS 26.04 ships Ceph 20.2.0-0ubuntu2 (on hold). Once HPE's update repo carried
+# 20.2.0-0ubuntu2.1, the Manager's (9.1.0-3) host provisioning hit an apt conflict (ceph
+# upgraded, ceph-mgr held) and the cluster failed. Pin Ceph to the version the host has.
+- name: Read the host's Ceph version
+  ansible.builtin.command: dpkg-query -W -f=${Version} ceph
+  register: hpevme_ceph_version
+  changed_when: false
+  failed_when: false
+  when: hpevme_pin_ceph and hpevme_create_cluster
+
+- name: Pin Ceph to the host's version ({{ hpevme_ceph_version.stdout | default('') }})
+  ansible.builtin.copy:
+    dest: /etc/apt/preferences.d/90-hpevme-ceph
+    content: |
+      # LabBuilder (hpevme_setup): keep Ceph at the version HVM OS ships
+      Package: ceph* libceph* librados* librbd* libradosstriper* python3-ceph* python3-rados* python3-rbd* radosgw* rbd-* libsqlite3-mod-ceph
+      Pin: version {{ hpevme_ceph_version.stdout }}
+      Pin-Priority: 1001
+    mode: "0644"
+  become: true
+  when:
+    - hpevme_pin_ceph and hpevme_create_cluster
+    - hpevme_ceph_version.rc | default(1) == 0
+
 - name: Read the host's iSCSI initiator name
   ansible.builtin.shell: sed -n 's/^InitiatorName=//p' /etc/iscsi/initiatorname.iscsi
   become: true

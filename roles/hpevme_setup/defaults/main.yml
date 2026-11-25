@@ -59,3 +59,4 @@ hpevme_create_cluster: true            # create the HVM cluster from the hosts, 
 hpevme_cluster_name: hvm-cluster
 hpevme_layout_match: "26.04"            # picks the cluster layout for the hosts' OS ("HVM 2.0 Cluster on HVM/Ubuntu 26.04")
 hpevme_repo_url: "https://update1.linux.hpe.com/repo/hpevme/"   # the hosts install cluster packages from here
+hpevme_pin_ceph: true                   # pin the hosts' Ceph to the version HVM OS ships (see tasks/main.yml)
