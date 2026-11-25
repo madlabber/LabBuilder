@@ -70,6 +70,8 @@
 
 # AlmaLinux 9's own Python is 3.9, too old for current pyVmomi, so stage 2 gets its own venv
 # (like LabBuilder's): Python 3.12 from AppStream with ansible-core, pyVmomi and the collections
+# Retried: the runner resolves names through the lab's DC, which now and then fails an outside
+# lookup (Galaxy, PyPI) soon after it's built.
 - name: Set up the runner's Ansible venv ({{ stage2_venv }})
   ansible.builtin.command:
     argv: ["ssh", "-i", "{{ stage2_key }}", "-p", "{{ stage2_ssh_port | string }}", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=no",
@@ -82,6 +84,10 @@
             {{ stage2_venv }}/bin/ansible-galaxy collection install --force 'community.vmware:{{ stage2_community_vmware }}'"]
   delegate_to: localhost
   changed_when: false
+  register: stage2_venv_setup
+  until: stage2_venv_setup is succeeded
+  retries: 5
+  delay: 30
 
 - name: Copy LabBuilder to the runner (no files/, vars/, inventories/ or .git)
   ansible.builtin.command:
