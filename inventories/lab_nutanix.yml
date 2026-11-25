@@ -65,6 +65,7 @@ all:
           ip_address:  192.168.0.51
           cvm_address: 192.168.0.61
       vars:
+        vm_memory_mb: 24576             # 24 GB node: the CVM takes 16 GB, leaving AHV about 1 GB for guest VMs
         nutanix_cluster_name: "ntnx-ce"
         nutanix_cluster_vip:  192.168.0.60
 
