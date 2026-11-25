@@ -48,6 +48,19 @@
   changed_when: "'formatted' in hpevme_disk.stdout"
   when: hpevme_local_datastore
 
+# The Manager provisions the cluster by having each host install packages (Ceph and the rest)
+# from HPE's repository. If a host can't reach it, the cluster ends up 'failed' with no message,
+# so wait until every host can.
+- name: Wait until the host can reach HPE's package repository
+  ansible.builtin.uri:
+    url: "{{ hpevme_repo_url }}"
+    timeout: 20
+  register: hpevme_repo
+  until: hpevme_repo is succeeded
+  retries: 20
+  delay: 30
+  when: hpevme_create_cluster
+
 - name: Read the host's iSCSI initiator name
   ansible.builtin.shell: sed -n 's/^InitiatorName=//p' /etc/iscsi/initiatorname.iscsi
   become: true
