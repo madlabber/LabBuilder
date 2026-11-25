@@ -1,0 +1,32 @@
+---
+# The node's answer file (arizona.cfg) on a small seed ISO, attached as the VM's second CD.
+# Every seed has the same volume UUID, which the unattended ISO's boot line looks for.
+- name: Write the node's answer file
+  ansible.builtin.template:
+    src: arizona.cfg.j2
+    dest: "{{ playbook_dir }}/files/{{ vm_name }}-arizona.cfg"
+    mode: "0644"
+  delegate_to: localhost
+
+- name: Make the node's seed ISO
+  ansible.builtin.shell: |
+    set -e
+    rm -f "{{ seed }}"
+    xorriso -outdev "{{ seed }}" -volid AZCONFIG \
+      -volume_date uuid {{ nutanix_az_volume_date }} \
+      -map "{{ playbook_dir }}/files/{{ vm_name }}-arizona.cfg" /arizona.cfg
+  vars:
+    seed: "{{ playbook_dir }}/files/{{ vm_name }}-arizona.iso"
+  delegate_to: localhost
+
+- name: Copy the seed ISO to the datastore
+  community.vmware.vsphere_copy:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    src: "{{ playbook_dir }}/files/{{ vm_name }}-arizona.iso"
+    datacenter: "{{ vcenter_datacenter }}"
+    datastore: "{{ iso_datastore }}"
+    path: "{{ vm_name }}-arizona.iso"
+  delegate_to: localhost
