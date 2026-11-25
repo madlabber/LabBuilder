@@ -70,6 +70,7 @@
   tasks:
   # Once, for the PTR records below. WIN32 9609: the zone exists, which is fine.
   # (exit 0: powershell -command exits 1 after any error, even a handled one)
+  # Retried: right after the DC is promoted, AD-integrated DNS may not take a new zone yet.
   - name: Add the reverse lookup zone via vm shell
     community.vmware.vmware_vm_shell:
       hostname: '{{ vcenter_address }}'
@@ -85,6 +86,10 @@
         catch { if ($_.FullyQualifiedErrorId -notmatch 'WIN32 9609') { throw } }; exit 0"
       wait_for_process: true
     delegate_to: localhost
+    retries: 10
+    delay: 30
+    register: zone_result
+    until: zone_result is succeeded
     ignore_errors: yes
     when:
       - lab_domain_controller|default("") != ""
