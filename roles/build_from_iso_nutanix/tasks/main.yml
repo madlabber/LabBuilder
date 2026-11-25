@@ -4,6 +4,29 @@
     msg: "build_from_iso_nutanix supports vCenter/ESXi targets only (pve_address is set)."
   when: pve_address|default('') != ''
 
+# The cluster steps talk to the CVMs through files/cvm_ssh.py, run by the Python that runs
+# Ansible. Check for paramiko now rather than after the nodes have been imaged.
+- name: Check that paramiko is installed for {{ ansible_playbook_python }}
+  ansible.builtin.command:
+    argv: ["{{ ansible_playbook_python }}", "-c", "import paramiko"]
+  delegate_to: localhost
+  run_once: true
+  changed_when: false
+  failed_when: false
+  register: nutanix_paramiko
+  when: state | default('present') != 'absent'
+
+- name: Stop if paramiko is missing
+  ansible.builtin.fail:
+    msg: >-
+      build_from_iso_nutanix needs the paramiko Python library for {{ ansible_playbook_python }}.
+      Install it with: {{ ansible_playbook_python }} -m pip install paramiko
+      (or run install-requirements.yml).
+  run_once: true
+  when:
+    - state | default('present') != 'absent'
+    - nutanix_paramiko.rc | default(0) != 0
+
 - name: build vm on VMware
   include_tasks: vmw_main.yml
   when:
