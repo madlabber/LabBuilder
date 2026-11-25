@@ -77,6 +77,8 @@ all:
           ip_address: 192.168.0.32
         hvm03:
           ip_address: 192.168.0.33
+      vars:
+          vm_memory_mb: 24576           # 24 GB: below HPE's 32 GB minimum, enough for a lab (hvm01 also runs the 12 GB Manager)
 
     # ONTAP 9.19.1 sim, one HA pair, built last and left unconfigured (hpevme_ontap below).
     vsims:
