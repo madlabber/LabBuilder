@@ -1,0 +1,70 @@
+---
+# The Manager VM, deployed with hvmcli on this host from the image on the Manager ISO,
+# which stage 1 attached to this host as a CD (hvm_extra_isos)
+- name: Mount the Manager ISO
+  ansible.builtin.shell: |
+    mkdir -p /mnt/hpevme
+    mountpoint -q /mnt/hpevme && exit 0
+    for d in /dev/sr*; do
+      mount -o ro "$d" /mnt/hpevme 2>/dev/null || continue
+      [ -f "/mnt/hpevme/{{ hpevme_manager_image }}" ] && exit 0
+      umount /mnt/hpevme
+    done
+    echo "no CD holds {{ hpevme_manager_image }}"; exit 1
+  become: true
+  changed_when: false
+
+- name: Check whether the Manager is already deployed
+  ansible.builtin.command: hvmcli deploy manager status --json
+  become: true
+  register: hpevme_status
+  changed_when: false
+  failed_when: false
+
+- name: Deploy the Manager VM
+  when: hpevme_status.rc != 0 or '"completed"' not in hpevme_status.stdout | lower
+  block:
+    - name: Precheck
+      ansible.builtin.command:
+        argv: [hvmcli, deploy, manager, precheck, --ip, "{{ hpevme_manager_ip }}", --interface, vs0,
+               --image, "/mnt/hpevme/{{ hpevme_manager_image }}", --size, "{{ hpevme_manager_size }}", --json]
+      become: true
+      changed_when: false
+
+    # --background returns at once; status and logs follow it
+    - name: Start the deploy
+      ansible.builtin.command:
+        argv: "{{ hpevme_deploy_args }}"
+        stdin: "{{ hpevme_admin_password }}"
+      become: true
+      no_log: true
+      vars:
+        hpevme_deploy_args: >-
+          {{ ['hvmcli', 'deploy', 'manager',
+              '--ip', hpevme_manager_ip, '--netmask', hpevme_manager_netmask, '--gateway', hpevme_manager_gateway,
+              '--hostname', hpevme_manager_hostname, '--interface', 'vs0',
+              '--image', '/mnt/hpevme/' ~ hpevme_manager_image, '--size', hpevme_manager_size,
+              '--admin-user', hpevme_admin_user, '--admin-password-stdin',
+              '--dns', hpevme_manager_dns, '--search-domain', hpevme_manager_domain,
+              '--appliance-url', 'https://' ~ hpevme_manager_hostname ~ '.' ~ hpevme_manager_domain]
+             + (['--ntp', hpevme_manager_ntp] if hpevme_manager_ntp else [])
+             + ['--background', '--json'] }}
+
+- name: Wait for the deploy to finish
+  ansible.builtin.command: hvmcli deploy manager status --json
+  become: true
+  register: hpevme_status
+  until: >-
+    hpevme_status.rc == 0 and
+    (((hpevme_status.stdout | from_json).data | default(hpevme_status.stdout | from_json)).status | default('') | lower)
+    in ['completed', 'complete', 'succeeded', 'success', 'failed', 'error']
+  retries: "{{ (hpevme_manager_wait | int / 30) | int }}"
+  delay: 30
+  changed_when: false
+
+- name: Deploy result
+  ansible.builtin.debug:
+    msg: "{{ hpevme_status.stdout | from_json }}"
+  failed_when: >-
+    (((hpevme_status.stdout | from_json).data | default(hpevme_status.stdout | from_json)).status | default('') | lower)
+    in ['failed', 'error']

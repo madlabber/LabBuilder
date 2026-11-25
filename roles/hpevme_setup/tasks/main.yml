@@ -1,0 +1,114 @@
+---
+# Runs on each HVM host (SSH as the install user, see the stage 2 blueprint)
+
+- name: Wait for the host's unattended install and first boot
+  ansible.builtin.wait_for_connection:
+    timeout: "{{ hpevme_wait }}"
+    sleep: 30
+
+# HPE's first-boot commands install hvmcli and create vs0, then reboot once more
+# (vs0 is the virtSwitch name; its Linux bridge is hvmbr0)
+- name: Wait for hvmcli and the vs0 virtSwitch
+  ansible.builtin.shell: hvmcli virtswitch list | grep -qw vs0
+  become: true
+  register: hpevme_ready
+  until: hpevme_ready.rc == 0
+  retries: 60
+  delay: 30
+  changed_when: false
+
+# The Manager runs sudo over SSH as this user and parses the output as JSON. Ubuntu 26.04's
+# sudo-rs echoes '********' at the password prompt, which breaks that, so the host is dropped.
+- name: Passwordless sudo for {{ ansible_user }} (the Manager's SSH user)
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/90-hpevme
+    content: "{{ ansible_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    mode: "0440"
+    validate: visudo -cf %s
+  become: true
+
+# The host's empty data disk (build_from_iso_hvm's data_disk_gb) becomes the cluster's local
+# datastore, so the cluster doesn't need ONTAP
+- name: Format and mount the data disk at {{ hpevme_local_path }}
+  ansible.builtin.shell: |
+    set -e
+    if ! findmnt -rn {{ hpevme_local_path }} >/dev/null; then
+      # the one whole disk with no partitions and no filesystem
+      dev=$(lsblk -dnpo NAME,TYPE | awk '$2=="disk"{print $1}' | while read d; do
+              [ "$(lsblk -no NAME "$d" | wc -l)" = 1 ] && [ -z "$(lsblk -dno FSTYPE "$d")" ] && echo "$d"; done | head -1)
+      [ -n "$dev" ] || { echo "no empty data disk"; exit 1; }
+      mkfs.ext4 -q -L hvmlocal "$dev"
+      mkdir -p {{ hpevme_local_path }}
+      grep -q 'LABEL=hvmlocal' /etc/fstab || echo 'LABEL=hvmlocal {{ hpevme_local_path }} ext4 defaults,nofail 0 2' >> /etc/fstab
+      mount {{ hpevme_local_path }}
+      echo formatted "$dev"
+    fi
+  become: true
+  register: hpevme_disk
+  changed_when: "'formatted' in hpevme_disk.stdout"
+  when: hpevme_local_datastore
+
+# The Manager provisions the cluster by having each host install packages (Ceph and the rest)
+# from HPE's repository. If a host can't reach it, the cluster ends up 'failed' with no message,
+# so wait until every host can.
+- name: Wait until the host can reach HPE's package repository
+  ansible.builtin.uri:
+    url: "{{ hpevme_repo_url }}"
+    timeout: 20
+  register: hpevme_repo
+  until: hpevme_repo is succeeded
+  retries: 20
+  delay: 30
+  when: hpevme_create_cluster
+
+# HVM OS 26.04 ships Ceph 20.2.0-0ubuntu2 (on hold). Once HPE's update repo carried
+# 20.2.0-0ubuntu2.1, the Manager's (9.1.0-3) host provisioning hit an apt conflict (ceph
+# upgraded, ceph-mgr held) and the cluster failed. Pin Ceph to the version the host has.
+- name: Read the host's Ceph version
+  ansible.builtin.command: dpkg-query -W -f=${Version} ceph
+  register: hpevme_ceph_version
+  changed_when: false
+  failed_when: false
+  when: hpevme_pin_ceph and hpevme_create_cluster
+
+- name: Pin Ceph to the host's version ({{ hpevme_ceph_version.stdout | default('') }})
+  ansible.builtin.copy:
+    dest: /etc/apt/preferences.d/90-hpevme-ceph
+    content: |
+      # LabBuilder (hpevme_setup): keep Ceph at the version HVM OS ships
+      Package: ceph* libceph* librados* librbd* libradosstriper* python3-ceph* python3-rados* python3-rbd* radosgw* rbd-* libsqlite3-mod-ceph
+      Pin: version {{ hpevme_ceph_version.stdout }}
+      Pin-Priority: 1001
+    mode: "0644"
+  become: true
+  when:
+    - hpevme_pin_ceph and hpevme_create_cluster
+    - hpevme_ceph_version.rc | default(1) == 0
+
+- name: Read the host's iSCSI initiator name
+  ansible.builtin.shell: sed -n 's/^InitiatorName=//p' /etc/iscsi/initiatorname.iscsi
+  become: true
+  register: hpevme_iqn
+  changed_when: false
+
+- name: ONTAP storage (NFS and iSCSI)
+  include_tasks: ontap.yml
+  when: hpevme_ontap
+  args:
+    apply:
+      run_once: true
+      delegate_to: localhost
+
+- name: Manager VM on the first host
+  include_tasks: manager.yml
+  when:
+    - hpevme_manager
+    - inventory_hostname == ansible_play_hosts_all[0]
+
+- name: Manager setup (API)
+  include_tasks: manager_api.yml
+  when: hpevme_manager and hpevme_setup_manager
+  args:
+    apply:
+      run_once: true
+      delegate_to: localhost

@@ -1,0 +1,242 @@
+# HPE VM Essentials demo, built end to end: three HVM OS 26.04 hosts (hvm01-03) installed
+# unattended, a 2-node ONTAP sim for NFS and iSCSI, and a VMware source to migrate from
+# (vCenter 8.0 U3 with one ESXi 8.0 U3 host running a small Ubuntu 24.04 VM, lnx01).
+# Stage 2 runs on an Ansible VM inside the lab: it sets up vc01 and builds lnx01, deploys the
+# VME Manager on hvm01, and creates the HVM cluster on the hosts' local data disks. The ONTAP sim
+# is left unconfigured (hpevme_ontap: true would add an SVM and an NFS datastore).
+# The user migrates lnx01 from vCenter to the HVM cluster in the Manager.
+# Files in files/: HPE_HVM_Install_26.04_S6E64-11270.iso, HPE_Morpheus_Manager_SW_image_v9.1.0-3_S6E64-11330.iso,
+# ubuntu-24.04.3-live-server-amd64.iso (for lnx01).
+# About 210 GB of RAM: the HVM hosts 3 x 48 GB, vCenter 14, ESXi 16, the ONTAP sim and the rest.
+all:
+  hosts:
+  vars:
+    lab_name: lab_hpevme
+    lab_prefix: "{{ lab_name }}_"
+    lab_password: "{{ default_lab_password }}"
+    lab_vm_datastore: "{{ lab_name }}"
+    lab_wan_portgroup: "{{ vm_network }}"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.21"
+    lab_domain_name:   "lab.test"
+    lab_domain_controller: "dc01"
+  children:
+    pfsense:
+      hosts:
+        gateway:
+          ip_address: 192.168.0.1
+          interfaces:
+            wan: "{{lab_wan_portgroup}}"
+            lan: "{{lab_lan1_portgroup}}"
+          lan:
+            address:      192.168.0.1
+            netmask_cidr: 24
+            domain:       "{{lab_domain_name}}"
+            dns_server:   192.168.0.21
+            dhcp_start:   192.168.0.150
+            dhcp_end:     192.168.0.200
+          # rdp_jumphost replaces nat_rules, so RDP is listed here instead
+          rdp_jumphost: ""
+          nat_rules:
+            - name: "RDP to desktop"
+              external_port: "3389"
+              internal_port: "3389"
+              protocol: "tcp"
+              target_ip: 192.168.0.20
+            - name: "SSH to the Ansible VM (LabBuilder runs stage 2 through this)"
+              external_port: "2223"
+              internal_port: "22"
+              protocol: "tcp"
+              target_ip: 192.168.0.22
+
+    dc:
+      hosts:
+        dc01:
+          version: "Server2025eval"
+          ip_address: 192.168.0.21
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+          extra_commands:
+            - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
+
+    # HPE VM Essentials hosts: HVM OS 26.04, 8 vCPU in one socket (the eval license counts
+    # sockets), 48 GB, 100 GB OS disk + 200 GB disk left for local VM storage, two NICs.
+    # hvm01 also gets the Manager ISO as a CD, and runs the Manager VM (vme, .30).
+    hvm:
+      hosts:
+        hvm01:
+          ip_address: 192.168.0.31
+          # the Manager's appliance URL (https://vme.lab.test): the hosts' agents download from it
+          extra_dns_records: [ { name: vme, ip: 192.168.0.30 } ]
+          hvm_extra_isos:
+            - HPE_Morpheus_Manager_SW_image_v9.1.0-3_S6E64-11330.iso
+        hvm02:
+          ip_address: 192.168.0.32
+        hvm03:
+          ip_address: 192.168.0.33
+      vars:
+          vm_memory_mb: 24576           # 24 GB: below HPE's 32 GB minimum, enough for a lab (hvm01 also runs the 12 GB Manager)
+
+    # ONTAP 9.19.1 sim, one HA pair, built last and left unconfigured (hpevme_ontap below).
+    vsims:
+      hosts:
+        cluster1-01:
+          partner:         "cluster1-02"
+          cluster_name:    "cluster1"
+          cluster_mgmt_ip: 192.168.0.90
+          ip_address:      192.168.0.91
+          partner_ip:      192.168.0.92
+          # DNS for the cluster address and the partner node, which aren't inventory hosts
+          extra_dns_records: [ { name: cluster1, ip: 192.168.0.90 }, { name: cluster1-02, ip: 192.168.0.92 } ]
+      vars:
+          ovf_version:  "9.19.1"
+          disk_model: "vscsi"
+          shelf0_disk_size: 8192
+          shelf0_disk_count: 12
+          shelf1_disk_size: 8192
+          shelf1_disk_count: 12
+          fake_ssd_disk_size: 8192
+          adp_enabled: "true"
+
+    # Migration source: vCenter 8.0 U3 with one ESXi 8.0 U3 host. Stage 2 sets them up and
+    # builds lnx01 on esx01.
+    vcenter:
+      hosts:
+        vc01:
+          ip_address: 192.168.0.40
+          vm_fqdn: "vc01.{{lab_domain_name}}"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
+
+    esx:
+      hosts:
+        esx01:
+          ip_address: 192.168.0.41
+          extra_dns_records: [ { name: lnx01, ip: 192.168.0.42 } ]   # built on esx01 by stage 2
+      vars:
+          install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
+          vm_num_cpus: 4
+          vm_memory_mb: 16384
+          create_local_vmfs: 'False'   # ESXi 8 keeps its boot disk; datastore1 goes on the data disk
+          disks:
+            - { size_gb: 64,  controller_type: paravirtual, controller_number: 0, unit_number: 0, type: thin }   # ESXi
+            - { size_gb: 200, controller_type: paravirtual, controller_number: 0, unit_number: 1, type: thin }   # datastore1
+          enable_ssh: 'True'
+
+    # Ansible VM inside the lab: the stage 2 runner
+    centos:
+      hosts:
+        ansible:
+          ip_address: 192.168.0.22
+          distro: "alma"
+          version: "9"
+          install_ansible: true
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
+          vm_disk_gb: 80
+
+    # Stage 2: LabBuilder runs again on the Ansible VM, inside the lab (roles/stage2)
+    stage2:
+      hosts:
+        ansible:
+      vars:
+        stage2_wait: 14400            # 4 h: the Manager deploy and cluster take most of it
+        stage2_vcenter: vc01
+        stage2_esx_hosts: [esx01]
+        stage2_files:
+          - ubuntu-24.04.3-live-server-amd64.iso   # for lnx01
+        stage2_pip_extra: [paramiko, pycdlib, netaddr, passlib]   # passlib: the Ubuntu role's password_hash
+        stage2_collections_extra: [community.general, ansible.utils, netapp.ontap]
+        stage2_groups:
+          # the VM to migrate, on esx01. Ubuntu rather than Windows: open-vm-tools and
+          # qemu-guest-agent come with the install, and a nested Server 2019 VM's VMTools service
+          # wasn't registered (see the PR).
+          ubuntu:
+            hosts:
+              lnx01:
+                version: "24.04"
+                ip_address: 192.168.0.42
+                vm_memory_mb: 2048
+                vm_num_cpus: 2
+                vm_disk_gb: 20
+          # the HVM hosts, for roles/hpevme_setup
+          hpevme:
+            hosts:
+              hvm01: { ansible_host: 192.168.0.31 }
+              hvm02: { ansible_host: 192.168.0.32 }
+              hvm03: { ansible_host: 192.168.0.33 }
+            vars:
+              ansible_connection: paramiko
+              ansible_user: hvmadmin
+              ansible_password: !unsafe "{{ default_lab_password }}"
+              ansible_become_password: !unsafe "{{ default_lab_password }}"
+              ansible_host_key_checking: false
+              ansible_python_interpreter: /usr/bin/python3
+              # ONTAP: the sim is built but left unconfigured; the cluster uses the hosts' data disks.
+              # true sets up SVM svm_vme (NFS .95, iSCSI .96/.97) and adds the NFS datastore.
+              hpevme_ontap: false
+              hpevme_ontap_address: 192.168.0.90
+              hpevme_ontap_password: !unsafe "{{ default_lab_password }}"
+              hpevme_ontap_nodes: [cluster1-01, cluster1-02]
+              hpevme_netmask: 255.255.255.0
+              hpevme_client_match: 192.168.0.0/24
+              hpevme_nfs_lif: 192.168.0.95
+              hpevme_iscsi_lifs: [192.168.0.96, 192.168.0.97]
+              # Manager VM on hvm01
+              hpevme_manager_ip: 192.168.0.30
+              hpevme_manager_hostname: vme
+              hpevme_manager_netmask: 255.255.255.0
+              hpevme_manager_gateway: 192.168.0.1
+              hpevme_manager_dns: 192.168.0.21
+              hpevme_manager_domain: lab.test
+              hpevme_manager_ntp: 192.168.0.1
+              hpevme_admin_password: !unsafe "{{ default_lab_password }}"
+              # the lab's vCenter, added as a cloud for the migration
+              hpevme_vcenter_address: 192.168.0.40
+              hpevme_vcenter_password: !unsafe "{{ default_lab_password }}"
+
+    winservers:
+      hosts:
+        desktop:
+          version: "Server2025eval"
+          ip_address: 192.168.0.20
+          join_domain: true
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+            - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
+          extra_commands:
+            # PuTTY: wait for the install to finish, and find the MSI by pattern
+            - |
+              Start-Sleep 60   # let Windows settle after the domain-join reboot
+              $msi = (Get-Item E:\files\putty*.msi).FullName
+              Start-Process msiexec.exe -Wait -ArgumentList "/i $msi /qn /l*v C:\putty-install.log"
+            - Start-Process msiexec.exe -Wait -ArgumentList '/i E:\files\googlechromestandaloneenterprise64.msi /qn /l*v C:\chrome-install.log'
+
+            # PuTTY sessions for every user: saved once to a .reg file, which Windows
+            # imports now and again each time any user signs in
+            - |
+              $sessions = [ordered]@{
+                'hvm01' = '192.168.0.31'
+                'hvm02' = '192.168.0.32'
+                'hvm03' = '192.168.0.33'
+                'vme'   = '192.168.0.30'
+                'ontap' = '192.168.0.90'
+                'vc01'  = '192.168.0.40'
+                'esx01' = '192.168.0.41'
+                'ansible' = '192.168.0.22'
+              }
+              $reg = "Windows Registry Editor Version 5.00`r`n"
+              foreach ($name in $sessions.Keys) {
+                $reg += "`r`n[HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions\$name]`r`n"
+                $reg += "`"HostName`"=`"$($sessions[$name])`"`r`n"
+                $reg += "`"PortNumber`"=dword:00000016`r`n"   # 0x16 = port 22
+                $reg += "`"Protocol`"=`"ssh`"`r`n"
+              }
+              Set-Content -Path C:\ProgramData\putty-sessions.reg -Value $reg -Encoding Unicode
+              New-ItemProperty -Path HKLM:\Software\Microsoft\Windows\CurrentVersion\Run -Name PuTTYSessions `
+                -Value 'reg.exe import C:\ProgramData\putty-sessions.reg' -Force | Out-Null
+              reg.exe import C:\ProgramData\putty-sessions.reg

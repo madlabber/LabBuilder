@@ -68,6 +68,61 @@
     - "{{ mainvars }}"
     - "{{ credentials }}"
   tasks:
+  # Once, for the PTR records below. WIN32 9609: the zone exists, which is fine.
+  # (exit 0: powershell -command exits 1 after any error, even a handled one)
+  # Retried: right after the DC is promoted, AD-integrated DNS may not take a new zone yet.
+  - name: Add the reverse lookup zone via vm shell
+    community.vmware.vmware_vm_shell:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'
+      validate_certs: no
+      vm_username: ".\\Administrator"
+      vm_password: "{{lab_password}}"
+      vm_id: "{{lab_prefix | default('')}}{{lab_domain_controller}}"
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: >-
+        -command "try { Add-DnsServerPrimaryZone -NetworkId {{ (lab_lan1_gateway ~ '/' ~ lab_lan1_netmask_cidr) | ansible.utils.ipaddr('network/prefix') }} -ReplicationScope Domain -ErrorAction Stop }
+        catch { if ($_.FullyQualifiedErrorId -notmatch 'WIN32 9609') { throw } }; exit 0"
+      wait_for_process: true
+    delegate_to: localhost
+    retries: 10
+    delay: 30
+    register: zone_result
+    until: zone_result is succeeded
+    ignore_errors: yes
+    when:
+      - lab_domain_controller|default("") != ""
+      - inventory_hostname == ansible_play_hosts_all[0]
+
+  # Once: send outside lookups to the lab gateway's resolver. Recursing from root hints, the
+  # DC's DNS returns SERVFAIL for some names (galaxy.ansible.com, github.com) that the gateway
+  # resolves, which broke stage 2's collection install.
+  - name: Forward the DC's outside lookups to the lab gateway via vm shell
+    community.vmware.vmware_vm_shell:
+      hostname: '{{ vcenter_address }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'
+      validate_certs: no
+      vm_username: ".\\Administrator"
+      vm_password: "{{lab_password}}"
+      vm_id: "{{lab_prefix | default('')}}{{lab_domain_controller}}"
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: >-
+        -command "Set-DnsServerForwarder -IPAddress {{ lab_lan1_gateway }} -UseRootHint $true -ErrorAction Stop; Clear-DnsServerCache -Force"
+      wait_for_process: true
+    delegate_to: localhost
+    retries: 5
+    delay: 30
+    register: forwarder_result
+    until: forwarder_result is succeeded
+    ignore_errors: yes
+    when:
+      - lab_domain_controller|default("") != ""
+      - inventory_hostname == ansible_play_hosts_all[0]
+
+  # A and PTR records. The A record is replaced, so a rerun also adds a missing PTR.
+  # WIN32 9715: the A record was added but the PTR exists, which is fine.
   - name: Add DNS record via vm shell
     community.vmware.vmware_vm_shell:
       hostname: '{{ vcenter_address }}'
@@ -78,7 +133,10 @@
       vm_password: "{{lab_password}}"
       vm_id: "{{lab_prefix | default('')}}{{lab_domain_controller}}"
       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: " -command \"({{item}})\""
+      vm_shell_args: >-
+        -command "Remove-DnsServerResourceRecord -ZoneName {{lab_domain_name}} -RRType A -Name {{ item.name }} -Force -ErrorAction SilentlyContinue;
+        try { Add-DnsServerResourceRecordA -Name {{ item.name }} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{ item.ip }} -CreatePtr -TimeToLive 01:00:00 -ErrorAction Stop }
+        catch { if ($_.FullyQualifiedErrorId -notmatch 'WIN32 9715') { throw } }; exit 0"
       wait_for_process: true
     delegate_to: localhost
     retries: 3
@@ -86,9 +144,12 @@
     register: result
     until: result is succeeded
     ignore_errors: yes
-    loop:
-      - "Add-DnsServerResourceRecordA -Name {{inventory_hostname}} -ZoneName {{lab_domain_name}} -AllowUpdateAny -IPv4Address {{ip_address}} -TimeToLive 01:00:00"
-    when: lab_domain_controller|default("") != ""
+    # this host, plus optional records for machines that aren't inventory hosts, e.g. a VM nested
+    # on this host: extra_dns_records: [ { name: vme, ip: 192.168.0.30 } ]
+    loop: "{{ [{'name': inventory_hostname, 'ip': ip_address}] + extra_dns_records | default([]) }}"
+    loop_control:
+      label: "{{ item.name }} {{ item.ip }}"
+    when: lab_domain_controller|default("") != "" and ip_address is defined
 
 # Nutanix runs before the Windows servers: it writes the lab guide that a
 # Windows VM can pick up through extra_files (see inventories/lab_nutanix.yml)
@@ -131,6 +192,22 @@
         nutanix_admin_password: "{{lab_password}}"
         nutanix_lab_domain:     "{{lab_domain_name}}"
         nutanix_lan_prefix_len: "{{lab_lan1_netmask_cidr}}"
+
+# Prepare a freshly deployed vCenter: datacenter, cluster, ESXi hosts, datastore, installer ISOs
+# (roles/vsphere_prep). Used by stage 2 blueprints, which run inside a lab against its own vCenter.
+# Reads vcenter_* and esxi_* from mainvars; the ISOs to upload are `isos` (host var or -e).
+# Before the Windows servers, so a stage 2 blueprint can build Windows VMs in that vCenter.
+- name: Prepare vSphere
+  hosts: vsphere_prep
+  gather_facts: false
+  vars_files:
+    - defaults/main.yml
+    - "{{ mainvars }}"
+    - "{{ credentials }}"
+  tasks:
+    - include_role:
+        name: vsphere_prep
+      when: state | default('present') != 'absent'
 
 # Build Windows Server VMs
 - name: Build Windows Servers
@@ -207,6 +284,29 @@
         # vm_username: 'root'
         vm_password: '{{lab_password}}'
 
+# HPE VM Essentials hosts (HVM OS 26.04), installed unattended from HPE's ISO. Stage 2 sets up
+# the rest from inside the lab (roles/hpevme_setup).
+- name: Build HPE VM Essentials hosts
+  hosts: hvm
+  gather_facts: false
+  vars_files:
+    - defaults/main.yml
+    - "{{ mainvars }}"
+    - "{{ credentials }}"
+  roles:
+    - role: build_from_iso_hvm
+      vars:
+        vm_name:         "{{lab_prefix | default('')}}{{inventory_hostname}}"
+        vm_hostname:     "{{inventory_hostname}}"
+        vm_network:      "{{lab_lan1_portgroup}}"
+        vm_datastore:    "{{lab_vm_datastore}}"
+        host_address:    "{{ip_address}}"
+        vm_netmask_cidr: "{{lab_lan1_netmask_cidr}}"
+        vm_gateway:      "{{lab_lan1_gateway}}"
+        vm_dns_server:   "{{lab_lan1_dns_ip}}"
+        vm_domain:       "{{lab_domain_name}}"
+        hvm_password:    "{{lab_password}}"
+
 # Build ESXi Server(s)
 - name: Build Nested ESXi from OVA
   hosts: nestedesx
@@ -234,21 +334,6 @@
         ovf_password: "{{lab_password}}"
         ovf_ssh:      "{{enable_ssh|string}}"
         ovf_createvmfs: "{{create_local_vmfs|string}}"
-
-# Prepare a freshly deployed vCenter: datacenter, cluster, ESXi hosts, datastore, installer ISOs
-# (roles/vsphere_prep). Used by stage 2 blueprints, which run inside a lab against its own vCenter.
-# Reads vcenter_* and esxi_* from mainvars; the ISOs to upload are `isos` (host var or -e).
-- name: Prepare vSphere
-  hosts: vsphere_prep
-  gather_facts: false
-  vars_files:
-    - defaults/main.yml
-    - "{{ mainvars }}"
-    - "{{ credentials }}"
-  tasks:
-    - include_role:
-        name: vsphere_prep
-      when: state | default('present') != 'absent'
 
 - name: Build Centos VMs
   hosts: centos
@@ -581,6 +666,21 @@
     until: result is succeeded
     when: #only run on VMware
       - pve_address|default('') == ''
+
+# HPE VM Essentials setup, run by stage 2 inside the lab, where the HVM hosts and the ONTAP sim
+# are reachable: ONTAP storage, the Manager VM, its first-time setup and the HVM cluster.
+# The stage 2 blueprint puts the hosts in group hpevme with these settings (roles/hpevme_setup).
+- name: Set up HPE VM Essentials
+  hosts: hpevme
+  gather_facts: false
+  vars_files:
+    - defaults/main.yml
+    - "{{ mainvars }}"
+    - "{{ credentials }}"
+  tasks:
+    - include_role:
+        name: hpevme_setup
+      when: state | default('present') != 'absent'
 
 # Stage 2: LabBuilder runs again on the lab's Ansible VM, inside the pod, with a blueprint and vars
 # file generated for the lab's own vCenter (roles/stage2). The gateway forwards stage2_ssh_port to it.
