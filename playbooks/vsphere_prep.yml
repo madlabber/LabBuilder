@@ -1,0 +1,163 @@
+---
+# Prepares a freshly deployed vCenter: creates the datacenter and cluster, adds the ESXi hosts,
+# creates a datastore on the first host and uploads installer ISOs to it. Runs for hosts in the
+# vsphere_prep group, which stage 2 blueprints (roles/stage2) generate for a lab's own vCenter.
+# main.yml imports it, or run it on its own:
+#   ansible-playbook playbooks/vsphere_prep.yml -i <inventory> -e mainvars=vars/<config>.yml
+#
+# Configuration: the usual LabBuilder variables, with no copies of its own: vcenter_address,
+# vcenter_username, vcenter_password, vcenter_datacenter, vcenter_cluster, esxi_username and
+# esxi_password from the mainvars file, and lab_vm_datastore from the lab inventory.
+#   esx_hosts:  FQDNs of the ESXi hosts to add. vmware.vmware.esxi_host reads each host's
+#               certificate thumbprint by connecting to it, so run this where the hosts are
+#               reachable (stage 2 runs inside the lab).
+#   isos:       installer ISOs (files in files/) uploaded to [lab_vm_datastore] ISO/ with a
+#               2-hour timeout; ISOs already there are left alone. Set it on the host in the
+#               inventory or pass it as an extra var: -e '{"isos": ["debian-12.11.0-amd64-netinst.iso"]}'
+#   vsphere_prep_wait: seconds to wait for a vCenter still in its first boot (default 5400).
+# These are host vars, so they get defaults in the tasks: play vars would override the inventory.
+# Datastore: ESXi 8 keeps its whole boot disk for itself (OSData), so give the first host a
+# separate data disk (create_local_vmfs: 'False'). Its largest disk becomes lab_vm_datastore
+# (VMFS 6), unless the host already has that datastore. Make the data disk bigger to give users more room.
+#
+# This file lives in playbooks/, so paths are taken from lab_root (the LabBuilder folder) rather
+# than playbook_dir. mainvars and credentials are looked up in vars/ and then in lab_root, the same
+# places the playbooks in the top folder find them.
+- name: Prepare vSphere
+  hosts: vsphere_prep
+  gather_facts: false
+  vars:
+    lab_root: "{{ playbook_dir | dirname }}"
+  vars_files:
+    - ../defaults/main.yml
+    - "{{ lookup('ansible.builtin.first_found', files=[mainvars], paths=[lab_root ~ '/vars', lab_root]) }}"
+    - "{{ lookup('ansible.builtin.first_found', files=[credentials], paths=[lab_root ~ '/vars', lab_root]) }}"
+  tasks:
+    - name: Prepare vSphere
+      when: state | default('present') != 'absent'
+      block:
+        - name: Wait for the vCenter API ({{ vcenter_address }})
+          community.vmware.vmware_about_info:
+            hostname: "{{ vcenter_address }}"
+            username: "{{ vcenter_username }}"
+            password: "{{ vcenter_password }}"
+            validate_certs: no
+          delegate_to: localhost
+          register: vsphere_prep_about
+          until: vsphere_prep_about is succeeded
+          retries: "{{ (vsphere_prep_wait | default(5400) | int / 60) | int }}"
+          delay: 60
+
+        - name: Create the datacenter
+          community.vmware.vmware_datacenter:
+            hostname: "{{ vcenter_address }}"
+            username: "{{ vcenter_username }}"
+            password: "{{ vcenter_password }}"
+            validate_certs: no
+            datacenter_name: "{{ vcenter_datacenter }}"
+            state: present
+          delegate_to: localhost
+
+        - name: Create the cluster
+          vmware.vmware.cluster:            # community.vmware.vmware_cluster was removed in community.vmware 6.0
+            hostname: "{{ vcenter_address }}"
+            username: "{{ vcenter_username }}"
+            password: "{{ vcenter_password }}"
+            validate_certs: no
+            datacenter: "{{ vcenter_datacenter }}"
+            cluster: "{{ vcenter_cluster }}"
+          delegate_to: localhost
+
+        - name: Add the ESXi hosts
+          vmware.vmware.esxi_host:          # community.vmware.vmware_host is removed in community.vmware 7.0
+            hostname: "{{ vcenter_address }}"
+            username: "{{ vcenter_username }}"
+            password: "{{ vcenter_password }}"
+            validate_certs: no
+            datacenter: "{{ vcenter_datacenter }}"
+            cluster: "{{ vcenter_cluster }}"
+            esxi_host_name: "{{ item }}"
+            esxi_username: "{{ esxi_username }}"
+            esxi_password: "{{ esxi_password }}"
+            state: present
+          loop: "{{ esx_hosts | default([]) }}"
+          delegate_to: localhost
+          register: vsphere_prep_add_host
+          until: vsphere_prep_add_host is succeeded
+          retries: 20          # a host may still be finishing its install
+          delay: 30
+
+        # ESXi 8 keeps its whole boot disk for itself, so the first host gets lab_vm_datastore on its
+        # largest disk (the lab's separate data disk), unless it already has it
+        - name: List the first host's disks
+          community.vmware.vmware_host_disk_info:
+            hostname: "{{ vcenter_address }}"
+            username: "{{ vcenter_username }}"
+            password: "{{ vcenter_password }}"
+            validate_certs: no
+            esxi_hostname: "{{ esx_hosts[0] }}"
+          delegate_to: localhost
+          register: vsphere_prep_disks
+          when: esx_hosts | default([]) | length > 0
+
+        - name: Create {{ lab_vm_datastore }} on the first host
+          community.vmware.vmware_host_datastore:
+            hostname: "{{ vcenter_address }}"
+            username: "{{ vcenter_username }}"
+            password: "{{ vcenter_password }}"
+            validate_certs: no
+            esxi_hostname: "{{ esx_hosts[0] }}"
+            datastore_name: "{{ lab_vm_datastore }}"
+            datastore_type: vmfs
+            vmfs_device_name: "{{ (vsphere_prep_disks.hosts_disk_info[esx_hosts[0]] | sort(attribute='capacity_mb') | last).canonical_name }}"
+            vmfs_version: 6
+            state: present
+          delegate_to: localhost
+          when: esx_hosts | default([]) | length > 0
+
+        # Installer ISOs for users to build their own VMs from in the lab vCenter
+        # (New Virtual Machine > CD/DVD > Datastore ISO File)
+        - name: Create the ISO folder on the lab datastore
+          community.vmware.vsphere_file:
+            hostname: "{{ vcenter_address }}"
+            username: "{{ vcenter_username }}"
+            password: "{{ vcenter_password }}"
+            validate_certs: no
+            datacenter: "{{ vcenter_datacenter }}"
+            datastore: "{{ lab_vm_datastore }}"
+            path: ISO
+            state: directory
+          delegate_to: localhost
+          when: isos | default([]) | length > 0
+
+        - name: Check for the ISOs on the lab datastore
+          community.vmware.vsphere_file:
+            hostname: "{{ vcenter_address }}"
+            username: "{{ vcenter_username }}"
+            password: "{{ vcenter_password }}"
+            validate_certs: no
+            datacenter: "{{ vcenter_datacenter }}"
+            datastore: "{{ lab_vm_datastore }}"
+            path: "ISO/{{ item }}"
+            state: file
+          delegate_to: localhost
+          register: vsphere_prep_iso_present
+          ignore_errors: true          # "not found" is the normal first-build answer
+          loop: "{{ isos | default([]) }}"
+
+        - name: Upload the ISOs to [{{ lab_vm_datastore }}] ISO/ (several GB; can take a while)
+          community.vmware.vsphere_copy:
+            hostname: "{{ vcenter_address }}"
+            username: "{{ vcenter_username }}"
+            password: "{{ vcenter_password }}"
+            validate_certs: no
+            src: "{{ lab_root }}/files/{{ item.item }}"
+            datacenter: "{{ vcenter_datacenter }}"
+            datastore: "{{ lab_vm_datastore }}"
+            path: "ISO/{{ item.item }}"
+            timeout: 7200
+          delegate_to: localhost
+          when: item is failed
+          loop: "{{ vsphere_prep_iso_present.results }}"
+          loop_control:
+            label: "{{ item.item }}"

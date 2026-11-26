@@ -11,7 +11,7 @@ From outside (stage 1, LabBuilder):
 
 An OVA can be marked `fix_ovf: true`: `files/fix_ovf.py` unpacks it on the runner and moves each VirtualSystem's `<Info>`/`<Name>` to the front, where the OVF standard puts them, and updates the manifest. Nutanix Move 6.3's OVF has them after its sections; the vSphere Client accepts that, but vCenter's import API (and so `vmware_deploy_ovf`) refuses it with "Missing child element 'Info'".
 
-The generated blueprint uses existing plays: `vsphere_prep` (roles/vsphere_prep: datacenter, cluster, hosts, datastore, ISOs) and `ovf` ("Deploy OVF files").
+The generated blueprint uses existing plays: `vsphere_prep` (playbooks/vsphere_prep.yml: datacenter, cluster, hosts, datastore, ISOs) and `ovf` ("Deploy OVF files").
 
 ```yaml
 centos:                       # the Ansible VM (roles/build_from_iso_centos)

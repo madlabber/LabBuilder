@@ -235,20 +235,9 @@
         ovf_ssh:      "{{enable_ssh|string}}"
         ovf_createvmfs: "{{create_local_vmfs|string}}"
 
-# Prepare a freshly deployed vCenter: datacenter, cluster, ESXi hosts, datastore, installer ISOs
-# (roles/vsphere_prep). Used by stage 2 blueprints, which run inside a lab against its own vCenter.
-# Reads vcenter_* and esxi_* from mainvars; the ISOs to upload are `isos` (host var or -e).
-- name: Prepare vSphere
-  hosts: vsphere_prep
-  gather_facts: false
-  vars_files:
-    - defaults/main.yml
-    - "{{ mainvars }}"
-    - "{{ credentials }}"
-  tasks:
-    - include_role:
-        name: vsphere_prep
-      when: state | default('present') != 'absent'
+# Prepare a freshly deployed vCenter: datacenter, cluster, ESXi hosts, datastore, installer ISOs.
+# Used by stage 2 blueprints, which run inside a lab against its own vCenter (hosts: vsphere_prep).
+- import_playbook: playbooks/vsphere_prep.yml
 
 - name: Build Centos VMs
   hosts: centos

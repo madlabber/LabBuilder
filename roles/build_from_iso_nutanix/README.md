@@ -53,7 +53,7 @@ nutanix_lab_network_pool_end:   192.168.0.120
 ```
 
 ## The Move demo lab
-`inventories/lab_nutanix_move.yml` (1 node) adds a VMware source next to the cluster: vCenter 8.0 U3 (`vc01`) and one ESXi host (`esx01`, with a data disk for `datastore1`), plus an **Ansible VM** (`ansible`, AlmaLinux 9). The last play runs **stage 2** on that VM, inside the lab (roles/stage2): it prepares `vc01` (roles/vsphere_prep), puts Windows Server 2019 and Debian 12 ISOs on `datastore1`, and deploys Move from its OVA on `esx01` with "Deploy OVF files". Users then build a small Windows VM and a small Linux VM and migrate both; `lab-lan` is the target network on the cluster. The Move guide documents the OVA for ESXi-to-ESXi, and Move 6.3.3 is qualified with AOS 6.10 while CE 2.1 runs AOS 6.8.1; the lab guide notes both and walks through the migration.
+`inventories/lab_nutanix_move.yml` (1 node) adds a VMware source next to the cluster: vCenter 8.0 U3 (`vc01`) and one ESXi host (`esx01`, with a data disk for `datastore1`), plus an **Ansible VM** (`ansible`, AlmaLinux 9). The last play runs **stage 2** on that VM, inside the lab (roles/stage2): it prepares `vc01` (playbooks/vsphere_prep.yml), puts Windows Server 2019 and Debian 12 ISOs on `datastore1`, and deploys Move from its OVA on `esx01` with "Deploy OVF files". Users then build a small Windows VM and a small Linux VM and migrate both; `lab-lan` is the target network on the cluster. The Move guide documents the OVA for ESXi-to-ESXi, and Move 6.3.3 is qualified with AOS 6.10 while CE 2.1 runs AOS 6.8.1; the lab guide notes both and walks through the migration.
 
 ## Timing
 | Variable | Default | Meaning |
