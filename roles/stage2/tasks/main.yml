@@ -1,0 +1,180 @@
+---
+- name: Find the lab gateway's WAN address
+  community.vmware.vmware_guest_info:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    datacenter: "{{ vcenter_datacenter }}"
+    name: '{{ stage2_gateway_vm }}'
+  delegate_to: localhost
+  register: stage2_gateway
+  until: >-
+    stage2_gateway.instance is defined and
+    (stage2_gateway.instance | dict2items | selectattr('key', 'match', '^hw_eth')
+     | map(attribute='value.ipaddresses') | select | flatten
+     | select('match', '^[0-9.]+$') | reject('match', '^' ~ (stage2_lan_prefix | regex_escape)) | list | length) > 0
+  retries: 30
+  delay: 20
+  vars:
+    stage2_lan_prefix: "{{ (stage2_lan_gateway.split('.'))[:3] | join('.') }}."
+
+- name: Set how to reach the runner
+  ansible.builtin.set_fact:
+    stage2_wan: >-
+      {{ stage2_gateway.instance | dict2items | selectattr('key', 'match', '^hw_eth')
+         | map(attribute='value.ipaddresses') | select | flatten
+         | select('match', '^[0-9.]+$') | reject('match', '^' ~ (stage2_lan_prefix | regex_escape)) | first }}
+    stage2_key: "{{ stage2_ssh_key | expanduser }}"
+  vars:
+    stage2_lan_prefix: "{{ (stage2_lan_gateway.split('.'))[:3] | join('.') }}."
+
+- name: Set the SSH command
+  ansible.builtin.set_fact:
+    stage2_ssh: "ssh -i {{ stage2_key }} -p {{ stage2_ssh_port }} -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
+
+- name: Make the stage 2 SSH key ({{ stage2_key }})
+  ansible.builtin.command: ssh-keygen -q -t ed25519 -N "" -C labbuilder-stage2 -f {{ stage2_key }}
+  args:
+    creates: "{{ stage2_key }}"
+  delegate_to: localhost
+
+# The runner only takes root over SSH with a key, so the key goes in through the outer vCenter
+- name: Let LabBuilder in with the key (guest operations in the outer vCenter)
+  community.vmware.vmware_vm_shell:
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    validate_certs: no
+    vm_username: root
+    vm_password: '{{ lab_password }}'
+    vm_id: '{{ stage2_vm_name }}'
+    vm_shell: /usr/bin/sh
+    vm_shell_args: >-
+      -c "mkdir -p /root/.ssh && chmod 700 /root/.ssh &&
+      (grep -qF '{{ stage2_pub }}' /root/.ssh/authorized_keys 2>/dev/null || echo '{{ stage2_pub }}' >> /root/.ssh/authorized_keys) &&
+      chmod 600 /root/.ssh/authorized_keys"
+    wait_for_process: true
+  delegate_to: localhost
+  vars:
+    stage2_pub: "{{ lookup('file', stage2_key ~ '.pub') }}"
+
+- name: Wait for SSH to the runner ({{ stage2_wan }}:{{ stage2_ssh_port }})
+  ansible.builtin.command: "{{ stage2_ssh }} root@{{ stage2_wan }} true"
+  delegate_to: localhost
+  register: stage2_ping
+  until: stage2_ping is succeeded
+  retries: 30
+  delay: 20
+  changed_when: false
+
+# AlmaLinux 9's own Python is 3.9, too old for current pyVmomi, so stage 2 gets its own venv
+# (like LabBuilder's): Python 3.12 from AppStream with ansible-core, pyVmomi and the collections
+# Retried: the runner resolves names through the lab's DC, which now and then fails an outside
+# lookup (Galaxy, PyPI) soon after it's built.
+- name: Set up the runner's Ansible venv ({{ stage2_venv }})
+  ansible.builtin.command:
+    argv: ["ssh", "-i", "{{ stage2_key }}", "-p", "{{ stage2_ssh_port | string }}", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=no",
+           "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", "root@{{ stage2_wan }}",
+           "dnf -y -q install rsync python3.12 python3.12-pip &&
+            ([ -x {{ stage2_venv }}/bin/python ] || python3.12 -m venv {{ stage2_venv }}) &&
+            {{ stage2_venv }}/bin/pip -q install --upgrade pip &&
+            {{ stage2_venv }}/bin/pip -q install 'ansible-core{{ stage2_ansible_core }}' pyvmomi requests &&
+            {{ stage2_venv }}/bin/ansible-galaxy collection install -U community.vmware vmware.vmware"]
+  delegate_to: localhost
+  changed_when: false
+  register: stage2_venv_setup
+  until: stage2_venv_setup is succeeded
+  retries: 5
+  delay: 30
+
+- name: Copy LabBuilder to the runner (no files/, vars/, inventories/ or .git)
+  ansible.builtin.command:
+    argv: ["rsync", "-a", "--delete", "--exclude=/files/", "--exclude=/vars/", "--exclude=/inventories/", "--exclude=.git/",
+           "--exclude=__pycache__/", "--exclude=*.log", "-e", "{{ stage2_ssh }}",
+           "{{ playbook_dir }}/", "root@{{ stage2_wan }}:{{ stage2_dir }}/"]
+  delegate_to: localhost
+  changed_when: false
+
+- name: Copy the binaries stage 2 needs (rsync skips what's already there)
+  ansible.builtin.command:
+    argv: "{{ ['rsync', '-a', '--partial', '-e', stage2_ssh] + stage2_binaries + ['root@' ~ stage2_wan ~ ':' ~ stage2_dir ~ '/files/'] }}"
+  vars:
+    stage2_binaries: "{{ (stage2_isos + (stage2_ovas | map(attribute='ova') | list)) | map('regex_replace', '^', playbook_dir ~ '/files/') | list }}"
+  delegate_to: localhost
+  changed_when: false
+  when: stage2_isos | length + stage2_ovas | length > 0
+
+# Some appliance OVFs (Nutanix Move 6.3) put a VirtualSystem's Info/Name after its sections,
+# which vCenter's import API refuses; files/fix_ovf.py unpacks those OVAs and reorders them
+- name: Fix OVFs that vCenter's import refuses (fix_ovf)
+  ansible.builtin.command:
+    argv: ["ssh", "-i", "{{ stage2_key }}", "-p", "{{ stage2_ssh_port | string }}", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=no",
+           "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", "root@{{ stage2_wan }}",
+           "{{ stage2_venv }}/bin/python {{ stage2_dir }}/roles/stage2/files/fix_ovf.py {{ stage2_dir }}/files/{{ item.ova }} {{ stage2_dir }}/files/{{ item.name }}-ovf {{ item.name }}"]
+  loop: "{{ stage2_ovas | selectattr('fix_ovf', 'defined') | selectattr('fix_ovf') | list }}"
+  loop_control:
+    label: "{{ item.ova }}"
+  delegate_to: localhost
+  register: stage2_fixed
+  changed_when: "'fixed' in stage2_fixed.stdout"
+
+- name: Make the folders for the generated stage 2 files
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/files/{{ lab_name }}_stage2/{{ item }}"
+    state: directory
+    mode: "0700"
+  loop: [inventories, vars]
+  delegate_to: localhost
+
+- name: Generate the stage 2 blueprint and vars file
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ playbook_dir }}/files/{{ lab_name }}_stage2/{{ item.dest }}"
+    mode: "0600"
+  loop:
+    - { src: blueprint.yml.j2, dest: inventories/stage2.yml }
+    - { src: vars.yml.j2, dest: vars/stage2.yml }
+    - { src: credentials.yml.j2, dest: vars/stage2-credentials.yml }
+  delegate_to: localhost
+  no_log: true
+
+- name: Copy them to the runner
+  ansible.builtin.command:
+    argv: ["rsync", "-a", "-e", "{{ stage2_ssh }}", "{{ playbook_dir }}/files/{{ lab_name }}_stage2/", "root@{{ stage2_wan }}:{{ stage2_dir }}/"]
+  delegate_to: localhost
+  changed_when: false
+
+# setsid -f detaches it fully, so this SSH session returns at once
+- name: Start stage 2 on the runner
+  ansible.builtin.command:
+    argv: ["ssh", "-i", "{{ stage2_key }}", "-p", "{{ stage2_ssh_port | string }}", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=no",
+           "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", "root@{{ stage2_wan }}",
+           "cd {{ stage2_dir }} && setsid -f bash -c '{{ stage2_venv }}/bin/ansible-playbook main.yml -i inventories/stage2.yml -e mainvars=vars/stage2.yml -e credentials=vars/stage2-credentials.yml; echo EXIT=$?' > stage2.log 2>&1 < /dev/null"]
+  delegate_to: localhost
+
+- name: Wait for stage 2 to finish (log on the runner, {{ stage2_dir }}/stage2.log)
+  ansible.builtin.command:
+    argv: ["ssh", "-i", "{{ stage2_key }}", "-p", "{{ stage2_ssh_port | string }}", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=no",
+           "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", "root@{{ stage2_wan }}",
+           "grep -o 'EXIT=[0-9]*' {{ stage2_dir }}/stage2.log"]
+  delegate_to: localhost
+  register: stage2_exit
+  until: stage2_exit.rc == 0
+  retries: "{{ (stage2_wait | int / 30) | int }}"
+  delay: 30
+  changed_when: false
+
+- name: Read the stage 2 result
+  ansible.builtin.command:
+    argv: ["ssh", "-i", "{{ stage2_key }}", "-p", "{{ stage2_ssh_port | string }}", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=no",
+           "-o", "UserKnownHostsFile=/dev/null", "-o", "LogLevel=ERROR", "root@{{ stage2_wan }}",
+           "sed -n '/PLAY RECAP/,$p' {{ stage2_dir }}/stage2.log; grep -E '^fatal|^failed:|ERROR' {{ stage2_dir }}/stage2.log | tail -5"]
+  delegate_to: localhost
+  register: stage2_recap
+  changed_when: false
+
+- name: Stage 2 result
+  ansible.builtin.debug:
+    msg: "{{ stage2_recap.stdout_lines }}"
+  failed_when: stage2_exit.stdout != 'EXIT=0'

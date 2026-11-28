@@ -71,6 +71,7 @@ all:
           ip_address:  192.168.0.53
           cvm_address: 192.168.0.63
       vars:
+        vm_memory_mb: 24576             # 24 GB node: the CVM takes 16 GB, leaving AHV about 1 GB for guest VMs
         nutanix_create_cluster: false   # stop once every CVM is up; the user creates the cluster (see the PDF)
         nutanix_cluster_name: "ntnx-ce"
         nutanix_cluster_vip:  192.168.0.60

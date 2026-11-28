@@ -1,0 +1,199 @@
+# Nutanix Move demo: the 1-node Nutanix CE lab (as lab_nutanix.yml) plus a VMware source to
+# migrate from: vCenter 8.0 U3 (vc01) with one ESXi 8.0 U3 host (esx01). Stage 2 runs on an
+# Ansible VM inside the lab: it sets up vc01, puts Windows and Linux ISOs on esx01's datastore for
+# the user to build the VMs to migrate, and deploys Nutanix Move (Nutanix-Move.ova in files/).
+all:
+  hosts:
+  vars:
+    lab_name: lab_nutanix_move
+    lab_prefix: "{{ lab_name }}_"
+    lab_password: "{{ default_lab_password }}"
+    lab_vm_datastore: "{{ lab_name }}"
+    lab_wan_portgroup: "{{ vm_network }}"
+    lab_lan1_portgroup: "{{ lab_name }}_net1"
+    lab_lan1_netmask_cidr: "24"
+    lab_lan1_netmask: "255.255.255.0"
+    lab_lan1_gateway: "192.168.0.1"
+    lab_lan1_dns_ip: "192.168.0.21"
+    lab_domain_name:   "lab.test"
+    lab_domain_controller: "dc01"
+  children:
+    pfsense:
+      hosts:
+        gateway:
+          ip_address: 192.168.0.1
+          interfaces:
+            wan: "{{lab_wan_portgroup}}"
+            lan: "{{lab_lan1_portgroup}}"
+          lan:
+            address:      192.168.0.1
+            netmask_cidr: 24
+            domain:       "{{lab_domain_name}}"
+            dns_server:   192.168.0.21
+            dhcp_start:   192.168.0.150
+            dhcp_end:     192.168.0.200
+          # rdp_jumphost replaces nat_rules, so RDP is listed here instead
+          rdp_jumphost: ""
+          nat_rules:
+            - name: "RDP to desktop"
+              external_port: "3389"
+              internal_port: "3389"
+              protocol: "tcp"
+              target_ip: 192.168.0.20
+            - name: "Prism on the first CVM"
+              external_port: "9440"
+              internal_port: "9440"
+              protocol: "tcp"
+              target_ip: 192.168.0.61
+            - name: "SSH to the first CVM (LabBuilder creates the cluster through this)"
+              external_port: "2222"
+              internal_port: "22"
+              protocol: "tcp"
+              target_ip: 192.168.0.61
+            - name: "SSH to the Ansible VM (LabBuilder runs stage 2 through this)"
+              external_port: "2223"
+              internal_port: "22"
+              protocol: "tcp"
+              target_ip: 192.168.0.22
+
+    dc:
+      hosts:
+        dc01:
+          version: "Server2025eval"
+          ip_address: 192.168.0.21
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+          extra_commands:
+            - MsiExec.exe /i E:\files\googlechromestandaloneenterprise64.msi /qn
+
+    # Nutanix CE 2.1 (AHV). ip_address is the AHV host; cvm_address is its CVM.
+    # Each node: 8 vCPU, 48 GB RAM, thin disks 64 GB (AHV) + 500 GB (CVM) + 250 GB (data).
+    nutanix:
+      hosts:
+        ahv01:
+          ip_address:  192.168.0.51
+          cvm_address: 192.168.0.61
+      vars:
+        vm_memory_mb: 24576             # 24 GB node: the CVM takes 16 GB, leaving AHV about 1 GB for guest VMs
+        nutanix_cluster_name: "ntnx-ce"
+        nutanix_cluster_vip:  192.168.0.60
+        # managed AHV network for VMs that Move migrates here (pool outside the gateway's .150-.200)
+        nutanix_lab_network: lab-lan
+        nutanix_lab_network_pool_start: 192.168.0.100
+        nutanix_lab_network_pool_end:   192.168.0.120
+
+    # Migration source for the Nutanix Move demo: vCenter 8.0 U3 with one ESXi 8.0 U3 host.
+    # Stage 2 (below) sets them up from inside the lab; the user builds the VMs to migrate.
+    vcenter:
+      hosts:
+        vc01:
+          ip_address: 192.168.0.40
+          vm_fqdn: "vc01.{{lab_domain_name}}"
+          ovf_file: "files/VMware-vCenter-Server-Appliance-8.0.3.00000-24022515_OVF10.ova"
+
+    esx:
+      hosts:
+        esx01:
+          ip_address: 192.168.0.41
+      vars:
+          install_iso: "VMware-VMvisor-Installer-8.0U3-24022510.x86_64.iso"
+          vm_num_cpus: 4
+          vm_memory_mb: 20480          # Move (8 GB) plus the users' Windows and Linux VMs
+          create_local_vmfs: 'False'   # ESXi 8 keeps its boot disk; datastore1 goes on the data disk
+          disks:
+            - { size_gb: 64,  controller_type: paravirtual, controller_number: 0, unit_number: 0, type: thin }   # ESXi
+            - { size_gb: 200, controller_type: paravirtual, controller_number: 0, unit_number: 1, type: thin }   # datastore1
+          enable_ssh: 'True'
+
+    # Ansible VM inside the lab: the stage 2 runner
+    centos:
+      hosts:
+        ansible:
+          ip_address: 192.168.0.22
+          distro: "alma"
+          version: "9"
+          install_ansible: true
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
+          vm_disk_gb: 80               # LabBuilder, the Move OVA and the ISOs
+
+    # Stage 2: LabBuilder runs again on the Ansible VM, inside the lab, against vc01 (roles/stage2):
+    # datacenter, cluster, esx01 and its datastore1, the ISOs, and Move from its OVA on esx01
+    stage2:
+      hosts:
+        ansible:
+      vars:
+        stage2_vcenter: vc01
+        stage2_esx_hosts: [esx01]
+        stage2_isos:                   # for the user to build a Windows and a Linux VM to migrate
+          - 17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso   # Windows Server 2019 eval
+          - debian-12.11.0-amd64-netinst.iso                                               # Debian 12
+        # Nutanix Move from its OVA, on esx01 (DHCP address). The Move guide documents the OVA for
+        # ESXi-to-ESXi; this lab uses it for ESXi-to-AHV. Without the OVA, leave stage2_ovas out.
+        stage2_ovas:
+          - { name: move, ova: Nutanix-Move.ova, fix_ovf: true }   # its OVF needs reordering for vCenter's import
+
+    winservers:
+      hosts:
+        desktop:
+          version: "Server2025eval"
+          ip_address: 192.168.0.20
+          join_domain: true
+          vm_memory_mb: 4096
+          vm_num_cpus: 2
+          extra_files_urls:
+            - https://dl.google.com/chrome/install/googlechromestandaloneenterprise64.msi
+            - http://the.earth.li/~sgtatham/putty/0.83/w64/putty-64bit-0.83-installer.msi
+          # the Nutanix lab guide, written by the "Create Nutanix CE cluster" play
+          extra_files:
+            - "{{ playbook_dir }}/files/{{ lab_name }}_nxguide.htm"
+            # the Move OVA (optional, gitignored), for the user to deploy Move again; ends up in C:\Software
+            - "{{ playbook_dir }}/files/Nutanix-Move.ova"
+          extra_commands:
+            # PuTTY: wait for the install to finish, and find the MSI by pattern
+            # (the config ISO renames putty-64bit-0.83-installer.msi to PUTTY_64BIT_0_83_INSTALLER.MSI)
+            - |
+              Start-Sleep 60   # let Windows settle after the domain-join reboot
+              $msi = (Get-Item E:\files\putty*.msi).FullName
+              Start-Process msiexec.exe -Wait -ArgumentList "/i $msi /qn /l*v C:\putty-install.log"
+            - Start-Process msiexec.exe -Wait -ArgumentList '/i E:\files\googlechromestandaloneenterprise64.msi /qn /l*v C:\chrome-install.log'
+
+            # The Move OVA, if it was in files/ (the config ISO may have renamed it, hence the pattern)
+            - |
+              $ova = Get-Item E:\files\*move*.ova -ErrorAction SilentlyContinue | Select-Object -First 1
+              if ($ova) {
+                New-Item -ItemType Directory -Path C:\Software -Force | Out-Null
+                Copy-Item $ova.FullName C:\Software\Nutanix-Move.ova -Force
+              }
+
+            # PuTTY sessions for every user: saved once to a .reg file, which Windows
+            # imports now and again each time any user signs in
+            - |
+              $sessions = [ordered]@{
+                'ahv01' = '192.168.0.51'
+                'cvm01' = '192.168.0.61'
+                'vc01'  = '192.168.0.40'
+                'esx01' = '192.168.0.41'
+                'ansible' = '192.168.0.22'
+                'prism' = '192.168.0.60'
+              }
+              $reg = "Windows Registry Editor Version 5.00`r`n"
+              foreach ($name in $sessions.Keys) {
+                $reg += "`r`n[HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions\$name]`r`n"
+                $reg += "`"HostName`"=`"$($sessions[$name])`"`r`n"
+                $reg += "`"PortNumber`"=dword:00000016`r`n"   # 0x16 = port 22
+                $reg += "`"Protocol`"=`"ssh`"`r`n"
+              }
+              Set-Content -Path C:\ProgramData\putty-sessions.reg -Value $reg -Encoding Unicode
+              New-ItemProperty -Path HKLM:\Software\Microsoft\Windows\CurrentVersion\Run -Name PuTTYSessions `
+                -Value 'reg.exe import C:\ProgramData\putty-sessions.reg' -Force | Out-Null
+              reg.exe import C:\ProgramData\putty-sessions.reg
+
+            # Nutanix lab guide: print the HTML from the config ISO to a PDF on every user's desktop
+            - |
+              $html = (Get-Item E:\files\*nxguide*.htm*).FullName
+              $browser = @("${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
+                           "$env:ProgramFiles\Google\Chrome\Application\chrome.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+              Start-Process $browser -Wait -ArgumentList '--headless', '--disable-gpu', '--no-pdf-header-footer',
+                '--user-data-dir=C:\ProgramData\nxguide-browser', '--print-to-pdf=C:\ProgramData\nxguide.pdf', "file:///$($html -replace '\\', '/')"
+              Copy-Item C:\ProgramData\nxguide.pdf 'C:\Users\Public\Desktop\Nutanix Lab Guide.pdf' -Force
