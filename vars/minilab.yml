@@ -23,7 +23,7 @@ import_path: /var/lib/vz/import
 # Default portgroup for new VMs
 vm_network: "vmbr0"
 
-# This section is not currently implementated:
+# This section is not currently implemented:
 # VLAN Pool for building lab pod portgroups
 # vlan_start: 1000
 # vlan_count: 1000

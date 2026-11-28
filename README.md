@@ -55,7 +55,7 @@ vCenter Server
     ``` 
     make install 
     ```
-    The "BECOME Password" prompt will promt for the sudo password.
+    The "BECOME Password" prompt will prompt for the sudo password.
 
 2. Configure your virtualization hosting environment variables in the main vars file:
     ```

@@ -65,7 +65,7 @@ disk_model: "vha"  # "vha", "vscsi"
 # type:qty:shelf,type:qty:shelf,type:qty:shelf,type:qty:shelf
 # Shelves 0-3 may be populated
 # Each shelf can contain up to 14 drives
-# Usefull Disk Types by capacity include:
+# Useful Disk Types by capacity include:
 # |       | 15K | 7200 | SSD
 # --------------------------
 # | 100MB | 21  |  27  | 34
