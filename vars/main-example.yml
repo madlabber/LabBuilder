@@ -1,4 +1,4 @@
-# If there is no vcenter, use the esxi host crendentials
+# If there is no vcenter, use the esxi host credentials
 # to complete the vcenter variables
 vcenter_address: 192.168.0.51
 vcenter_username: root

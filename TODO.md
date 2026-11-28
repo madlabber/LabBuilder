@@ -18,7 +18,7 @@ esxi:
   - find a way to deploy 9.x to PVE
 OVA: 
   - find a generalized way to deploy OVA to proxmox 
-  - make a seperate builder role for ONTAP Deploy
+  - make a separate builder role for ONTAP Deploy
 
 Proxmox:
   - add vlan support to all roles 

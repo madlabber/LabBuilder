@@ -24,7 +24,7 @@ versions:
     "8.8":
       install_iso:        "rhel-8.8-x86_64-dvd.iso"
       install_iso_url:    "https://developers.redhat.com/download-manager/file/rhel-8.8-x86_64-dvd.iso"
-    #"9": RHEL9 requires a code change to build_vm.yml to accomodate paywalled EL9 repositories
+    #"9": RHEL9 requires a code change to build_vm.yml to accommodate paywalled EL9 repositories
     # TBD
 
   rocky:
